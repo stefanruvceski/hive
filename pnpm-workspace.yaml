@@ -19,3 +19,10 @@ onlyBuiltDependencies: []
 ignoredBuiltDependencies:
   - '@parcel/watcher'
   - unrs-resolver
+
+# `pnpm audit` exceptions: only advisories in build/dev tooling that never reaches the app bundle,
+# with no fix compatible with the current Expo SDK. Same list, with reasons and an expiry, in
+# osv-scanner.toml — keep both in sync and drop entries as soon as an upgrade fixes them.
+auditConfig:
+  ignoreGhsas:
+    - GHSA-mrhx-c7xc-m3w5 # zod 3 via @expo/cli; fixed only in zod 4, Expo SDK 58 requires 3

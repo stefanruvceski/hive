@@ -44,7 +44,9 @@ jobs:
       - id: fingerprint
         uses: expo/expo-github-action/fingerprint@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e # v8
         with:
-          packager: pnpm
+          # Only installs the action's own sqlite3 tool. pnpm 10 blocks its build script, leaving
+          # no native binding ("Could not locate the bindings file"); our deps are installed above.
+          packager: npm
 
       - name: Label the PR
         if: github.event_name == 'pull_request'

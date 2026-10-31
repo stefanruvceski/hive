@@ -1,0 +1,29 @@
+# OSV-Scanner exceptions (security.yml). Only advisories in build/dev tooling that never reaches the
+# app bundle and have no fix compatible with the current Expo SDK. Each entry expires: when it does,
+# CI fails again and the finding gets re-triaged (docs/agent-rules/13-security.md §10).
+# The pnpm audit counterpart lives in pnpm-workspace.yaml (auditConfig.ignoreGhsas).
+
+[[IgnoredVulns]]
+id = "GHSA-mrhx-c7xc-m3w5"
+ignoreUntil = 2027-01-01
+reason = "zod 3 (memory exhaustion on oversized input) via @expo/cli; CLI-only, fixed only in zod 4, Expo SDK 58 requires zod 3."
+
+[[IgnoredVulns]]
+id = "GHSA-3g3m-2fjr-6pw4"
+ignoreUntil = 2027-01-01
+reason = "glob (AbortSignal bypass) via @expo/cli and Jest coverage; dev tooling only, fix needs a glob major the dependents don't accept."
+
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2027-01-01
+reason = "minimatch (ReDoS) via @expo/cli, Jest and ESLint tooling; dev tooling only, fix needs a minimatch major the dependents don't accept."
+
+[[IgnoredVulns]]
+id = "GHSA-gcqx-w48m-w2h4"
+ignoreUntil = 2027-01-01
+reason = "deepmerge (prototype poisoning) via @expo/config; build-time config merging of our own app.config.ts, no patched version exists."
+
+[[IgnoredVulns]]
+id = "GHSA-67mh-4wv8-2f99"
+ignoreUntil = 2027-01-01
+reason = "esbuild 0.18 dev-server CORS issue via drizzle-kit (@esbuild-kit); drizzle-kit never runs esbuild's dev server, dev dependency only."
