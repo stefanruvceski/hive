@@ -112,6 +112,9 @@ Install mechanics: [08 §4](08-native-config.md).
 - No deps from git URLs or tarballs of unknown provenance.
 - `pnpm-lock.yaml` is the integrity record: commit it, never hand-edit or delete/regenerate it, never `--no-lockfile`.
 - Triage audit findings (fix, upgrade, or document the false positive); CI gates only prod high+.
+  An unfixable finding in dev/build tooling is excepted in both `osv-scanner.toml` (with `reason`
+  and `ignoreUntil`) and `pnpm-workspace.yaml` `auditConfig.ignoreGhsas` — never for code that
+  ships in the app bundle.
 
 ## 11. Jailbreak/root & binary protection
 
