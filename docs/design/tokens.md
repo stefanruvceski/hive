@@ -6,21 +6,24 @@ Both themes are required (Settings → Appearance: System / Dark / Light).
 
 ## Color
 
-| Token            | Dark                                                       | Light                                                   | Use                                                             |
-| ---------------- | ---------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------- |
-| `background`     | `#0A0F1C`                                                  | `#EEF2F5`                                               | Screen base under the glow                                      |
-| `text`           | `#F8FAFC`                                                  | `#0F172A`                                               | Titles, primary text                                            |
-| `textSecondary`  | `#CBD5E1`                                                  | `#334155`                                               | Body text in cards                                              |
-| `textTertiary`   | `#A3AEC2`                                                  | `#475569`                                               | Date line, hints, values                                        |
-| `textQuaternary` | `#8B95A7`                                                  | `#64748B`                                               | Section headers, group names, footnotes                         |
-| `glass`          | `rgba(17,26,46,0.52)` + border `rgba(255,255,255,0.09)`    | `rgba(255,255,255,0.62)` + border `rgba(15,23,42,0.07)` | Cards, sheets (blur 22, saturate 160%)                          |
-| `control`        | `rgba(255,255,255,0.08)` + border `rgba(255,255,255,0.16)` | `rgba(255,255,255,0.70)` + border `rgba(15,23,42,0.10)` | Round glass buttons, Dock                                       |
-| `separator`      | `rgba(255,255,255,0.08)`                                   | `rgba(15,23,42,0.08)`                                   | List row dividers                                               |
-| `accent`         | `#2DD4BF`                                                  | `#2DD4BF`                                               | Fills: primary buttons, switches, active dot, selection ring    |
-| `accentText`     | `#2DD4BF`                                                  | `#0F766E`                                               | Teal text and icons (light needs the darker shade for contrast) |
-| `accentFill`     | `rgba(45,212,191,0.16)`                                    | `rgba(45,212,191,0.22)`                                 | Faint teal behind a Settings row icon                           |
-| `onAccent`       | `#042F2A`                                                  | `#042F2A`                                               | Text on a teal fill                                             |
-| `danger`         | `#F87171`                                                  | `#DC2626`                                               | Delete group                                                    |
+| Token             | Dark                                                       | Light                                                    | Use                                                             |
+| ----------------- | ---------------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------- |
+| `background`      | `#0A0F1C`                                                  | `#EEF2F5`                                                | Screen base under the glow                                      |
+| `text`            | `#F8FAFC`                                                  | `#0F172A`                                                | Titles, primary text                                            |
+| `textSecondary`   | `#CBD5E1`                                                  | `#334155`                                                | Body text in cards                                              |
+| `textTertiary`    | `#A3AEC2`                                                  | `#475569`                                                | Date line, hints, values                                        |
+| `textQuaternary`  | `#8B95A7`                                                  | `#64748B`                                                | Section headers, group names, footnotes                         |
+| `glass`           | `rgba(17,26,46,0.52)` + border `rgba(255,255,255,0.09)`    | `rgba(255,255,255,0.62)` + border `rgba(15,23,42,0.07)`  | Cards, sheets (blur 22, saturate 160%)                          |
+| `control`         | `rgba(255,255,255,0.08)` + border `rgba(255,255,255,0.16)` | `rgba(255,255,255,0.70)` + border `rgba(15,23,42,0.10)`  | Round glass buttons, Dock                                       |
+| `separator`       | `rgba(255,255,255,0.08)`                                   | `rgba(15,23,42,0.08)`                                    | List row dividers                                               |
+| `accent`          | `#2DD4BF`                                                  | `#2DD4BF`                                                | Fills: primary buttons, switches, active dot, selection ring    |
+| `accentText`      | `#2DD4BF`                                                  | `#0F766E`                                                | Teal text and icons (light needs the darker shade for contrast) |
+| `accentFill`      | `rgba(45,212,191,0.16)`                                    | `rgba(45,212,191,0.22)`                                  | Faint teal behind a Settings row icon                           |
+| `segmentTrack`    | `rgba(10,15,28,0.45)`                                      | `rgba(15,23,42,0.06)`                                    | Segmented control track                                         |
+| `segmentSelected` | `rgba(45,212,191,0.18)` + border `rgba(45,212,191,0.55)`   | `rgba(45,212,191,0.22)` + border `rgba(45,212,191,0.55)` | Chosen segment (text `accentText`; others `textSecondary`)      |
+| `switchOff`       | `#334155`                                                  | `rgba(15,23,42,0.18)`                                    | Switch track when off (on = `accent`); knob `#FFFFFF`           |
+| `onAccent`        | `#042F2A`                                                  | `#042F2A`                                                | Text on a teal fill                                             |
+| `danger`          | `#F87171`                                                  | `#DC2626`                                                | Delete group                                                    |
 
 **Wallpaper glow** (fixed, does not scroll): five soft radial glows over `background` — teal top-left,
 amber right at ~22 %, teal left at ~52 %, violet right at ~74 %, teal bottom. Dark uses deep, saturated
@@ -58,6 +61,8 @@ use the accent teal as its tint (it would read as "selected").
 | Dock                    | Glass capsule, radius 34, 28 above the bottom | Max 4 pinned + Customize button        |
 | Touch targets           | ≥ 44                                          | Buttons, dots (28 × 20 hit area)       |
 | Settings row            | ≥ 54 high, 16 side padding, 12 gap            | Icon tile 30, radius 8, glyph 16       |
+| Segmented control       | Segments 38 high, radius 19; track padding 3  | Track radius 22, 12 inside its card    |
+| Switch                  | 51 × 31, padding 2, knob 27                   | Knob shadow `0 2px 6px rgba(0,0,0,.3)` |
 
 ## Type (SF Pro on iOS, Roboto on Android — system font, no custom font)
 
@@ -73,6 +78,8 @@ use the accent teal as its tint (it would read as "selected").
 | List rows (Settings, sheets) | 17                            | follows Dynamic Type       |
 | Settings group header        | 15 semibold, `textQuaternary` | follows Dynamic Type       |
 | Settings footnote            | 13 / 18, `textQuaternary`     | follows Dynamic Type       |
+| Segment label                | 15, chosen 15 semibold        | follows Dynamic Type       |
+| Hash / id value (About)      | 15 monospace                  | follows Dynamic Type       |
 
 At the largest sizes Today widgets become full width (one per page); group cards stay square because
 they hold no text.
