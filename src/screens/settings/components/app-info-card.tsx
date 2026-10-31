@@ -1,7 +1,7 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 
-import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { KeyValueRow } from '@/components/ui/key-value-row';
 import { Spacing } from '@/constants/theme';
 import { isApiConfigured } from '@/lib/api';
 import { getAppInfo } from '@/lib/app-info';
@@ -28,14 +28,7 @@ function ServerRow() {
       ? 'unreachable'
       : health.data.status;
 
-  return (
-    <View style={styles.row}>
-      <ThemedText type="small">Server</ThemedText>
-      <ThemedText type="code" themeColor="textSecondary" numberOfLines={1} testID="app-info-server">
-        {serverValue}
-      </ThemedText>
-    </View>
-  );
+  return <KeyValueRow label="Server" value={serverValue} testID="app-info-server" />;
 }
 
 /** Build and OTA metadata. Keep it reachable in production — it makes bug reports actionable. */
@@ -43,12 +36,7 @@ export function AppInfoCard() {
   return (
     <ThemedView type="backgroundElement" style={styles.card} testID="app-info-card">
       {rows.map(([label, value]) => (
-        <View key={label} style={styles.row}>
-          <ThemedText type="small">{label}</ThemedText>
-          <ThemedText type="code" themeColor="textSecondary" numberOfLines={1}>
-            {value}
-          </ThemedText>
-        </View>
+        <KeyValueRow key={label} label={label} value={value} />
       ))}
       {isApiConfigured() && <ServerRow />}
     </ThemedView>
@@ -61,10 +49,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.four,
     borderRadius: Spacing.four,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: Spacing.three,
   },
 });

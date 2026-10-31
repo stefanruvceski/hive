@@ -12,10 +12,14 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
   const theme = useTheme();
   const color = theme[themeColor ?? (type === 'linkPrimary' ? 'link' : 'text')];
 
-  return <Text style={[{ color }, styles[type], style]} {...rest} />;
+  return <Text style={[styles.base, { color }, styles[type], style]} {...rest} />;
 }
 
 const styles = StyleSheet.create({
+  // RN Text defaults to flexShrink: 0, which lets text in a row overflow its parent.
+  base: {
+    flexShrink: 1,
+  },
   small: {
     fontSize: 14,
     lineHeight: 20,
