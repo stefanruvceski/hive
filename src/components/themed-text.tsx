@@ -14,10 +14,15 @@ type TextType =
   | 'body'
   | 'groupLabel'
   | 'row'
+  | 'listHeader'
+  | 'footnote'
+  | 'segment'
+  | 'segmentSelected'
   | 'stateTitle'
   | 'stateBody'
   | 'button'
-  | 'code';
+  | 'code'
+  | 'rowCode';
 
 export type ThemedTextProps = TextProps & {
   type?: TextType;
@@ -28,6 +33,8 @@ const defaultColor: Partial<Record<TextType, ThemeColor>> = {
   date: 'textTertiary',
   groupLabel: 'textQuaternary',
   stateBody: 'textTertiary',
+  listHeader: 'textQuaternary',
+  footnote: 'textQuaternary',
 };
 
 export function ThemedText({ style, type = 'row', themeColor, ...rest }: ThemedTextProps) {
@@ -89,6 +96,24 @@ const styles = StyleSheet.create({
   row: {
     fontSize: 17,
   },
+  /** Header above a Settings list group. */
+  listHeader: {
+    fontSize: 15,
+    fontWeight: 600,
+  },
+  /** Explanation under a Settings list group. */
+  footnote: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  /** Segmented control option, and the chosen one. */
+  segment: {
+    fontSize: 15,
+  },
+  segmentSelected: {
+    fontSize: 15,
+    fontWeight: 600,
+  },
   /** Empty-state title (docs/design/canvas/Empty.dc.html). */
   stateTitle: {
     fontSize: 22,
@@ -109,5 +134,10 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.mono,
     fontWeight: Platform.select({ android: 700 }) ?? 500,
     fontSize: 13,
+  },
+  /** Hash or id as a list-row value (Settings → About). */
+  rowCode: {
+    fontFamily: Fonts.mono,
+    fontSize: 15,
   },
 });

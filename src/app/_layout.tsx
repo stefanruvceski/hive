@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { AppearanceGate } from '@/components/appearance-gate';
 import { ErrorFallback } from '@/components/error-fallback';
 import { Colors } from '@/constants/theme';
 import { useThemeName } from '@/hooks/use-theme';
@@ -27,9 +28,9 @@ export default function RootLayout() {
   const { success, error } = useMigrations(getDb(), migrations);
 
   useEffect(() => {
-    // Hide once the database is ready (or failed). Move after fonts/auth bootstrap when added.
-    if (success || error) void SplashScreen.hideAsync();
-  }, [success, error]);
+    // On success `AppearanceGate` hides the splash once the saved appearance is applied.
+    if (error) void SplashScreen.hideAsync();
+  }, [error]);
 
   if (error) throw error;
   if (!success) return null;
@@ -37,10 +38,12 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider value={navigationTheme[scheme]}>
-          <Stack />
-          <StatusBar style="auto" />
-        </ThemeProvider>
+        <AppearanceGate>
+          <ThemeProvider value={navigationTheme[scheme]}>
+            <Stack />
+            <StatusBar style="auto" />
+          </ThemeProvider>
+        </AppearanceGate>
       </QueryClientProvider>
     </GestureHandlerRootView>
   );

@@ -9,3 +9,9 @@ export const homeModules = sqliteTable('home_modules', {
   position: integer('position').notNull(),
   hidden: integer('hidden', { mode: 'boolean' }).notNull().default(false),
 });
+
+/** App-wide preferences (Settings), one row per key; values are JSON. Read via `useAppSettings()`. */
+export const settings = sqliteTable('settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+});
