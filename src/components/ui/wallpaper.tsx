@@ -15,7 +15,8 @@ export function useWallpaperTarget() {
 
 /**
  * The fixed background glow behind a screen. Wrap the whole screen in it: the glow does not scroll,
- * and glass surfaces inside blur it (Android blurs only a `BlurTargetView`, so the glow is one).
+ * and glass surfaces inside blur it (Android blurs only what is inside a `BlurTargetView`, so the
+ * glow sits in one).
  */
 export function Wallpaper({ style, children, ...rest }: ViewProps) {
   const theme = useTheme();
@@ -29,8 +30,13 @@ export function Wallpaper({ style, children, ...rest }: ViewProps) {
         aria-hidden
         importantForAccessibility="no-hide-descendants"
         pointerEvents="none"
-        style={[StyleSheet.absoluteFill, { backgroundImage: effects.wallpaper }]}
-      />
+        style={StyleSheet.absoluteFill}>
+        {/* Android draws `backgroundImage` only on plain RN views, not on BlurTargetView itself. */}
+        <View
+          testID="wallpaper-glow"
+          style={[StyleSheet.absoluteFill, { backgroundImage: effects.wallpaper }]}
+        />
+      </BlurTargetView>
       <WallpaperTarget value={target}>{children}</WallpaperTarget>
     </View>
   );
