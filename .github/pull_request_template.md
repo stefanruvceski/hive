@@ -20,6 +20,7 @@
 
 - [ ] `pnpm check` passes locally (typecheck + lint + test)
 - [ ] `pnpm deps:check` clean (required after any dependency change)
+- [ ] Design reference in `docs/design/` updated (or: no visual change)
 - [ ] Native code / config plugin / `app.config.ts` / `eas.json` changed → **"requires store release" stated above** (fingerprint change — no OTA; docs/agent-rules/10)
 - [ ] New `expo-*` or native dependency added with `npx expo install`
 - [ ] Verified on iOS **and** Android (simulator is fine), light **and** dark mode

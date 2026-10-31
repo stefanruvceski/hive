@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hive settings</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1380px; box-sizing: border-box; padding: 58px 20px 40px; display: flex; flex-direction: column; gap: 8px; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: {{c.text}}; background: {{c.wallpaper}};">
+  <div style="display: flex;">
+    <a href="Main.dc.html" aria-label="Back" style="width: 44px; height: 44px; box-sizing: border-box; border-radius: 22px; {{c.control}} display: flex; align-items: center; justify-content: center;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+    </a>
+  </div>
+  <h1 style="margin: 6px 4px 14px; font-size: 30px; line-height: 36px; font-weight: 700;">Settings</h1>
+
+  <h2 style="margin: 0 16px; font-size: 15px; font-weight: 600; color: {{c.text4}};">Home</h2>
+  <div style="{{c.glass}} overflow: hidden;">
+    <a href="Customize.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 54px; padding: 0 16px; color: {{c.text}}; text-decoration: none;">
+      <span style="width: 30px; height: 30px; flex-shrink: 0; border-radius: 8px; background: {{accentFill}}; display: flex; align-items: center; justify-content: center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{c.accentText}}" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+      </span>
+      <span style="flex: 1; min-width: 0; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Customize Home</span>
+      <span style="min-width: 0; font-size: 15px; color: {{c.text3}}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">3 groups · 2 pinned</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{c.chevron}}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </a>
+    <div style="height: 1px; margin-left: 58px; background: {{c.line}};"></div>
+    <div style="display: flex; align-items: center; gap: 12px; min-height: 54px; padding: 0 16px;">
+      <span style="width: 30px; height: 30px; flex-shrink: 0; border-radius: 8px; background: {{accentFill}}; display: flex; align-items: center; justify-content: center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{c.accentText}}" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="2"/><path d="M7 15h10M9 19h6"/></svg>
+      </span>
+      <span id="today-label" style="flex: 1; min-width: 0; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Show Today</span>
+      <button type="button" role="switch" aria-checked="{{todayChecked}}" aria-labelledby="today-label" onClick="{{toggleToday}}" style="width: 51px; height: 31px; flex-shrink: 0; border: 0; border-radius: 16px; background: {{todayTrack}}; padding: 2px; display: flex; justify-content: {{todaySide}};">
+        <span style="width: 27px; height: 27px; border-radius: 14px; background: #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></span>
+      </button>
+    </div>
+  </div>
+  <p style="margin: 2px 16px 18px; font-size: 13px; line-height: 18px; color: {{c.text4}};">Today shows a short summary from each app at the top of Home.</p>
+
+  <h2 style="margin: 0 16px; font-size: 15px; font-weight: 600; color: {{c.text4}};">Appearance</h2>
+  <div style="{{c.glass}} padding: 12px;">
+    <div role="radiogroup" aria-label="Appearance" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 3px; border-radius: 22px; background: {{c.segTrack}};">
+      <sc-for list="{{themes}}" as="f" hint-placeholder-count="3">
+        <button type="button" role="radio" aria-checked="{{f.checked}}" onClick="{{f.pick}}" style="height: 38px; border-radius: 19px; border: {{f.border}}; background: {{f.bg}}; color: {{f.color}}; font-family: inherit; font-size: 15px; font-weight: {{f.weight}};">{{f.label}}</button>
+      </sc-for>
+    </div>
+  </div>
+  <p style="margin: 2px 16px 18px; font-size: 13px; line-height: 18px; color: {{c.text4}};">System follows your phone's light or dark setting.</p>
+
+  <h2 style="margin: 0 16px; font-size: 15px; font-weight: 600; color: {{c.text4}};">Date Format</h2>
+  <div style="{{c.glass}} padding: 12px;">
+    <div role="radiogroup" aria-label="Date format" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 3px; border-radius: 22px; background: {{c.segTrack}};">
+      <sc-for list="{{formats}}" as="f" hint-placeholder-count="3">
+        <button type="button" role="radio" aria-checked="{{f.checked}}" onClick="{{f.pick}}" style="height: 38px; border-radius: 19px; border: {{f.border}}; background: {{f.bg}}; color: {{f.color}}; font-family: inherit; font-size: 15px; font-weight: {{f.weight}};">{{f.label}}</button>
+      </sc-for>
+    </div>
+  </div>
+  <p style="margin: 2px 16px 18px; font-size: 13px; line-height: 18px; color: {{c.text4}};">Dates look like {{example}} in every app in Hive.</p>
+
+  <h2 style="margin: 0 16px; font-size: 15px; font-weight: 600; color: {{c.text4}};">Backup</h2>
+  <div style="{{c.glass}} overflow: hidden;">
+    <button type="button" style="width: 100%; min-height: 54px; padding: 0 16px; border: 0; background: transparent; color: {{c.accentText}}; font-family: inherit; font-size: 17px; font-weight: 600; text-align: left;">Back Up Now</button>
+    <div style="height: 1px; margin-left: 16px; background: {{c.line}};"></div>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; min-height: 54px; padding: 0 16px; color: {{c.text}}; text-decoration: none;">
+      <span style="flex-shrink: 0; font-size: 17px;">Folder</span>
+      <span style="flex: 1; min-width: 0; text-align: right; font-size: 17px; color: {{c.text3}}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Documents/hive</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{c.chevron}}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </a>
+    <div style="height: 1px; margin-left: 16px; background: {{c.line}};"></div>
+    <div style="display: flex; align-items: center; gap: 12px; min-height: 54px; padding: 0 16px;">
+      <span style="flex: 1; min-width: 0; font-size: 17px;">Last Backup</span>
+      <span style="font-size: 17px; color: {{c.text3}};">Today, 12:40</span>
+    </div>
+    <div style="height: 1px; margin-left: 16px; background: {{c.line}};"></div>
+    <button type="button" style="width: 100%; min-height: 54px; padding: 0 16px; border: 0; background: transparent; color: {{c.accentText}}; font-family: inherit; font-size: 17px; text-align: left;">Restore Latest Backup</button>
+    <div style="height: 1px; margin-left: 16px; background: {{c.line}};"></div>
+    <button type="button" style="width: 100%; min-height: 54px; padding: 0 16px; border: 0; background: transparent; color: {{c.accentText}}; font-family: inherit; font-size: 17px; text-align: left;">Restore from File…</button>
+    <div style="height: 1px; margin-left: 16px; background: {{c.line}};"></div>
+    <button type="button" style="width: 100%; min-height: 54px; padding: 0 16px; border: 0; background: transparent; color: {{c.accentText}}; font-family: inherit; font-size: 17px; text-align: left;">Share Backup…</button>
+  </div>
+  <p style="margin: 2px 16px 18px; font-size: 13px; line-height: 18px; color: {{c.text4}};">Every app in one file, saved once a day to a folder on your phone: two weeks of daily copies and one per month. The folder stays if Hive is deleted. Keys and sign-ins are never in it.</p>
+
+  <h2 style="margin: 0 16px; font-size: 15px; font-weight: 600; color: {{c.text4}};">About</h2>
+  <div style="{{c.glass}} overflow: hidden;">
+    <div style="display: flex; align-items: center; gap: 12px; min-height: 54px; padding: 0 16px;">
+      <span style="flex-shrink: 0; font-size: 17px;">Version</span>
+      <span style="flex: 1; min-width: 0; text-align: right; font-size: 17px; color: {{c.text3}}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">[VERSION] ([BUILD])</span>
+    </div>
+    <div style="height: 1px; margin-left: 16px; background: {{c.line}};"></div>
+    <div style="display: flex; align-items: center; gap: 12px; min-height: 54px; padding: 0 16px;">
+      <span style="flex-shrink: 0; font-size: 17px;">Runtime</span>
+      <span style="flex: 1; min-width: 0; text-align: right; font-size: 15px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; color: {{c.text3}}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">c6048d64715f545512165c631d6ec2842e66d8df</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#2DD4BF","options":["#2DD4BF","#34D399","#4ADE80"]},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":390,"height":1380}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { today: true, format: 'eu', appearance: 'system' };
+  }
+  renderVals() {
+    var self = this;
+    var accent = this.props.accent ?? '#2DD4BF';
+    var light = (this.props.theme ?? 'dark') === 'light';
+    var c = light ? {
+      text: '#0F172A', text3: '#475569', text4: '#64748B', chevron: '#94A3B8', accentText: '#0F766E', line: 'rgba(15,23,42,0.08)',
+      segTrack: 'rgba(15,23,42,0.06)', segOff: '#334155', switchOff: 'rgba(15,23,42,0.18)',
+      wallpaper: 'radial-gradient(90% 18% at 0% 0%, rgba(45,212,191,0.32) 0%, rgba(45,212,191,0) 100%), radial-gradient(70% 16% at 100% 22%, rgba(251,191,36,0.24) 0%, rgba(251,191,36,0) 100%), radial-gradient(80% 18% at 0% 52%, rgba(45,212,191,0.22) 0%, rgba(45,212,191,0) 100%), radial-gradient(80% 18% at 100% 76%, rgba(139,92,246,0.16) 0%, rgba(139,92,246,0) 100%), radial-gradient(100% 18% at 40% 100%, rgba(45,212,191,0.24) 0%, rgba(45,212,191,0) 100%), #EEF2F5',
+      glass: 'border-radius: 26px; background: rgba(255,255,255,0.66); border: 1px solid rgba(15,23,42,0.07); backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 8px 24px rgba(15,23,42,0.07);',
+      control: 'border: 1px solid rgba(15,23,42,0.10); background: rgba(255,255,255,0.70); color: #1E293B;'
+    } : {
+      text: '#F8FAFC', text3: '#A3AEC2', text4: '#8B95A7', chevron: '#475569', accentText: accent, line: 'rgba(255,255,255,0.08)',
+      segTrack: 'rgba(10,15,28,0.45)', segOff: '#CBD5E1', switchOff: '#334155',
+      wallpaper: 'radial-gradient(90% 18% at 0% 0%, rgba(20,110,100,0.75) 0%, rgba(20,110,100,0) 100%), radial-gradient(70% 16% at 100% 22%, rgba(120,84,30,0.55) 0%, rgba(120,84,30,0) 100%), radial-gradient(80% 18% at 0% 52%, rgba(16,120,110,0.55) 0%, rgba(16,120,110,0) 100%), radial-gradient(80% 18% at 100% 76%, rgba(76,60,160,0.45) 0%, rgba(76,60,160,0) 100%), radial-gradient(100% 18% at 40% 100%, rgba(20,110,100,0.60) 0%, rgba(20,110,100,0) 100%), #0A0F1C',
+      glass: 'border-radius: 26px; background: rgba(17,26,46,0.55); border: 1px solid rgba(255,255,255,0.09); backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 24px rgba(0,0,0,0.25);',
+      control: 'border: 1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.08); color: #E2E8F0;'
+    };
+    var segment = function (list, key) {
+      return list.map(function (f) {
+        var sel = self.state[key] === f.id;
+        return Object.assign({}, f, {
+          checked: sel ? 'true' : 'false',
+          bg: sel ? accent + (light ? '38' : '2E') : 'transparent',
+          border: sel ? '1px solid ' + accent + '8C' : '1px solid transparent',
+          color: sel ? c.accentText : c.segOff,
+          weight: sel ? 600 : 400,
+          pick: function () { var next = {}; next[key] = f.id; self.setState(next); }
+        });
+      });
+    };
+    var formats = [
+      { id: 'eu', label: 'Europe', example: '31.10.2026' },
+      { id: 'iso', label: 'ISO', example: '2026-10-31' },
+      { id: 'us', label: 'US', example: '10/31/2026' }
+    ];
+    var current = formats.filter(function (f) { return f.id === self.state.format; })[0];
+    var on = this.state.today;
+    return {
+      c: c,
+      accentFill: accent + (light ? '38' : '29'),
+      todayChecked: on ? 'true' : 'false',
+      todayTrack: on ? accent : c.switchOff,
+      todaySide: on ? 'flex-end' : 'flex-start',
+      toggleToday: function () { self.setState({ today: !self.state.today }); },
+      example: current.example,
+      formats: segment(formats, 'format'),
+      themes: segment([{ id: 'system', label: 'System' }, { id: 'dark', label: 'Dark' }, { id: 'light', label: 'Light' }], 'appearance')
+    };
+  }
+}
+</script>
+</body>
+</html>
