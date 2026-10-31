@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
+import { isApiConfigured } from '@/lib/api';
 import { getAppInfo } from '@/lib/app-info';
 
 import { useHealth } from '../use-health';
@@ -17,8 +18,8 @@ const rows: [label: string, value: string][] = [
   ['Update', info.isEmbeddedLaunch ? 'embedded' : info.updateId],
 ];
 
-/** Build and OTA metadata. Keep it reachable in production — it makes bug reports actionable. */
-export function AppInfoCard() {
+/** Server reachability. Rendered only when an API URL is configured — Hive is local-first. */
+function ServerRow() {
   const health = useHealth();
   // Inline three-state row — background info, not core content (agent-rules/14 §2).
   const serverValue = health.isPending
@@ -27,6 +28,18 @@ export function AppInfoCard() {
       ? 'unreachable'
       : health.data.status;
 
+  return (
+    <View style={styles.row}>
+      <ThemedText type="small">Server</ThemedText>
+      <ThemedText type="code" themeColor="textSecondary" numberOfLines={1} testID="app-info-server">
+        {serverValue}
+      </ThemedText>
+    </View>
+  );
+}
+
+/** Build and OTA metadata. Keep it reachable in production — it makes bug reports actionable. */
+export function AppInfoCard() {
   return (
     <ThemedView type="backgroundElement" style={styles.card} testID="app-info-card">
       {rows.map(([label, value]) => (
@@ -37,16 +50,7 @@ export function AppInfoCard() {
           </ThemedText>
         </View>
       ))}
-      <View style={styles.row}>
-        <ThemedText type="small">Server</ThemedText>
-        <ThemedText
-          type="code"
-          themeColor="textSecondary"
-          numberOfLines={1}
-          testID="app-info-server">
-          {serverValue}
-        </ThemedText>
-      </View>
+      {isApiConfigured() && <ServerRow />}
     </ThemedView>
   );
 }

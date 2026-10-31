@@ -1,6 +1,6 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 
-import { ApiError } from '@/lib/api';
+import { ApiError, ApiNotConfiguredError } from '@/lib/api';
 
 /** Structured, PII-free error log — the single place for global query/mutation side effects. */
 function logError(
@@ -24,6 +24,7 @@ const MAX_RETRIES = 2;
 
 export function shouldRetryQuery(failureCount: number, error: unknown): boolean {
   if (failureCount >= MAX_RETRIES) return false;
+  if (error instanceof ApiNotConfiguredError) return false;
   if (!(error instanceof ApiError)) return true;
   return error.status < 400 || error.status >= 500 || TRANSIENT_CLIENT_ERRORS.has(error.status);
 }

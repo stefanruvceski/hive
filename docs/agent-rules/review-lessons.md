@@ -43,9 +43,11 @@ Accepted review findings from past PRs, kept so the same mistake is never made t
   `EXPO_PUBLIC_API_URL` — the CI web-export step broke because nobody checked what the new
   import transitively requires at module-eval time.
 - Instead: Before importing anything into `_layout.tsx` (or any module it reaches), check for
-  module-level side effects/env requirements. If a build-time env var becomes mandatory, update
-  CI env blocks and `.env.example` in the same change, and say so in the PR.
-- Seen: 1
+  module-level side effects/env requirements. An env var never becomes mandatory (01 §5).
+- Again in #18: a required `EXPO_PUBLIC_API_URL` crashed every EAS Update bundle on launch.
+  Env part promoted: `env.ts` values are optional, CI exports without env, regression test
+  `src/lib/env.test.ts` ([01 §5](01-architecture.md)). The import-time rule stays here.
+- Seen: 2
 
 ### L-002 — 2026-10-29 — pre-PR audit
 

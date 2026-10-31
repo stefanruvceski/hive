@@ -78,16 +78,18 @@ New folders: only a new module (via `pnpm new:module`), a new screen (via `pnpm 
 - Inside `env.ts`, reference each variable statically with dot notation (`process.env.EXPO_PUBLIC_API_URL`). Bracket access and destructuring are not inlined → `undefined` at runtime.
 - Changing a value needs a rebundle + full reload; it is not a runtime lookup.
 - `.env` resolution (SDK 58): development loads `.env.development.local` → `.env.local` → `.env.development` → `.env`; production analogously. Nonstandard names like `.env.staging` are NOT loaded. `.env*.local` is git-ignored.
-- New variable checklist (add to `env` with `required()`, `.env.example`, CI, EAS): [src/lib/AGENTS.md](../../src/lib/AGENTS.md). EAS environments: [08 §9](08-native-config.md).
+- **Every `env` value is optional and never throws.** EAS Update bundles (PR previews, production OTA) are built without `.env` or `eas.json` `env`, so a value that throws when missing crashes every update on launch (#18). The feature that needs a value checks for it and degrades: hide the feature or fail with a clear error (`isApiConfigured()` / `ApiNotConfiguredError` in `api.ts`).
+- New variable checklist (add to `env` with `optional()`, `.env.example`, the code path that handles it being unset): [src/lib/AGENTS.md](../../src/lib/AGENTS.md). EAS environments: [08 §9](08-native-config.md).
 
 ```ts
 // ✅ src/lib/env.ts — the single access point
 export const env = {
-  apiUrl: required('EXPO_PUBLIC_API_URL', process.env.EXPO_PUBLIC_API_URL),
+  apiUrl: optional(process.env.EXPO_PUBLIC_API_URL), // string | undefined
 } as const;
 
 // ❌ inside env.ts
 const url = process.env['EXPO_PUBLIC_API_URL']; // not inlined → undefined
+required('EXPO_PUBLIC_API_URL', process.env.EXPO_PUBLIC_API_URL); // throws in EAS Update bundles
 ```
 
 ## 6. Server API routes (`src/app/api/*+api.ts`)

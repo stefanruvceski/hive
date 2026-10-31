@@ -30,7 +30,7 @@
 - Config lives in `package.json` → `"jest"` (preset `jest-expo`, `setupFilesAfterEnv: ["./jest.setup.ts"]`, `.maestro/` ignored, CSS mapped to `__mocks__/style-mock.js`, coverage settings). Do not create a `jest.config.js`.
 - jest-expo ~58 requires Jest 30 — do not change either major.
 - New dependency throws `SyntaxError: Unexpected token`? Extend `transformIgnorePatterns` (keep the `.pnpm` entry) — never mock the whole package to dodge the transform.
-- Module mocks every test needs go in [jest.setup.ts](../../jest.setup.ts) (it already mocks `expo-updates` and sets a placeholder `EXPO_PUBLIC_API_URL`), not in individual test files.
+- Module mocks every test needs go in [jest.setup.ts](../../jest.setup.ts) (it already mocks `expo-updates`; it deliberately sets no `EXPO_PUBLIC_*` values, so tests run like an EAS Update bundle), not in individual test files.
 - Repo-local ESLint rules have RuleTester specs in `eslint/rules/rules.test.js`, run by `pnpm test`.
 
 ## 3. RNTL v14 traps

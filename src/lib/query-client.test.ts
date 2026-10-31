@@ -1,4 +1,4 @@
-import { ApiError } from '@/lib/api';
+import { ApiError, ApiNotConfiguredError } from '@/lib/api';
 
 import { shouldRetryQuery } from './query-client';
 
@@ -13,5 +13,7 @@ describe('shouldRetryQuery', () => {
     expect(shouldRetryQuery(0, new ApiError(401, 'GET /x failed'))).toBe(false);
     expect(shouldRetryQuery(0, new ApiError(404, 'GET /x failed'))).toBe(false);
     expect(shouldRetryQuery(2, new ApiError(503, 'GET /x failed'))).toBe(false);
+    // Missing config can't fix itself by retrying.
+    expect(shouldRetryQuery(0, new ApiNotConfiguredError())).toBe(false);
   });
 });
