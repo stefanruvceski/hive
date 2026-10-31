@@ -23,8 +23,8 @@ const { name, bundleId, scheme } = config[variant];
 
 // Filled in by `eas init` (or copy from https://expo.dev/accounts/<owner>/projects/hive).
 // Not secret — it only identifies the EAS project for builds and updates.
-const EAS_PROJECT_ID = '';
-const EAS_OWNER = '';
+const EAS_PROJECT_ID = '95d9b519-c2b3-42f1-9ac0-2041d75c0e12';
+const EAS_OWNER = 'stefanruvceski';
 
 export default ({ config: base }: ConfigContext): ExpoConfig => ({
   ...base,
