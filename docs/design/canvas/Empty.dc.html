@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hive home with every app hidden</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; padding: 58px 20px 40px; display: flex; flex-direction: column; gap: 22px; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: {{c.text}}; background: {{c.wallpaper}};">
+  <header style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;">
+    <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+      <span style="font-size: 13px; font-weight: 600; letter-spacing: 0.2px; color: {{c.text3}};">SATURDAY, OCTOBER 31</span>
+      <h1 style="margin: 0; font-size: 30px; line-height: 36px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Good afternoon</h1>
+    </div>
+    <a href="Settings.dc.html" aria-label="Settings" style="width: 44px; height: 44px; flex-shrink: 0; box-sizing: border-box; border-radius: 22px; {{c.control}} display: flex; align-items: center; justify-content: center;">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </a>
+  </header>
+
+  <section role="status" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 0 12px 80px; text-align: center;">
+    <div aria-hidden="true" style="width: 169px; height: 169px; box-sizing: border-box; padding: 13px; {{c.glass}} display: grid; grid-template-columns: repeat(2, 65px); grid-auto-rows: 65px; gap: 13px;">
+      <span style="box-sizing: border-box; border-radius: 17px; border: 1.5px dashed {{c.dashed}};"></span>
+      <span style="box-sizing: border-box; border-radius: 17px; border: 1.5px dashed {{c.dashed}};"></span>
+      <span style="box-sizing: border-box; border-radius: 17px; border: 1.5px dashed {{c.dashed}};"></span>
+      <span style="box-sizing: border-box; border-radius: 17px; border: 1.5px dashed {{accent}};"></span>
+    </div>
+    <h2 style="margin: 6px 0 0; font-size: 22px; line-height: 28px; font-weight: 700;">Your Home is empty</h2>
+    <p style="margin: 0; max-width: 300px; font-size: 15px; line-height: 21px; color: {{c.text3}};">Every app is hidden. Bring the ones you use back to Home — their data is still here.</p>
+    <a href="Customize.dc.html" style="margin-top: 6px; height: 50px; padding: 0 26px; box-sizing: border-box; border-radius: 25px; background: {{accent}}; color: #042F2A; font-size: 16px; font-weight: 600; text-decoration: none; display: flex; align-items: center;">Customize Home</a>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#2DD4BF","options":["#2DD4BF","#34D399","#4ADE80"]},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var light = (this.props.theme ?? 'dark') === 'light';
+    var c = light ? {
+      text: '#0F172A', text3: '#475569', dashed: 'rgba(15,23,42,0.18)',
+      wallpaper: 'radial-gradient(90% 26% at 0% 0%, rgba(45,212,191,0.32) 0%, rgba(45,212,191,0) 100%), radial-gradient(70% 22% at 100% 22%, rgba(251,191,36,0.24) 0%, rgba(251,191,36,0) 100%), radial-gradient(80% 26% at 0% 52%, rgba(45,212,191,0.22) 0%, rgba(45,212,191,0) 100%), radial-gradient(80% 26% at 100% 74%, rgba(139,92,246,0.16) 0%, rgba(139,92,246,0) 100%), radial-gradient(100% 26% at 40% 100%, rgba(45,212,191,0.24) 0%, rgba(45,212,191,0) 100%), #EEF2F5',
+      glass: 'border-radius: 30px; background: rgba(255,255,255,0.62); border: 1px solid rgba(15,23,42,0.07); box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 8px 24px rgba(15,23,42,0.08);',
+      control: 'border: 1px solid rgba(15,23,42,0.10); background: rgba(255,255,255,0.70); color: #1E293B;'
+    } : {
+      text: '#F8FAFC', text3: '#A3AEC2', dashed: 'rgba(255,255,255,0.18)',
+      wallpaper: 'radial-gradient(90% 26% at 0% 0%, rgba(20,110,100,0.75) 0%, rgba(20,110,100,0) 100%), radial-gradient(70% 22% at 100% 22%, rgba(120,84,30,0.55) 0%, rgba(120,84,30,0) 100%), radial-gradient(80% 26% at 0% 52%, rgba(16,120,110,0.55) 0%, rgba(16,120,110,0) 100%), radial-gradient(80% 26% at 100% 74%, rgba(76,60,160,0.45) 0%, rgba(76,60,160,0) 100%), radial-gradient(100% 26% at 40% 100%, rgba(20,110,100,0.60) 0%, rgba(20,110,100,0) 100%), #0A0F1C',
+      glass: 'border-radius: 30px; background: rgba(17,26,46,0.52); border: 1px solid rgba(255,255,255,0.09); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 24px rgba(0,0,0,0.25);',
+      control: 'border: 1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.08); color: #E2E8F0;'
+    };
+    return { c: c, accent: this.props.accent ?? '#2DD4BF' };
+  }
+}
+</script>
+</body>
+</html>

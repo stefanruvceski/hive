@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Customize Hive home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; min-height: 1420px; box-sizing: border-box; padding: 58px 20px 140px; display: flex; flex-direction: column; gap: 14px; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: {{c.text}}; background: {{c.wallpaper}};">
+  <header style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+    <h1 style="margin: 0; min-width: 0; font-size: 30px; line-height: 36px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Customize Home</h1>
+    <a href="Main.dc.html" style="height: 44px; padding: 0 22px; flex-shrink: 0; box-sizing: border-box; border-radius: 22px; background: {{accent}}; color: #042F2A; font-size: 16px; font-weight: 600; text-decoration: none; display: flex; align-items: center;">Done</a>
+  </header>
+  <p style="margin: 0 4px 4px; font-size: 14px; line-height: 19px; color: {{c.text3}};">Tap an app to pin it, move it to another group or hide it. Tap a group's name to rename it.</p>
+
+  <section style="display: flex; flex-direction: column; gap: 13px; padding: 13px 13px 16px; {{c.glass}} border-color: {{accentEdge}};">
+    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 2px 3px 0;">
+      <h2 style="margin: 0; display: flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 600; color: {{c.accentText}};">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 3l5 5-3 1-4 4 1 5-2 2-4-4-5 5-1-1 5-5-4-4 2-2 5 1 4-4z"/></svg>
+        Dock
+      </h2>
+      <span style="font-size: 13px; color: {{c.text4}};">{{pinCount}} of 4 pinned</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, 65px); gap: 13px; justify-content: space-between;">
+      <sc-for list="{{dockSlots}}" as="t" hint-placeholder-count="4">
+        <sc-if value="{{t.isApp}}" hint-placeholder-val="{{true}}">
+          <button type="button" aria-pressed="{{t.pressed}}" aria-label="{{t.name}}, pinned" onClick="{{t.pick}}" style="width: 65px; height: 65px; padding: 0; box-sizing: border-box; border-radius: 17px; {{t.tile}} outline: {{t.ring}}; outline-offset: 2px; display: flex; align-items: center; justify-content: center;">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="{{t.glyph}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.icon}}"/></svg>
+          </button>
+        </sc-if>
+        <sc-if value="{{t.isEmpty}}" hint-placeholder-val="{{false}}">
+          <span aria-hidden="true" style="width: 65px; height: 65px; box-sizing: border-box; border-radius: 17px; border: 1.5px dashed {{c.dashed}};"></span>
+        </sc-if>
+      </sc-for>
+    </div>
+  </section>
+
+  <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+    <section style="display: flex; flex-direction: column; gap: 13px; padding: 13px 13px 16px; {{c.glass}} border-color: {{g.border}};">
+      <div style="display: flex; align-items: center; gap: 2px;">
+        <label style="flex: 1; min-width: 0; display: flex;">
+          <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);">Group name</span>
+          <input value="{{g.name}}" onChange="{{g.rename}}" style="flex: 1; min-width: 0; height: 42px; box-sizing: border-box; padding: 0 14px; border-radius: 14px; border: 1px solid {{c.line}}; background: {{c.field}}; color: {{c.text}}; font-family: inherit; font-size: 16px; font-weight: 600;">
+        </label>
+        <button type="button" aria-label="Move group {{g.name}} up" onClick="{{g.up}}" style="width: 40px; height: 42px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{c.icon}}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+        </button>
+        <button type="button" aria-label="Move group {{g.name}} down" onClick="{{g.down}}" style="width: 40px; height: 42px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{c.icon}}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <sc-if value="{{g.empty}}" hint-placeholder-val="{{false}}">
+          <button type="button" aria-label="Delete group {{g.name}}" onClick="{{g.remove}}" style="width: 40px; height: 42px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{c.danger}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+          </button>
+        </sc-if>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(4, 65px); gap: 13px; justify-content: space-between;">
+        <sc-for list="{{g.apps}}" as="t" hint-placeholder-count="3">
+          <button type="button" aria-pressed="{{t.pressed}}" aria-label="{{t.name}}" onClick="{{t.pick}}" style="position: relative; width: 65px; height: 65px; padding: 0; box-sizing: border-box; border-radius: 17px; {{t.tile}} outline: {{t.ring}}; outline-offset: 2px; display: flex; align-items: center; justify-content: center;">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="{{t.glyph}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.icon}}"/></svg>
+            <sc-if value="{{t.isPinned}}" hint-placeholder-val="{{false}}">
+              <span role="img" aria-label="pinned" style="position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 11px; background: {{accent}}; display: flex; align-items: center; justify-content: center;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="#042F2A" aria-hidden="true"><path d="M16 3l5 5-3 1-4 4 1 5-2 2-4-4-5 5-1-1 5-5-4-4 2-2 5 1 4-4z"/></svg>
+              </span>
+            </sc-if>
+          </button>
+        </sc-for>
+      </div>
+      <sc-if value="{{g.empty}}" hint-placeholder-val="{{false}}">
+        <span style="font-size: 13px; color: {{c.text4}}; padding: 0 3px;">No apps in this group</span>
+      </sc-if>
+      <sc-if value="{{g.isTarget}}" hint-placeholder-val="{{false}}">
+        <button type="button" onClick="{{g.moveHere}}" style="height: 46px; border-radius: 16px; border: 1.5px dashed {{c.accentText}}; background: transparent; color: {{c.accentText}}; font-family: inherit; font-size: 15px; font-weight: 600;">Move {{selectedName}} here</button>
+      </sc-if>
+    </section>
+  </sc-for>
+
+  <button type="button" onClick="{{addGroup}}" style="height: 54px; border-radius: 27px; border: 1.5px dashed {{c.dashed}}; background: transparent; color: {{c.text2}}; font-family: inherit; font-size: 15px; font-weight: 600;">+ New group</button>
+
+  <section style="display: flex; flex-direction: column; gap: 13px; padding: 13px 13px 16px; border-radius: 30px; border: 1px dashed {{c.dashed}};">
+    <h2 style="margin: 0; padding: 2px 3px 0; font-size: 15px; font-weight: 600; color: {{c.text4}};">Hidden from Home</h2>
+    <div style="display: grid; grid-template-columns: repeat(4, 65px); gap: 13px; justify-content: space-between;">
+      <sc-for list="{{hidden}}" as="t" hint-placeholder-count="1">
+        <button type="button" aria-pressed="{{t.pressed}}" aria-label="{{t.name}}, hidden" onClick="{{t.pick}}" style="width: 65px; height: 65px; padding: 0; box-sizing: border-box; border-radius: 17px; {{t.tile}} outline: {{t.ring}}; outline-offset: 2px; opacity: 0.55; display: flex; align-items: center; justify-content: center;">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="{{t.glyph}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.icon}}"/></svg>
+        </button>
+      </sc-for>
+    </div>
+    <sc-if value="{{noHidden}}" hint-placeholder-val="{{false}}">
+      <span style="font-size: 13px; color: {{c.text4}}; padding: 0 3px;">Nothing hidden. Hidden apps keep their data.</span>
+    </sc-if>
+  </section>
+
+  <sc-if value="{{hasSelection}}" hint-placeholder-val="{{false}}">
+    <div role="toolbar" aria-label="{{selectedName}} actions" style="position: absolute; left: 16px; right: 16px; bottom: 28px; display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 18px; border-radius: 32px; border: 1px solid {{accentEdge}}; background: {{c.bar}}; backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%); box-shadow: {{c.barShadow}};">
+      <span style="flex: 1; min-width: 0; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{selectedName}}</span>
+      <button type="button" onClick="{{togglePin}}" style="height: 42px; padding: 0 16px; border-radius: 21px; border: 1px solid {{accentEdge}}; background: {{accentFill}}; color: {{c.accentText}}; font-family: inherit; font-size: 14px; font-weight: 600; white-space: nowrap;">{{pinLabel}}</button>
+      <button type="button" onClick="{{hideSelected}}" style="height: 42px; padding: 0 16px; border-radius: 21px; border: 1px solid {{c.line}}; background: transparent; color: {{c.text}}; font-family: inherit; font-size: 14px; white-space: nowrap;">{{hideLabel}}</button>
+      <button type="button" aria-label="Cancel selection" onClick="{{clearSelection}}" style="width: 42px; height: 42px; border-radius: 21px; border: 0; background: transparent; color: {{c.icon}}; display: flex; align-items: center; justify-content: center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#2DD4BF","options":["#2DD4BF","#34D399","#4ADE80"]},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":390,"height":1420}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      selected: null,
+      pinned: ['habits', 'money'],
+      hidden: [],
+      groups: [
+        { id: 'money', name: 'Money', apps: ['money', 'wallet', 'invest'] },
+        { id: 'body', name: 'Body & mind', apps: ['health', 'habits'] },
+        { id: 'creative', name: 'Creative', apps: ['books', 'drawify', 'music'] }
+      ]
+    };
+  }
+  renderVals() {
+    var self = this;
+    var s = this.state;
+    var accent = this.props.accent ?? '#2DD4BF';
+    var light = (this.props.theme ?? 'dark') === 'light';
+    var c = light ? {
+      text: '#0F172A', text2: '#334155', text3: '#475569', text4: '#64748B', icon: '#64748B', danger: '#DC2626', accentText: '#0F766E',
+      wallpaper: 'radial-gradient(90% 18% at 0% 0%, rgba(45,212,191,0.32) 0%, rgba(45,212,191,0) 100%), radial-gradient(70% 16% at 100% 20%, rgba(251,191,36,0.24) 0%, rgba(251,191,36,0) 100%), radial-gradient(80% 18% at 0% 50%, rgba(45,212,191,0.22) 0%, rgba(45,212,191,0) 100%), radial-gradient(80% 18% at 100% 75%, rgba(139,92,246,0.16) 0%, rgba(139,92,246,0) 100%), radial-gradient(100% 18% at 40% 100%, rgba(45,212,191,0.24) 0%, rgba(45,212,191,0) 100%), #EEF2F5',
+      glass: 'border-radius: 30px; background: rgba(255,255,255,0.62); border: 1px solid rgba(15,23,42,0.07); backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 8px 24px rgba(15,23,42,0.08);',
+      line: 'rgba(15,23,42,0.10)', field: 'rgba(255,255,255,0.85)', dashed: 'rgba(15,23,42,0.18)', idle: 'rgba(15,23,42,0.07)',
+      bar: 'rgba(255,255,255,0.78)', barShadow: 'inset 0 1px 0 #FFFFFF, 0 10px 30px rgba(15,23,42,0.16)'
+    } : {
+      text: '#F8FAFC', text2: '#CBD5E1', text3: '#A3AEC2', text4: '#8B95A7', icon: '#94A3B8', danger: '#F87171', accentText: accent,
+      wallpaper: 'radial-gradient(90% 18% at 0% 0%, rgba(20,110,100,0.75) 0%, rgba(20,110,100,0) 100%), radial-gradient(70% 16% at 100% 20%, rgba(120,84,30,0.55) 0%, rgba(120,84,30,0) 100%), radial-gradient(80% 18% at 0% 50%, rgba(16,120,110,0.55) 0%, rgba(16,120,110,0) 100%), radial-gradient(80% 18% at 100% 75%, rgba(76,60,160,0.45) 0%, rgba(76,60,160,0) 100%), radial-gradient(100% 18% at 40% 100%, rgba(20,110,100,0.60) 0%, rgba(20,110,100,0) 100%), #0A0F1C',
+      glass: 'border-radius: 30px; background: rgba(17,26,46,0.52); border: 1px solid rgba(255,255,255,0.09); backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 24px rgba(0,0,0,0.25);',
+      line: 'rgba(255,255,255,0.12)', field: 'rgba(10,15,28,0.45)', dashed: 'rgba(255,255,255,0.18)', idle: 'rgba(255,255,255,0.09)',
+      bar: 'rgba(19,27,46,0.72)', barShadow: 'inset 0 1px 0 rgba(255,255,255,0.22), 0 10px 30px rgba(0,0,0,0.5)'
+    };
+    var tint = light
+      ? { health: '#E11D48', habits: '#B45309', money: '#047857', wallet: '#2563EB', invest: '#0369A1', books: '#C2410C', drawify: '#6D28D9', music: '#BE185D' }
+      : { health: '#FB7185', habits: '#FBBF24', money: '#34D399', wallet: '#60A5FA', invest: '#7DD3FC', books: '#FDBA74', drawify: '#C4B5FD', music: '#F9A8D4' };
+    var wallet = 'M20 7V5a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15v12H5a2 2 0 0 1-2-2V6M15 13h2';
+    var apps = {
+      health: { name: 'Health', icon: 'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 0 0 0-7.8z' },
+      habits: { name: 'Habits', icon: 'M21 11.1V12a9 9 0 1 1-5.3-8.2M21 4L12 13l-3-3' },
+      money: { name: 'Money', icon: wallet },
+      wallet: { name: 'Wallet', icon: 'M3 6h18v12H3zM3 10h18M7 15h3' },
+      invest: { name: 'Invest', icon: 'M3 17l6-6 4 4 8-8M15 7h6v6' },
+      books: { name: 'Books', icon: 'M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z' },
+      drawify: { name: 'Drawify', icon: 'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z' },
+      music: { name: 'Music', icon: 'M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z' }
+    };
+    var tile = function (id) {
+      var color = tint[id];
+      return {
+        isApp: true, isEmpty: false, id: id, name: apps[id].name, icon: apps[id].icon, glyph: color,
+        isPinned: s.pinned.indexOf(id) !== -1,
+        pressed: s.selected === id ? 'true' : 'false',
+        ring: s.selected === id ? '3px solid ' + accent : '0 solid transparent',
+        tile: light
+          ? 'background: linear-gradient(180deg, #FFFFFF 0%, #F1F5F9 100%); border: 1px solid ' + color + '33; box-shadow: inset 0 1px 0 #FFFFFF, 0 3px 10px rgba(15,23,42,0.10);'
+          : 'background: linear-gradient(180deg, #1D2A47 0%, #111A2E 100%); border: 1px solid ' + color + '45; box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 3px 10px rgba(0,0,0,0.45);',
+        pick: function () { self.setState({ selected: s.selected === id ? null : id }); }
+      };
+    };
+    var without = function (id) {
+      return {
+        groups: s.groups.map(function (g) { return Object.assign({}, g, { apps: g.apps.filter(function (a) { return a !== id; }) }); }),
+        hidden: s.hidden.filter(function (a) { return a !== id; })
+      };
+    };
+    var swap = function (groupId, delta) {
+      var gs = s.groups.slice();
+      var i = gs.findIndex(function (g) { return g.id === groupId; });
+      var j = i + delta;
+      if (j < 0 || j >= gs.length) return;
+      var t = gs[i]; gs[i] = gs[j]; gs[j] = t;
+      self.setState({ groups: gs });
+    };
+    var dockSlots = s.pinned.map(tile);
+    while (dockSlots.length < 4) dockSlots.push({ isApp: false, isEmpty: true });
+    var selectedPinned = !!s.selected && s.pinned.indexOf(s.selected) !== -1;
+    var selectedHidden = !!s.selected && s.hidden.indexOf(s.selected) !== -1;
+    return {
+      c: c,
+      accent: accent,
+      accentEdge: accent + '66',
+      accentFill: accent + (light ? '38' : '29'),
+      pinCount: s.pinned.length,
+      dockSlots: dockSlots,
+      groups: s.groups.map(function (g) {
+        var holds = g.apps.indexOf(s.selected) !== -1;
+        var target = !!s.selected && !holds;
+        return {
+          id: g.id,
+          name: g.name,
+          empty: g.apps.length === 0,
+          isTarget: target,
+          border: target ? accent + '88' : c.idle,
+          apps: g.apps.map(tile),
+          rename: function (e) {
+            var value = e && e.target ? e.target.value : '';
+            self.setState({ groups: s.groups.map(function (x) { return x.id === g.id ? Object.assign({}, x, { name: value }) : x; }) });
+          },
+          up: function () { swap(g.id, -1); },
+          down: function () { swap(g.id, 1); },
+          remove: function () { self.setState({ groups: s.groups.filter(function (x) { return x.id !== g.id; }) }); },
+          moveHere: function () {
+            var next = without(s.selected);
+            next.groups = next.groups.map(function (x) { return x.id === g.id ? Object.assign({}, x, { apps: x.apps.concat([s.selected]) }) : x; });
+            next.selected = null;
+            self.setState(next);
+          }
+        };
+      }),
+      hidden: s.hidden.map(tile),
+      noHidden: s.hidden.length === 0,
+      hasSelection: !!s.selected,
+      selectedName: s.selected ? apps[s.selected].name : '',
+      pinLabel: selectedPinned ? 'Unpin' : s.pinned.length >= 4 ? 'Dock full' : 'Pin',
+      hideLabel: selectedHidden ? 'Hidden' : 'Hide',
+      togglePin: function () {
+        if (selectedPinned) {
+          self.setState({ pinned: s.pinned.filter(function (id) { return id !== s.selected; }), selected: null });
+        } else if (s.pinned.length < 4 && !selectedHidden) {
+          self.setState({ pinned: s.pinned.concat([s.selected]), selected: null });
+        }
+      },
+      hideSelected: function () {
+        if (selectedHidden) return;
+        var next = without(s.selected);
+        next.hidden = next.hidden.concat([s.selected]);
+        next.pinned = s.pinned.filter(function (id) { return id !== s.selected; });
+        next.selected = null;
+        self.setState(next);
+      },
+      clearSelection: function () { self.setState({ selected: null }); },
+      addGroup: function () {
+        self.setState({ groups: s.groups.concat([{ id: 'g' + Date.now(), name: 'New group', apps: [] }]) });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

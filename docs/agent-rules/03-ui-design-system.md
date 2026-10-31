@@ -2,6 +2,8 @@
 
 **Scope:** Visual code in Hive — theme tokens, text and surfaces, dark mode, native controls, images, icons, animation, pressables, styles. Layout and safe areas: [04](04-responsive-adaptive.md). Accessibility: [12](12-accessibility-platform.md).
 
+**Design reference:** the approved screens and tokens are in [docs/design/](../design/README.md). Build a screen from its reference there (sizes, colors, states); if a screen has none, ask for one before inventing a layout. A PR that changes a screen's look updates its reference in the same PR.
+
 ## Non-negotiables
 
 - [ ] Colors only from `src/constants/theme.ts` via `useTheme()` / `ThemedText` / `ThemedView`. (lint)

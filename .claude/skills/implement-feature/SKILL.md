@@ -57,6 +57,9 @@ Agents never change git state here. Hand over, in one message:
 - PR title and body filling every section of `.github/pull_request_template.md`, with
   `Closes #<issue>` and the evidence (commands run + screenshots).
 - Anything left undone or unverified, stated plainly.
+- If the change alters a screen's look: pull the current design canvas into `docs/design/canvas/`
+  (see `docs/design/README.md`) so the PR carries the design it was built from.
+- No AI attribution anywhere (no `Co-authored-by:` trailer, no "Generated with …" line).
 
 **Checkpoint C:** the user reviews and runs git. If they accept a review finding, record it in
 `docs/agent-rules/review-lessons.md`.
