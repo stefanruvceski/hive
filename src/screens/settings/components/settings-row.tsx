@@ -1,10 +1,13 @@
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Layout, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+
+/** From ~1.5× text a side-by-side value is too narrow; it stacks under the label (as `KeyValueRow`). */
+const STACK_FONT_SCALE = 1.5;
 
 type Props = {
   label: string;
@@ -25,8 +28,9 @@ type Props = {
 };
 
 /**
- * One Settings list row: optional icon tile, label, value or control, 54 pt high. Not pressable
- * yet: no row opens anything until Customize Home (#31) and Backup land.
+ * One Settings list row: optional icon tile, label, value or control, 54 pt high. The value sits
+ * at the end of the row and stacks under the label at accessibility text sizes. Not pressable yet:
+ * no row opens anything until Customize Home (#31) and Backup land.
  */
 export function SettingsRow({
   label,
@@ -39,6 +43,8 @@ export function SettingsRow({
   testID,
 }: Props) {
   const theme = useTheme();
+  const { fontScale } = useWindowDimensions();
+  const stacked = fontScale >= STACK_FONT_SCALE;
 
   return (
     <View
@@ -52,23 +58,25 @@ export function SettingsRow({
             <SymbolView name={icon} size={Layout.listRow.icon.glyph} tintColor={theme.accentText} />
           </View>
         )}
-        <ThemedText
-          themeColor={action ? 'accentText' : 'text'}
-          style={value === undefined ? styles.grow : styles.label}>
-          {label}
-        </ThemedText>
-        {value !== undefined && (
+        <View style={stacked ? styles.textStacked : styles.text}>
           <ThemedText
-            type={valueType}
-            themeColor="textTertiary"
-            // Identifiers can't wrap usefully: one line, cut in the middle so both ends stay.
-            numberOfLines={valueType === 'code' ? 1 : undefined}
-            ellipsizeMode="middle"
-            style={styles.value}
-            testID={testID}>
-            {value}
+            themeColor={action ? 'accentText' : 'text'}
+            style={value !== undefined && !stacked && styles.labelBesideValue}>
+            {label}
           </ThemedText>
-        )}
+          {value !== undefined && (
+            <ThemedText
+              type={valueType}
+              themeColor="textTertiary"
+              // Identifiers can't wrap usefully: one line, cut in the middle so both ends stay.
+              numberOfLines={valueType === 'code' ? 1 : undefined}
+              ellipsizeMode="middle"
+              style={!stacked && styles.valueAtEnd}
+              testID={testID}>
+              {value}
+            </ThemedText>
+          )}
+        </View>
         {trailing}
       </View>
     </View>
@@ -84,7 +92,7 @@ const styles = StyleSheet.create({
   content: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.three - Spacing.one,
+    gap: Layout.listRow.gap,
     paddingVertical: Spacing.two,
   },
   tile: {
@@ -94,16 +102,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  label: {
+  text: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Layout.listRow.gap,
+  },
+  textStacked: {
+    flex: 1,
+    gap: Spacing.half,
+  },
+  // A short label keeps its width so the value, not the label, gives way (agent-rules/03 §2).
+  labelBesideValue: {
     flexShrink: 0,
-    maxWidth: '60%',
   },
-  grow: {
-    flex: 1,
-  },
-  value: {
-    flex: 1,
-    textAlign: 'right',
+  // Pushed to the row's end with a logical margin (no left/right, agent-rules/04).
+  valueAtEnd: {
+    marginStart: 'auto',
   },
   disabled: {
     opacity: 0.45,

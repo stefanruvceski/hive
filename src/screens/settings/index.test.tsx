@@ -22,18 +22,25 @@ const mutate = jest.fn();
 
 jest.mock('expo-router', () => ({ router: { back: jest.fn() } }));
 
-// Native @expo/ui controls can't be pressed in Jest; stand-ins with the same props.
+// Native boundary: @expo/ui views can't be pressed in Jest. Stand-ins with the same props, so the
+// app's own components (SegmentedControl, SettingsRow) run for real (agent-rules/09 §5).
 jest.mock('@expo/ui', () => {
-  const { Pressable, Text } = jest.requireActual('react-native');
+  const { Pressable, Text, View } = jest.requireActual('react-native');
   return {
-    Host: ({ children }: { children: ReactNode }) => children,
+    Host: ({ children, colorScheme }: { children: ReactNode; colorScheme?: string }) => (
+      <View testID="expo-ui-host" aria-label={`scheme-${colorScheme}`}>
+        {children}
+      </View>
+    ),
     Switch: ({
       value,
       onValueChange,
+      label,
       testID,
     }: {
       value: boolean;
       onValueChange: (value: boolean) => void;
+      label?: string;
       testID: string;
     }) => (
       <Pressable
@@ -41,46 +48,68 @@ jest.mock('@expo/ui', () => {
         aria-checked={value}
         testID={testID}
         onPress={() => onValueChange(!value)}>
-        <Text>{value ? 'on' : 'off'}</Text>
+        {label !== undefined && <Text>{label}</Text>}
       </Pressable>
     ),
   };
 });
-jest.mock('@/components/ui/segmented-control', () => {
+jest.mock('@expo/ui/swift-ui', () => {
   const { Pressable, Text, View } = jest.requireActual('react-native');
   return {
-    SegmentedControl: ({
-      options,
-      value,
-      onChange,
+    Host: ({ children, colorScheme }: { children: ReactNode; colorScheme?: string }) => (
+      <View testID="expo-ui-host" aria-label={`scheme-${colorScheme}`}>
+        {children}
+      </View>
+    ),
+    Text: ({ children }: { children: string }) => <Text>{children}</Text>,
+    Picker: ({
+      selection,
+      onSelectionChange,
+      children,
       testID,
     }: {
-      options: { value: string; label: string }[];
-      value: string;
-      onChange: (value: string) => void;
+      selection: string;
+      onSelectionChange: (value: string) => void;
+      children: { props: { children: string; modifiers: { tag: string }[] } }[];
       testID: string;
     }) => (
       <View testID={testID}>
-        {options.map((option) => (
-          <Pressable
-            key={option.value}
-            role="radio"
-            aria-checked={option.value === value}
-            testID={`${testID}-${option.value}`}
-            onPress={() => onChange(option.value)}>
-            <Text>{option.label}</Text>
-          </Pressable>
-        ))}
+        {children.map((option) => {
+          const value = option.props.modifiers[0]!.tag;
+          return (
+            <Pressable
+              key={value}
+              role="radio"
+              aria-checked={value === selection}
+              testID={`${testID}-${value}`}
+              onPress={() => onSelectionChange(value)}>
+              <Text>{option.props.children}</Text>
+            </Pressable>
+          );
+        })}
       </View>
     ),
   };
 });
+
+// fontScale is what the rows react to; the rest is a plain phone window (copy of key-value-row.test).
+const window = (fontScale: number) => ({ width: 402, height: 874, scale: 3, fontScale });
+const mockUseWindowDimensions = jest.fn(() => window(1));
+jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
+  __esModule: true,
+  default: () => mockUseWindowDimensions(),
+}));
+
+function mockFontScale(fontScale: number) {
+  mockUseWindowDimensions.mockReturnValue(window(fontScale));
+}
 
 function mockSettings(result: object) {
   jest.mocked(useAppSettings).mockReturnValue(result as never);
 }
 
 beforeEach(() => {
+  mockFontScale(1);
   mutate.mockReset();
   mockSettings({ data: defaultAppSettings, isPending: false, isError: false });
   jest.mocked(useSetAppSetting).mockReturnValue({ mutate, isError: false } as never);
@@ -119,6 +148,10 @@ describe('Settings', () => {
 });
 
 describe('Settings preferences', () => {
+  // No API URL: the server row (and its async health check) is covered above.
+  beforeEach(() => jest.mocked(isApiConfigured).mockReturnValue(false));
+  afterEach(() => jest.mocked(isApiConfigured).mockReturnValue(true));
+
   it('shows every section from the design', async () => {
     await renderSettings();
 
@@ -156,11 +189,22 @@ describe('Settings preferences', () => {
     expect(screen.getByTestId('settings-appearance-dark')).toBeChecked();
   });
 
-  it('turns Show Today off', async () => {
+  it('turns Show Today off, with the row label shown once', async () => {
     await renderSettings();
 
+    // The switch must not draw its own label next to the row's (Android renders it as text).
+    expect(screen.getAllByText('Show Today')).toHaveLength(1);
     await userEvent.setup().press(screen.getByTestId('settings-show-today'));
     expect(mutate).toHaveBeenCalledWith({ key: 'showToday', value: false });
+  });
+
+  it('gives native controls the app scheme, not the phone scheme', async () => {
+    await renderSettings();
+
+    // A forced Dark/Light must reach SwiftUI/Compose too; jest-expo reports light.
+    const hosts = screen.getAllByTestId('expo-ui-host');
+    expect(hosts.length).toBeGreaterThan(0);
+    for (const host of hosts) expect(host).toHaveProp('aria-label', 'scheme-light');
   });
 
   it('saves the date format and shows an example in it', async () => {
@@ -178,6 +222,14 @@ describe('Settings preferences', () => {
     expect(screen.getByTestId('app-info-runtime')).toHaveProp('numberOfLines', 1);
     expect(screen.getByTestId('app-info-runtime')).toHaveProp('ellipsizeMode', 'middle');
     expect(screen.getByTestId('app-info-version')).not.toHaveProp('numberOfLines', 1);
+    expect(screen.getByTestId('app-info-version')).toHaveStyle({ marginStart: 'auto' });
+  });
+
+  it('stacks values under their labels at accessibility text sizes', async () => {
+    mockFontScale(2);
+    await renderSettings();
+
+    expect(screen.getByTestId('app-info-version')).not.toHaveStyle({ marginStart: 'auto' });
   });
 
   it('shows Backup as not available yet', async () => {

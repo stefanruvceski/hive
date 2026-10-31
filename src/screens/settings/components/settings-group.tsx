@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: StyleSheet.hairlineWidth,
-    marginLeft: Layout.listRow.paddingHorizontal,
+    marginStart: Layout.listRow.paddingHorizontal,
   },
   footnote: {
     marginTop: Spacing.half,

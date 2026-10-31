@@ -132,8 +132,13 @@ export const Layout = {
   /** Group name sits this far below its card. */
   groupLabelGap: 6,
   minTouch: 44,
-  /** Settings list: row height, icon tile. */
-  listRow: { minHeight: 54, paddingHorizontal: 16, icon: { size: 30, radius: 8, glyph: 16 } },
+  /** Settings list: row height, padding, gap between icon/label/value, icon tile. */
+  listRow: {
+    minHeight: 54,
+    paddingHorizontal: 16,
+    gap: 12,
+    icon: { size: 30, radius: 8, glyph: 16 },
+  },
   /** Primary (accent-filled) button. */
   button: { height: 50, paddingHorizontal: 26 },
   /** Round glass button (Settings, Close, Back). */

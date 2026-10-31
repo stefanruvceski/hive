@@ -57,7 +57,7 @@ use the accent teal as its tint (it would read as "selected").
 | Grid gap                | 12 across, 14 down                            | Group name sits 6 below its card       |
 | Dock                    | Glass capsule, radius 34, 28 above the bottom | Max 4 pinned + Customize button        |
 | Touch targets           | ≥ 44                                          | Buttons, dots (28 × 20 hit area)       |
-| Settings row            | ≥ 54 high, 16 side padding                    | Icon tile 30, radius 8, glyph 16       |
+| Settings row            | ≥ 54 high, 16 side padding, 12 gap            | Icon tile 30, radius 8, glyph 16       |
 
 ## Type (SF Pro on iOS, Roboto on Android — system font, no custom font)
 

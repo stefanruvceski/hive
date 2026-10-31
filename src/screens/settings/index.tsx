@@ -1,6 +1,8 @@
 import { Host, Switch } from '@expo/ui';
+import { semantics } from '@expo/ui/jetpack-compose/modifiers';
+import { accessibilityLabel, labelsHidden } from '@expo/ui/swift-ui/modifiers';
 import { router } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -11,7 +13,7 @@ import { type SegmentedOption, SegmentedControl } from '@/components/ui/segmente
 import { Wallpaper } from '@/components/ui/wallpaper';
 import { Layout, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useAppSettings, useSetAppSetting } from '@/hooks/use-app-settings';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useThemeName } from '@/hooks/use-theme';
 import { type Appearance, type DateFormat, formatDateExample } from '@/utils/app-settings';
 
 import { AppInfoCard } from './components/app-info-card';
@@ -29,6 +31,15 @@ const dateFormatOptions: SegmentedOption<DateFormat>[] = [
   { value: 'iso', label: 'ISO' },
   { value: 'us', label: 'US' },
 ];
+
+/**
+ * The switch has no visible label of its own (the row shows it), so its accessible name is set
+ * natively; on iOS `labelsHidden` also keeps the Toggle from stretching across the row.
+ */
+const switchModifiers = Platform.select({
+  android: [semantics({ contentDescription: 'Show Today' })],
+  default: [accessibilityLabel('Show Today'), labelsHidden()],
+});
 
 /** Settings from docs/design/canvas/Settings.dc.html: preferences, backup (not yet live), about. */
 export function Settings() {
@@ -61,6 +72,7 @@ function Preferences() {
   const { data, error, isPending, isError, refetch } = useAppSettings();
   const save = useSetAppSetting();
   const theme = useTheme();
+  const scheme = useThemeName();
 
   if (isPending) return <LoadingState testID="settings-loading" />;
   if (isError) {
@@ -77,11 +89,12 @@ function Preferences() {
           label="Show Today"
           icon={{ ios: 'rectangle.grid.1x2', android: 'widgets', web: 'widgets' }}
           trailing={
-            <Host matchContents seedColor={theme.accent}>
+            // No `label`: Android would draw it as text beside the row's own label.
+            <Host matchContents colorScheme={scheme} seedColor={theme.accent}>
               <Switch
                 value={data.showToday}
                 onValueChange={(value) => save.mutate({ key: 'showToday', value })}
-                label="Show Today"
+                modifiers={switchModifiers}
                 testID="settings-show-today"
               />
             </Host>

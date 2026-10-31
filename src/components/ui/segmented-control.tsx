@@ -9,7 +9,7 @@ import { Host as SwiftHost, Picker, Text as SwiftText } from '@expo/ui/swift-ui'
 import { pickerStyle, tag } from '@expo/ui/swift-ui/modifiers';
 import { Platform, StyleSheet } from 'react-native';
 
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useThemeName } from '@/hooks/use-theme';
 
 export type SegmentedOption<T extends string> = { value: T; label: string };
 
@@ -24,7 +24,8 @@ type Props<T extends string> = {
 
 /**
  * Native single-choice segmented control: SwiftUI segmented `Picker` on iOS, Material 3 segmented
- * buttons on Android (`@expo/ui`, agent-rules/03 §4). Fills the width it is given.
+ * buttons on Android (`@expo/ui`, agent-rules/03 §4). Fills the width it is given. The host gets
+ * the app's scheme: without it, native views follow the phone even when Settings forces one.
  */
 export function SegmentedControl<T extends string>(props: Props<T>) {
   return Platform.OS === 'android' ? <ComposeSegments {...props} /> : <SwiftSegments {...props} />;
@@ -33,7 +34,11 @@ export function SegmentedControl<T extends string>(props: Props<T>) {
 function SwiftSegments<T extends string>({ options, value, onChange, label, testID }: Props<T>) {
   const theme = useTheme();
   return (
-    <SwiftHost matchContents={{ vertical: true }} seedColor={theme.accent} style={styles.host}>
+    <SwiftHost
+      matchContents={{ vertical: true }}
+      colorScheme={useThemeName()}
+      seedColor={theme.accent}
+      style={styles.host}>
       <Picker
         label={label}
         selection={value}
@@ -53,7 +58,11 @@ function SwiftSegments<T extends string>({ options, value, onChange, label, test
 function ComposeSegments<T extends string>({ options, value, onChange, testID }: Props<T>) {
   const theme = useTheme();
   return (
-    <ComposeHost matchContents={{ vertical: true }} seedColor={theme.accent} style={styles.host}>
+    <ComposeHost
+      matchContents={{ vertical: true }}
+      colorScheme={useThemeName()}
+      seedColor={theme.accent}
+      style={styles.host}>
       <SingleChoiceSegmentedButtonRow modifiers={[fillMaxWidth(), composeTestID(testID)]}>
         {options.map((option) => (
           <SegmentedButton
