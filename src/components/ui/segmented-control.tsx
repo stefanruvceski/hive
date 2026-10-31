@@ -1,15 +1,8 @@
-import {
-  Host as ComposeHost,
-  SegmentedButton,
-  SingleChoiceSegmentedButtonRow,
-  Text as ComposeText,
-} from '@expo/ui/jetpack-compose';
-import { fillMaxWidth, testID as composeTestID } from '@expo/ui/jetpack-compose/modifiers';
-import { Host as SwiftHost, Picker, Text as SwiftText } from '@expo/ui/swift-ui';
-import { pickerStyle, tag } from '@expo/ui/swift-ui/modifiers';
-import { Platform, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import { useTheme, useThemeName } from '@/hooks/use-theme';
+import { ThemedText } from '@/components/themed-text';
+import { Layout } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 export type SegmentedOption<T extends string> = { value: T; label: string };
 
@@ -17,70 +10,94 @@ type Props<T extends string> = {
   options: readonly SegmentedOption<T>[];
   value: T;
   onChange: (value: T) => void;
-  /** Accessible name of the whole control ("Appearance"). */
+  /** Accessible name of the group ("Appearance"). */
   label: string;
+  /** On the group; each option gets `${testID}-${value}`. */
   testID: string;
 };
 
+// Segments are 38 high; the slop brings the touch target to 48 (agent-rules/12).
+const hitSlop = { top: 5, bottom: 5 };
+
 /**
- * Native single-choice segmented control: SwiftUI segmented `Picker` on iOS, Material 3 segmented
- * buttons on Android (`@expo/ui`, agent-rules/03 §4). Fills the width it is given. The host gets
- * the app's scheme: without it, native views follow the phone even when Settings forces one.
+ * Single-choice segmented control drawn from the design (docs/design/canvas/Settings.dc.html):
+ * equal segments on a tinted track, the chosen one a teal pill. Drawn, not `@expo/ui`, so it looks
+ * the same on iOS and Android (agent-rules/03 §4).
  */
-export function SegmentedControl<T extends string>(props: Props<T>) {
-  return Platform.OS === 'android' ? <ComposeSegments {...props} /> : <SwiftSegments {...props} />;
-}
-
-function SwiftSegments<T extends string>({ options, value, onChange, label, testID }: Props<T>) {
+export function SegmentedControl<T extends string>({
+  options,
+  value,
+  onChange,
+  label,
+  testID,
+}: Props<T>) {
   const theme = useTheme();
-  return (
-    <SwiftHost
-      matchContents={{ vertical: true }}
-      colorScheme={useThemeName()}
-      seedColor={theme.accent}
-      style={styles.host}>
-      <Picker
-        label={label}
-        selection={value}
-        onSelectionChange={(next: T) => onChange(next)}
-        modifiers={[pickerStyle('segmented')]}
-        testID={testID}>
-        {options.map((option) => (
-          <SwiftText key={option.value} modifiers={[tag(option.value)]}>
-            {option.label}
-          </SwiftText>
-        ))}
-      </Picker>
-    </SwiftHost>
-  );
-}
 
-function ComposeSegments<T extends string>({ options, value, onChange, testID }: Props<T>) {
-  const theme = useTheme();
   return (
-    <ComposeHost
-      matchContents={{ vertical: true }}
-      colorScheme={useThemeName()}
-      seedColor={theme.accent}
-      style={styles.host}>
-      <SingleChoiceSegmentedButtonRow modifiers={[fillMaxWidth(), composeTestID(testID)]}>
-        {options.map((option) => (
-          <SegmentedButton
+    // Not `accessible`: that would merge the segments into one element on iOS.
+    <View
+      role="radiogroup"
+      aria-label={label}
+      testID={testID}
+      style={[styles.track, { backgroundColor: theme.segmentTrack }]}>
+      {options.map((option) => {
+        const selected = option.value === value;
+        return (
+          <Pressable
             key={option.value}
-            selected={option.value === value}
-            onClick={() => onChange(option.value)}>
-            <SegmentedButton.Label>
-              <ComposeText>{option.label}</ComposeText>
-            </SegmentedButton.Label>
-          </SegmentedButton>
-        ))}
-      </SingleChoiceSegmentedButtonRow>
-    </ComposeHost>
+            role="radio"
+            aria-checked={selected}
+            aria-label={option.label}
+            hitSlop={hitSlop}
+            onPress={() => onChange(option.value)}
+            testID={`${testID}-${option.value}`}
+            style={[
+              styles.segment,
+              // RN borders sit inside the box, so only the chosen segment needs one.
+              selected && [
+                styles.selected,
+                {
+                  backgroundColor: theme.segmentSelected,
+                  borderColor: theme.segmentSelectedBorder,
+                },
+              ],
+            ]}>
+            {({ pressed }) => (
+              <ThemedText
+                type={selected ? 'segmentSelected' : 'segment'}
+                themeColor={selected ? 'accentText' : 'textSecondary'}
+                style={[styles.label, pressed && styles.pressed]}>
+                {option.label}
+              </ThemedText>
+            )}
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  host: {
-    alignSelf: 'stretch',
+  track: {
+    flexDirection: 'row',
+    padding: Layout.segmented.trackPadding,
+    borderRadius: Layout.segmented.trackRadius,
+  },
+  segment: {
+    flex: 1,
+    minHeight: Layout.segmented.height,
+    borderRadius: Layout.segmented.radius,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selected: {
+    borderWidth: 1,
+  },
+  // Wraps at large text sizes instead of truncating (agent-rules/03 §2).
+  label: {
+    textAlign: 'center',
+  },
+  pressed: {
+    opacity: 0.6,
   },
 });

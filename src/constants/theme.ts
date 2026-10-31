@@ -26,6 +26,13 @@ export const Colors = {
     accentText: '#0F766E',
     /** Faint teal behind a list-row icon (Settings). */
     accentFill: 'rgba(45,212,191,0.22)',
+    /** Segmented control: track, chosen segment fill and its border. */
+    segmentTrack: 'rgba(15,23,42,0.06)',
+    segmentSelected: 'rgba(45,212,191,0.22)',
+    segmentSelectedBorder: 'rgba(45,212,191,0.55)',
+    /** Switch: track when off, and the knob. */
+    switchOff: 'rgba(15,23,42,0.18)',
+    switchKnob: '#FFFFFF',
     onAccent: '#042F2A',
     danger: '#DC2626',
   },
@@ -44,6 +51,11 @@ export const Colors = {
     accent: '#2DD4BF',
     accentText: '#2DD4BF',
     accentFill: 'rgba(45,212,191,0.16)',
+    segmentTrack: 'rgba(10,15,28,0.45)',
+    segmentSelected: 'rgba(45,212,191,0.18)',
+    segmentSelectedBorder: 'rgba(45,212,191,0.55)',
+    switchOff: '#334155',
+    switchKnob: '#FFFFFF',
     onAccent: '#042F2A',
     danger: '#F87171',
   },
@@ -69,6 +81,7 @@ export const Effects = {
     tileShadow: 'inset 0 1px 0 #FFFFFF, 0 3px 10px rgba(15,23,42,0.10)',
     /** Hex alpha appended to an app tint for the tile's 1 px border. */
     tileBorderAlpha: '33',
+    switchKnobShadow: '0 2px 6px rgba(0,0,0,0.3)',
   },
   dark: {
     wallpaper:
@@ -81,6 +94,7 @@ export const Effects = {
     tile: 'linear-gradient(180deg, #1D2A47 0%, #111A2E 100%)',
     tileShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 3px 10px rgba(0,0,0,0.45)',
     tileBorderAlpha: '45',
+    switchKnobShadow: '0 2px 6px rgba(0,0,0,0.3)',
   },
 } as const;
 
@@ -132,13 +146,21 @@ export const Layout = {
   /** Group name sits this far below its card. */
   groupLabelGap: 6,
   minTouch: 44,
-  /** Settings list: row height, padding, gap between icon/label/value, icon tile. */
+  /**
+   * Settings list: row height, padding, gap between icon/label/value, icon tile. `controlPadding`
+   * surrounds a lone control (segmented) in a group.
+   */
   listRow: {
     minHeight: 54,
     paddingHorizontal: 16,
     gap: 12,
+    controlPadding: 12,
     icon: { size: 30, radius: 8, glyph: 16 },
   },
+  /** Segmented control (Settings): segment height and radius, track padding and radius. */
+  segmented: { height: 38, radius: 19, trackPadding: 3, trackRadius: 22 },
+  /** Switch (Settings): track, inner padding, knob. */
+  switch: { width: 51, height: 31, padding: 2, knob: 27 },
   /** Primary (accent-filled) button. */
   button: { height: 50, paddingHorizontal: 26 },
   /** Round glass button (Settings, Close, Back). */

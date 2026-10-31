@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   padded: {
-    padding: Layout.cardPadding,
+    padding: Layout.listRow.controlPadding,
   },
   separator: {
     height: StyleSheet.hairlineWidth,

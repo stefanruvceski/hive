@@ -66,7 +66,7 @@ export function SettingsRow({
           </ThemedText>
           {value !== undefined && (
             <ThemedText
-              type={valueType}
+              type={valueType === 'code' ? 'rowCode' : 'row'}
               themeColor="textTertiary"
               // Identifiers can't wrap usefully: one line, cut in the middle so both ends stay.
               numberOfLines={valueType === 'code' ? 1 : undefined}

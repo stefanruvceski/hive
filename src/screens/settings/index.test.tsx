@@ -1,7 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
-import type { ReactNode } from 'react';
 
 import { useAppSettings, useSetAppSetting } from '@/hooks/use-app-settings';
 import { isApiConfigured } from '@/lib/api';
@@ -21,76 +20,6 @@ jest.mock('@/hooks/use-app-settings');
 const mutate = jest.fn();
 
 jest.mock('expo-router', () => ({ router: { back: jest.fn() } }));
-
-// Native boundary: @expo/ui views can't be pressed in Jest. Stand-ins with the same props, so the
-// app's own components (SegmentedControl, SettingsRow) run for real (agent-rules/09 §5).
-jest.mock('@expo/ui', () => {
-  const { Pressable, Text, View } = jest.requireActual('react-native');
-  return {
-    Host: ({ children, colorScheme }: { children: ReactNode; colorScheme?: string }) => (
-      <View testID="expo-ui-host" aria-label={`scheme-${colorScheme}`}>
-        {children}
-      </View>
-    ),
-    Switch: ({
-      value,
-      onValueChange,
-      label,
-      testID,
-    }: {
-      value: boolean;
-      onValueChange: (value: boolean) => void;
-      label?: string;
-      testID: string;
-    }) => (
-      <Pressable
-        role="switch"
-        aria-checked={value}
-        testID={testID}
-        onPress={() => onValueChange(!value)}>
-        {label !== undefined && <Text>{label}</Text>}
-      </Pressable>
-    ),
-  };
-});
-jest.mock('@expo/ui/swift-ui', () => {
-  const { Pressable, Text, View } = jest.requireActual('react-native');
-  return {
-    Host: ({ children, colorScheme }: { children: ReactNode; colorScheme?: string }) => (
-      <View testID="expo-ui-host" aria-label={`scheme-${colorScheme}`}>
-        {children}
-      </View>
-    ),
-    Text: ({ children }: { children: string }) => <Text>{children}</Text>,
-    Picker: ({
-      selection,
-      onSelectionChange,
-      children,
-      testID,
-    }: {
-      selection: string;
-      onSelectionChange: (value: string) => void;
-      children: { props: { children: string; modifiers: { tag: string }[] } }[];
-      testID: string;
-    }) => (
-      <View testID={testID}>
-        {children.map((option) => {
-          const value = option.props.modifiers[0]!.tag;
-          return (
-            <Pressable
-              key={value}
-              role="radio"
-              aria-checked={value === selection}
-              testID={`${testID}-${value}`}
-              onPress={() => onSelectionChange(value)}>
-              <Text>{option.props.children}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-    ),
-  };
-});
 
 // fontScale is what the rows react to; the rest is a plain phone window (copy of key-value-row.test).
 const window = (fontScale: number) => ({ width: 402, height: 874, scale: 3, fontScale });
@@ -192,19 +121,10 @@ describe('Settings preferences', () => {
   it('turns Show Today off, with the row label shown once', async () => {
     await renderSettings();
 
-    // The switch must not draw its own label next to the row's (Android renders it as text).
+    // The switch is named for screen readers but draws no second label next to the row's.
     expect(screen.getAllByText('Show Today')).toHaveLength(1);
-    await userEvent.setup().press(screen.getByTestId('settings-show-today'));
+    await userEvent.setup().press(screen.getByRole('switch', { name: 'Show Today' }));
     expect(mutate).toHaveBeenCalledWith({ key: 'showToday', value: false });
-  });
-
-  it('gives native controls the app scheme, not the phone scheme', async () => {
-    await renderSettings();
-
-    // A forced Dark/Light must reach SwiftUI/Compose too; jest-expo reports light.
-    const hosts = screen.getAllByTestId('expo-ui-host');
-    expect(hosts.length).toBeGreaterThan(0);
-    for (const host of hosts) expect(host).toHaveProp('aria-label', 'scheme-light');
   });
 
   it('saves the date format and shows an example in it', async () => {
