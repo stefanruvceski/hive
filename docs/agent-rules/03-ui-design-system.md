@@ -7,6 +7,7 @@
 - [ ] Colors only from `src/constants/theme.ts` via `useTheme()` / `ThemedText` / `ThemedView`. (lint)
 - [ ] Padding/margin/gap only from `Spacing` tokens.
 - [ ] Text through `ThemedText`; colored containers through `ThemedView`.
+- [ ] Text never overflows its container, at any system font size.
 - [ ] Every screen works in light **and** dark mode.
 - [ ] Native controls use `@expo/ui` first.
 - [ ] Images via `expo-image` (lint); animation via Reanimated 4 + Gesture Handler (lint for `Animated`/`Easing`).
@@ -38,6 +39,14 @@
 - Text color via `themeColor` (a `ThemeColor` key), never `style={{ color }}`.
 - [ThemedView](../../src/components/themed-view.tsx) `type` = any `ThemeColor` surface, default `background`.
 - A recurring new text style = a new `type` in `themed-text.tsx`. Font families from `Fonts`, never string literals.
+
+### Text stays inside its container
+
+RN `Text` defaults to `flexShrink: 0`, so in a row a long string keeps its full width and runs past its parent. `ThemedText` sets `flexShrink: 1` by default — don't override it to `0` except on a short label that must keep its width.
+
+- Label + value rows use [KeyValueRow](../../src/components/ui/key-value-row.tsx): the label keeps its width, the value wraps, and at accessibility text sizes (`fontScale` ≥ 1.5) the value stacks under the label.
+- Other rows: give the growing text `flex: 1` (or keep the default shrink) so it has room to wrap.
+- Wrap, don't truncate: no `numberOfLines` to "fix" overflow ([12 §3](12-accessibility-platform.md#3-dynamic-type--font-scaling)). Check at the largest system font size.
 
 ## 3. Dark mode
 
@@ -117,3 +126,4 @@ RN `Animated`/`Easing` imports are lint errors. `LayoutAnimation` and `PanRespon
 6. A JS-styled fake switch/sheet/menu when `@expo/ui` has the native one.
 7. Missing `recyclingKey` on `expo-image` in lists.
 8. Adding a color to only one scheme.
+9. Text in a row without room to shrink — it overflows the card. Use `KeyValueRow` or `flex: 1`.
