@@ -22,6 +22,31 @@ if (!id || !KEBAB.test(id) || id === 'registry') {
 }
 const { pascal, camel, snake, title } = names(id);
 
+// Checked before anything is written: the app's color and its default Home group
+// (docs/design/tokens.md, Main.dc.html).
+const themeSource = readFileSync(join(root, 'src/constants/theme.ts'), 'utf8');
+const tints = [
+  ...(themeSource.match(/export const AppTints = \{([\s\S]*?)\} as const;/)?.[1] ?? '').matchAll(
+    /^\s*([a-z]+):/gm,
+  ),
+].map((m) => m[1]);
+if (!tints.includes(id)) {
+  fail(
+    `No app color for "${id}": add it to AppTints in src/constants/theme.ts and docs/design/tokens.md first.`,
+  );
+}
+const defaultGroups = {
+  money: 'money',
+  wallet: 'money',
+  invest: 'money',
+  health: 'body-mind',
+  habits: 'body-mind',
+  books: 'creative',
+  drawify: 'creative',
+  music: 'creative',
+};
+const group = defaultGroups[id] ?? 'creative';
+
 const schema = `import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 // ${title} tables. Every table name starts with \`${snake}_\` so modules never collide in hive.db.
@@ -208,7 +233,7 @@ const files = [
 writeAll(files);
 invalidateRouteTypes();
 
-// Register on Home (default order = registry order; users can reorder/hide).
+// Register on Home (default order within its group = registry order).
 const registryPath = join(root, 'src/modules/registry.ts');
 const registry = readFileSync(registryPath, 'utf8');
 const entry = `  {
@@ -216,6 +241,8 @@ const entry = `  {
     title: '${title}',
     description: '${title} module.',
     icon: { ios: 'square.grid.2x2', android: 'apps', web: 'apps' },
+    tint: '${id}',
+    group: '${group}',
     href: '/${id}',
   },
 `;
@@ -237,7 +264,7 @@ console.warn(`
 Created module ${title} (${id}), registered it on Home and generated its first migration.
 
 Next steps:
-1. Set the real description and icon in src/modules/registry.ts.
+1. Set the real description, icon and Home group in src/modules/registry.ts.
 2. Replace the sample \`${snake}_items\` table, then \`pnpm db:generate\` (review the SQL before committing).
 3. Add screens with \`pnpm new:screen ${id}/<name>\`; put pure logic in src/modules/${id}/domain/ with tests.
 4. pnpm check — then rebuild the dev client only if you added a native dependency.`);
