@@ -1,6 +1,5 @@
-import { ActivityIndicator, StyleSheet } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -9,9 +8,9 @@ export function LoadingState({ testID }: { testID: string }) {
   const theme = useTheme();
 
   return (
-    <ThemedView style={styles.container} testID={testID} aria-busy>
+    <View style={styles.container} testID={testID} aria-busy>
       <ActivityIndicator color={theme.textSecondary} />
-    </ThemedView>
+    </View>
   );
 }
 

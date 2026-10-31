@@ -5,10 +5,11 @@ import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
+import { GlassCard } from '@/components/ui/glass-card';
 import { LoadingState } from '@/components/ui/loading-state';
+import { Wallpaper } from '@/components/ui/wallpaper';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { type HiveModule, hiveModules } from '@/modules/registry';
@@ -21,10 +22,10 @@ export function Home() {
   const [editing, setEditing] = useState(false);
 
   return (
-    <ThemedView style={styles.container}>
+    <Wallpaper style={styles.container}>
       <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.safeArea}>
         <View style={styles.header}>
-          <ThemedText type="subtitle" testID="home-title">
+          <ThemedText type="title" testID="home-title">
             Hive
           </ThemedText>
           <View style={styles.headerActions}>
@@ -35,7 +36,7 @@ export function Home() {
                 hitSlop={12}
                 onPress={() => setEditing((value) => !value)}
                 style={({ pressed }) => pressed && styles.pressed}>
-                <ThemedText type="linkPrimary">{editing ? 'Done' : 'Edit'}</ThemedText>
+                <ThemedText themeColor="accentText">{editing ? 'Done' : 'Edit'}</ThemedText>
               </Pressable>
             )}
             <Link href="/settings" asChild>
@@ -52,7 +53,7 @@ export function Home() {
         </View>
         <HomeContent editing={editing} />
       </SafeAreaView>
-    </ThemedView>
+    </Wallpaper>
   );
 }
 
@@ -150,27 +151,24 @@ function ModuleCard({
 }: ModuleCardProps) {
   const theme = useTheme();
   const { module, hidden } = card;
-  const body = (
-    <ThemedView
-      type="backgroundElement"
-      style={[styles.card, hidden && styles.hiddenCard]}
-      testID={`home-card-${module.id}`}>
-      <SymbolView name={module.icon} size={28} tintColor={theme.text} />
-      <ThemedText type="smallBold">{module.title}</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
-        {module.description}
-      </ThemedText>
-    </ThemedView>
+  // Dim the content, never the GlassCard: iOS can't blur under a faded view.
+  const body = (dimmed: boolean) => (
+    <GlassCard style={styles.card} testID={`home-card-${module.id}`}>
+      <View style={[styles.cardContent, dimmed && styles.dimmed]}>
+        <SymbolView name={module.icon} size={28} tintColor={theme.text} />
+        <ThemedText type="headline">{module.title}</ThemedText>
+        <ThemedText type="body" themeColor="textSecondary" numberOfLines={2}>
+          {module.description}
+        </ThemedText>
+      </View>
+    </GlassCard>
   );
 
   if (!editing) {
     return (
       <Link href={module.href} asChild>
-        <Pressable
-          role="button"
-          testID={`home-open-${module.id}`}
-          style={({ pressed }) => [{ flexBasis: basis }, pressed && styles.pressed]}>
-          {body}
+        <Pressable role="button" testID={`home-open-${module.id}`} style={{ flexBasis: basis }}>
+          {({ pressed }) => body(pressed || hidden)}
         </Pressable>
       </Link>
     );
@@ -178,7 +176,7 @@ function ModuleCard({
 
   return (
     <View style={{ flexBasis: basis }}>
-      {body}
+      {body(hidden)}
       <View style={styles.editRow}>
         <EditButton
           label={`Move ${module.title} up`}
@@ -265,12 +263,13 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.four,
   },
   card: {
-    gap: Spacing.two,
     padding: Spacing.three,
-    borderRadius: Spacing.four,
     minHeight: Spacing.six * 2,
   },
-  hiddenCard: {
+  cardContent: {
+    gap: Spacing.two,
+  },
+  dimmed: {
     opacity: 0.5,
   },
   editRow: {
