@@ -21,7 +21,31 @@
 
 ## 1. Theme tokens — the only source of color and spacing
 
-[src/constants/theme.ts](../../src/constants/theme.ts) holds `Colors.light`/`Colors.dark` (keys `text`, `background`, `backgroundElement`, `backgroundSelected`, `textSecondary`, `link`), `Spacing` (`half` 2, `one` 4, `two` 8, `three` 16, `four` 24, `five` 32, `six` 64), `Fonts` (`sans`, `serif`, `rounded`, `mono`), `MaxContentWidth`. (`BottomTabInset` and the `Fonts.web` entry are leftovers from the removed tab bar / web target — don't use them.)
+[src/constants/theme.ts](../../src/constants/theme.ts) turns [docs/design/tokens.md](../design/tokens.md) into code. Change the design first, then the token.
+
+| Export                           | Holds                                                                                                                                                                                                         | Read with                                     |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `Colors.light` / `Colors.dark`   | `background`, `text`, `textSecondary`/`Tertiary`/`Quaternary`, `glass` + `glassBorder`, `control` + `controlBorder` + `controlGlyph`, `separator`, `accent`, `accentText`, `onAccent`, `danger`               | `useTheme()`, `ThemedText`/`ThemedView` props |
+| `Effects.light` / `Effects.dark` | Non-color values: `wallpaper` (radial glows), `tile` (gradient), `glassShadow`/`controlShadow` (drop), `glassHighlight`/`controlHighlight` (inset top edge), `blurTint`, `tileShadow`, `tileBorderAlpha`      | `useThemeEffects()`                           |
+| `AppTints`                       | Per-app glyph/border color, `{ dark, light }`; never the accent teal                                                                                                                                          | `AppIcon`                                     |
+| `Layout`                         | Design sizes: `screenMargin` 20, `card` 169, `cardPadding` 13, grid gaps 12/14, `minTouch` 44, `control` 44 (glyph 21), `icon.card` 65/17, `icon.dock` 52/14, `radius` card 30 · sheet 38 · list 26 · dock 34 | import                                        |
+| `Spacing`                        | Generic steps `half` 2 … `six` 64 for spacing the design does not name                                                                                                                                        | import                                        |
+| `Blur`                           | `expo-blur` intensities matching the design's `blur(22px)` / `blur(24px)`                                                                                                                                     | glass components                              |
+| `Fonts`                          | `sans` (system font), `mono`                                                                                                                                                                                  | `ThemedText`                                  |
+
+Gradients and shadows use React Native's built-in `backgroundImage` / `boxShadow` styles — no gradient library.
+
+### Base components (`src/components/ui/`)
+
+- `Wallpaper` — wrap a whole screen: fixed background glow; glass inside it blurs the glow (Android needs it as the blur target).
+- `GlassSurface` — the one glass implementation (blur → token tint → border and highlight on top). `GlassCard`, `GlassButton` and `Collapsible` use it; never re-create glass from `theme.glass`.
+- `GlassCard` — frosted surface for cards (`variant="card"`, radius 30) and sheets (`"sheet"`, 38).
+- `GlassButton` — round 44 pt control with a symbol and an `aria-label`; Liquid Glass on iOS 26+, blur fallback elsewhere.
+- `AppIcon` — tinted tile, `size="card"` (65) or `"dock"` (52), glyph via `SymbolView`.
+- `SectionLabel` — section title (heading) or the small group name under a card.
+- `PrimaryButton` — accent-filled action (`accent` fill, `onAccent` text, 50 high).
+
+**Never fade glass.** iOS can't blur under a view with `opacity` < 1: put pressed or dimmed opacity on the content inside the glass, never on the glass or a parent of it (see `GlassButton`, Home's module cards).
 
 - Color literals outside `theme.ts`: enforced by `local/no-color-literals` (lint). In components resolve colors with `useTheme()` or Themed\* props, not `Colors.light.x`.
 - Spacing is not lint-checked: use `Spacing`; if a step is missing, add it to `theme.ts` in the same PR.
@@ -30,14 +54,14 @@
 
 ```tsx
 // ✅
-<View style={[styles.card, { backgroundColor: theme.backgroundElement }]} /> // card: { padding: Spacing.three }
+<View style={[styles.row, { borderBottomColor: theme.separator }]} /> // row: { paddingVertical: Spacing.three }
 // ❌
 <View style={{ backgroundColor: '#F0F0F3', padding: 16 }} />
 ```
 
 ## 2. ThemedText / ThemedView
 
-- [ThemedText](../../src/components/themed-text.tsx) `type` is the typography scale — never re-specify `fontSize`/`lineHeight`/`fontWeight` inline: `title` 48/52/600, `subtitle` 32/44/600, `default` 16/24/500, `small`/`smallBold` 14/20/500·700, `link`/`linkPrimary` 14/30 (`linkPrimary` colored `link`), `code` 12 mono.
+- [ThemedText](../../src/components/themed-text.tsx) `type` is the typography scale from the design — never re-specify `fontSize`/`lineHeight`/`fontWeight` inline: `date` 13/600 uppercase (`textTertiary`), `title` 30/700, `section` 17/600, `headline` 20/700, `number` 26/700, `body` 13, `groupLabel` 11/500 (`textQuaternary`), `row` 17 (default, list rows), `stateTitle` 22/28/700 and `stateBody` 15/21 (`textTertiary`) for empty states, `button` 16/600, `code` 13 mono. Sizes follow the system text size — no caps ([12 §3](12-accessibility-platform.md#3-dynamic-type--font-scaling)).
 - Text color via `themeColor` (a `ThemeColor` key), never `style={{ color }}`.
 - [ThemedView](../../src/components/themed-view.tsx) `type` = any `ThemeColor` surface, default `background`.
 - A recurring new text style = a new `type` in `themed-text.tsx`. Font families from `Fonts`, never string literals.
@@ -90,7 +114,7 @@ RN `Image`/`ImageBackground` are lint errors — import both from `expo-image`.
 
 - `tintColor` from `useTheme()`. Weights: `weight={{ ios: 'bold', android: bold }}` with `bold` imported from `expo-symbols/androidWeights/bold`.
 - Hive has no tab bar and no tab icons ([02 §5](02-navigation.md#5-layouts-and-stack)). Module icons are the `icon` name objects in `src/modules/registry.ts`, rendered by Home's cards.
-- `GlassView` (`expo-glass-effect`) is iOS 26+ only: gate with `isLiquidGlassAvailable()` and ship a `ThemedView` fallback.
+- `GlassView` (`expo-glass-effect`) is iOS 26+ only: gate with `isLiquidGlassAvailable()` and ship a fallback — `GlassButton` already does both.
 
 ## 7. Animations — Reanimated 4 + Gesture Handler only
 

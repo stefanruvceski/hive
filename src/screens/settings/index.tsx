@@ -1,21 +1,21 @@
 import { ScrollView, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { Wallpaper } from '@/components/ui/wallpaper';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 
 import { AppInfoCard } from './components/app-info-card';
 
 export function Settings() {
   return (
-    <ThemedView style={styles.container}>
+    <Wallpaper style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} contentInsetAdjustmentBehavior="automatic">
-        <ThemedText type="smallBold" themeColor="textSecondary" testID="settings-about">
+        <ThemedText type="body" themeColor="textQuaternary" testID="settings-about">
           ABOUT
         </ThemedText>
         <AppInfoCard />
       </ScrollView>
-    </ThemedView>
+    </Wallpaper>
   );
 }
 

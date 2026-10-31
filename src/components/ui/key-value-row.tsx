@@ -22,7 +22,7 @@ export function KeyValueRow({ label, value, testID }: Props) {
 
   return (
     <View style={stacked ? styles.stacked : styles.row} testID={testID && `${testID}-row`}>
-      <ThemedText type="small" style={styles.label}>
+      <ThemedText type="body" style={styles.label}>
         {label}
       </ThemedText>
       <ThemedText
