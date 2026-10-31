@@ -1,0 +1,19 @@
+# Home: the fixed header (date, greeting, Settings) and the way to Settings and back.
+# Run locally: pnpm test:e2e   (needs a dev build installed on the simulator/emulator)
+appId: com.ruvceski.hive.dev
+tags:
+  - home
+---
+- launchApp
+- assertVisible:
+    id: 'home-date'
+- assertVisible:
+    id: 'home-title'
+- tapOn:
+    id: 'home-settings'
+- assertVisible:
+    id: 'settings-title'
+- tapOn:
+    id: 'settings-back'
+- assertVisible:
+    id: 'home-title'
