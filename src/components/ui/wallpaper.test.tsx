@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { Colors, Effects } from '@/constants/theme';
 
 import { useWallpaperTarget, Wallpaper } from './wallpaper';
 
@@ -21,6 +21,15 @@ describe('Wallpaper', () => {
       backgroundColor: Colors.light.background,
     });
     expect(screen.getByText('Content')).toBeOnTheScreen();
+  });
+
+  // Android: `backgroundImage` is drawn only by plain RN views, not by expo-blur's BlurTargetView.
+  it('draws the glow on a plain view inside the blur target', async () => {
+    await render(<Wallpaper />);
+
+    const glow = screen.getByTestId('wallpaper-glow', { includeHiddenElements: true });
+    expect(glow.type).toBe('View');
+    expect(glow).toHaveStyle({ backgroundImage: Effects.light.wallpaper });
   });
 
   it('gives glass surfaces inside it a blur target', async () => {
