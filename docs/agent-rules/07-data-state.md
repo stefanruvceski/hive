@@ -100,7 +100,8 @@ export function useCreateHabit() {
 
 No feature uses a remote backend yet; `api<T>()`, `env.ts` and `src/app/api/health+api.ts` remain for future integrations (sync, imports).
 
-- ALWAYS `api<T>(path, init?)` from [src/lib/api.ts](../../src/lib/api.ts): prefixes `env.apiUrl`, sets JSON headers, applies a default 15 s timeout unless you pass a `signal`, throws `ApiError(status, message)` on non-2xx. Enforced by lint (`no-restricted-globals` fetch outside `api.ts` and `src/app/api/**`) — no exceptions in client code.
+- ALWAYS `api<T>(path, init?)` from [src/lib/api.ts](../../src/lib/api.ts): rejects with `ApiNotConfiguredError` (never retried) when no API URL is set, otherwise prefixes `env.apiUrl`, sets JSON headers, applies a default 15 s timeout unless you pass a `signal`, throws `ApiError(status, message)` on non-2xx. Enforced by lint (`no-restricted-globals` fetch outside `api.ts` and `src/app/api/**`) — no exceptions in client code.
+- Remote-only UI renders only when `isApiConfigured()` is true (copy `ServerRow` in `src/screens/settings/components/app-info-card.tsx`); the app must work fully without an API URL.
 - Error normalization happens only in `api.ts`; don't re-wrap `ApiError` in hooks — let it reach the query/mutation `error`.
 - Cross-cutting concerns (auth header, tracing) go in `api.ts`, not at call sites ([src/lib/AGENTS.md](../../src/lib/AGENTS.md)). No ad-hoc retry loops ([14 §2](14-errors-resilience.md)).
 

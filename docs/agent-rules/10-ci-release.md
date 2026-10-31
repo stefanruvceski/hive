@@ -30,7 +30,7 @@ graph LR
 
 **GitHub Actions** ([.github/workflows/](../../.github/workflows/), free Linux runners, all actions SHA-pinned, least-privilege `permissions`):
 
-- [ci.yml](../../.github/workflows/ci.yml) — `pnpm install --frozen-lockfile`, `pnpm doctor:expo`, `pnpm typecheck`, `pnpm lint`, `pnpm test:coverage --ci`, `pnpm docs:check`, `expo export --platform android` (bundle smoke check — web is not a target; needs `EXPO_PUBLIC_API_URL` in its env — see [review-lessons L-001](review-lessons.md)).
+- [ci.yml](../../.github/workflows/ci.yml) — `pnpm install --frozen-lockfile`, `pnpm doctor:expo`, `pnpm typecheck`, `pnpm lint`, `pnpm test:coverage --ci`, `pnpm docs:check`, `expo export --platform android` (bundle smoke check — web is not a target; runs with no `EXPO_PUBLIC_*` env on purpose, like EAS Update bundles).
 - [security.yml](../../.github/workflows/security.yml) — `pnpm audit --prod --audit-level=high`, OSV-Scanner on `pnpm-lock.yaml`, gitleaks. Also weekly on a schedule.
 - [fingerprint.yml](../../.github/workflows/fingerprint.yml) — labels the PR `fingerprint:changed` (merge ⇒ store build) or `fingerprint:compatible` (merge ⇒ OTA). This label is the authoritative "requires store release" signal; don't guess.
 - [preview.yml](../../.github/workflows/preview.yml) — EAS Update preview (`APP_VARIANT=development`) + QR comment. Reviewers open it in a **development build**; no native build is made, so a PR adding native code won't work in its preview — say so in the PR.
