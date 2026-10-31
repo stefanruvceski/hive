@@ -3,12 +3,19 @@
  * https://docs.expo.dev/guides/color-schemes/
  */
 
-import { Colors } from '@/constants/theme';
+import { Colors, Effects } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
-export function useTheme() {
-  const scheme = useColorScheme();
-  const theme = scheme === 'dark' ? 'dark' : 'light';
+/** The resolved scheme: anything but `dark` renders light. */
+export function useThemeName(): 'light' | 'dark' {
+  return useColorScheme() === 'dark' ? 'dark' : 'light';
+}
 
-  return Colors[theme];
+export function useTheme() {
+  return Colors[useThemeName()];
+}
+
+/** Gradients and shadows for the current scheme. */
+export function useThemeEffects() {
+  return Effects[useThemeName()];
 }

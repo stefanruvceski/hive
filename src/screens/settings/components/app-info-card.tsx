@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { ThemedView } from '@/components/themed-view';
+import { GlassCard } from '@/components/ui/glass-card';
 import { KeyValueRow } from '@/components/ui/key-value-row';
 import { Spacing } from '@/constants/theme';
 import { isApiConfigured } from '@/lib/api';
@@ -34,12 +34,12 @@ function ServerRow() {
 /** Build and OTA metadata. Keep it reachable in production — it makes bug reports actionable. */
 export function AppInfoCard() {
   return (
-    <ThemedView type="backgroundElement" style={styles.card} testID="app-info-card">
+    <GlassCard style={styles.card} testID="app-info-card">
       {rows.map(([label, value]) => (
         <KeyValueRow key={label} label={label} value={value} />
       ))}
       {isApiConfigured() && <ServerRow />}
-    </ThemedView>
+    </GlassCard>
   );
 }
 
@@ -48,6 +48,5 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
   },
 });

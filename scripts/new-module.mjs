@@ -65,10 +65,11 @@ export function use${pascal}Items() {
 const homeScreen = `import { FlatList, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
+import { GlassCard } from '@/components/ui/glass-card';
 import { LoadingState } from '@/components/ui/loading-state';
+import { Wallpaper } from '@/components/ui/wallpaper';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 
 import { type ${pascal}Item, use${pascal}Items } from '../../data/queries';
@@ -76,9 +77,9 @@ import { type ${pascal}Item, use${pascal}Items } from '../../data/queries';
 /** ${title}'s entry screen. The Stack header shows the title (src/app/${id}/index.tsx). */
 export function ${pascal}Home() {
   return (
-    <ThemedView style={styles.container} testID="${id}-screen">
+    <Wallpaper style={styles.container} testID="${id}-screen">
       <${pascal}Content />
-    </ThemedView>
+    </Wallpaper>
   );
 }
 
@@ -110,9 +111,9 @@ function ${pascal}Content() {
 const keyExtractor = (item: ${pascal}Item) => item.id;
 
 const renderItem = ({ item }: { item: ${pascal}Item }) => (
-  <ThemedView type="backgroundElement" style={styles.row} testID={\`${id}-item-\${item.id}\`}>
+  <GlassCard testID={\`${id}-item-\${item.id}\`}>
     <ThemedText>{item.title}</ThemedText>
-  </ThemedView>
+  </GlassCard>
 );
 
 const styles = StyleSheet.create({
@@ -125,10 +126,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     padding: Spacing.four,
     gap: Spacing.two,
-  },
-  row: {
-    padding: Spacing.three,
-    borderRadius: Spacing.three,
   },
 });
 `;

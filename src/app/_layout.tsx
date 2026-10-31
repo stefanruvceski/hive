@@ -8,7 +8,8 @@ import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { ErrorFallback } from '@/components/error-fallback';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Colors } from '@/constants/theme';
+import { useThemeName } from '@/hooks/use-theme';
 import { getDb } from '@/lib/db/client';
 import migrations from '@/lib/db/migrations/migrations';
 import { queryClient } from '@/lib/query-client';
@@ -21,7 +22,7 @@ export const unstable_settings = { screenErrorBoundary: ErrorFallback };
 export { ErrorFallback as ErrorBoundary };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const scheme = useThemeName();
   // Every module's tables are migrated before any screen renders (docs/agent-rules/07 §8).
   const { success, error } = useMigrations(getDb(), migrations);
 
@@ -36,13 +37,34 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <ThemeProvider value={navigationTheme[scheme]}>
           <Stack />
           <StatusBar style="auto" />
         </ThemeProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
   );
+}
+
+// Navigator chrome (headers, screen background) from the same tokens as the screens.
+const navigationTheme = {
+  light: navigationThemeFrom(DefaultTheme, Colors.light),
+  dark: navigationThemeFrom(DarkTheme, Colors.dark),
+};
+
+function navigationThemeFrom(base: typeof DefaultTheme, colors: (typeof Colors)['light' | 'dark']) {
+  return {
+    ...base,
+    colors: {
+      ...base.colors,
+      primary: colors.accentText,
+      background: colors.background,
+      card: colors.background,
+      text: colors.text,
+      border: colors.separator,
+      notification: colors.danger,
+    },
+  };
 }
 
 const styles = StyleSheet.create({
