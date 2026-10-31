@@ -79,9 +79,9 @@ New modules start from `pnpm new:module`, new screens from `pnpm new:screen`, ne
 
 ## Exemplars — copy these shapes
 
-- Thin route: `src/app/settings.tsx`. Launcher screen (four states, edit mode): `src/screens/home/`.
-- SQLite data hook (key factory, `queryOptions`, optimistic mutation): `src/screens/home/use-home-layout.ts`.
-- Pure logic + test: `src/screens/home/home-layout.ts`. Remote hook: `src/screens/settings/use-health.ts`.
+- Thin route: `src/app/settings.tsx`. Launcher screen (four states, fixed header, Dock): `src/screens/home/`.
+- SQLite data hook (key factory, `queryOptions`): `src/screens/home/use-home-layout.ts`; with an optimistic mutation: `src/hooks/use-app-settings.ts`.
+- Pure logic + test: `src/screens/home/home-groups.ts`. Remote hook: `src/screens/settings/use-health.ts`.
 - Loading / error / empty states: `src/components/ui/{loading,error,empty}-state.tsx`.
 - Tests: `src/components/ui/error-state.test.tsx` (component), `src/screens/home/index.test.tsx`
   (data hooks mocked), `src/screens/settings/index.test.tsx` (fresh QueryClient, `@/lib/api` mocked).
@@ -125,9 +125,9 @@ target: no `.web.tsx` files (`web.output: 'server'` exists only for API routes).
 ## Navigation
 
 Expo Router. Import `Link`, `router`, `useLocalSearchParams`, `Stack` from `expo-router`. The root
-`src/app/_layout.tsx` is a plain `<Stack />` — no tabs. Home (`/`, header hidden) shows a card per
-module (`home-open-<id>` links to `/<id>`), an Edit button and a gear link to `/settings`. Typed
-routes are enabled; never build hrefs from untyped strings.
+`src/app/_layout.tsx` is a plain `<Stack />` — no tabs. Home (`/`, header hidden) shows app groups
+as cards, pinned apps in a Dock (`home-dock-<id>` links to `/<id>`) and a Settings button (`/settings`).
+Typed routes are enabled; never build hrefs from untyped strings.
 
 ## Data
 
