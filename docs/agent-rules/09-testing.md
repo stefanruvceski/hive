@@ -1,6 +1,6 @@
 # 09 — Testing rules
 
-**Scope:** All unit, component, and E2E tests in Hive (Jest 30 + jest-expo ~58, @testing-library/react-native v14, Maestro flows in `.maestro/`). Exemplars: [src/screens/home/index.test.tsx](../../src/screens/home/index.test.tsx) (data hooks mocked), [src/screens/home/home-layout.test.ts](../../src/screens/home/home-layout.test.ts) (pure logic), [src/screens/settings/index.test.tsx](../../src/screens/settings/index.test.tsx) (remote, fresh QueryClient, `@/lib/api` mocked).
+**Scope:** All unit, component, and E2E tests in Hive (Jest 30 + jest-expo ~58, @testing-library/react-native v14, Maestro flows in `.maestro/`). Exemplars: [src/screens/home/index.test.tsx](../../src/screens/home/index.test.tsx) (data hooks mocked), [src/screens/home/home-groups.test.ts](../../src/screens/home/home-groups.test.ts) (pure logic), [src/screens/settings/index.test.tsx](../../src/screens/settings/index.test.tsx) (remote, fresh QueryClient, `@/lib/api` mocked).
 
 ## Non-negotiables
 
@@ -54,12 +54,12 @@ await waitFor(() => expect(screen.getByTestId('app-info-server')).toHaveTextCont
 - Behavior through the public surface: what renders, what happens on press/type, what is announced. Not state, hook internals, styles, render counts, or composite-element props.
 - One flow per test: render once, assert loading, await loaded UI, interact, assert the outcome. Do not slice a flow into tests sharing state via `beforeAll`.
 - Snapshots never stand alone; UI regression coverage belongs in Maestro.
-- Pure logic (e.g. [format-date.ts](../../src/utils/format-date.ts), [home-layout.ts](../../src/screens/home/home-layout.ts), a module's `domain/`): table-style unit tests, no rendering, no mocks. Hooks: test through a component; `renderHook` only for logic-only hooks.
+- Pure logic (e.g. [format-date.ts](../../src/utils/format-date.ts), [home-groups.ts](../../src/screens/home/home-groups.ts), a module's `domain/`): table-style unit tests, no rendering, no mocks. Hooks: test through a component; `renderHook` only for logic-only hooks.
 - Don't test third-party behavior, generated code, or trivial pass-through components.
 
 ## 5. Mocking rules
 
-- **Database boundary = the data hooks.** expo-sqlite has no JS implementation in Jest, so screens over SQLite mock their hook module — `jest.mock('../../data/queries')` in a module screen, `jest.mock('./use-home-layout')` in Home — and set return values with `jest.mocked(useThing).mockReturnValue(...)` (copy the Home test or a generated module test). Keep business logic out of hooks (in `domain/` / `home-layout.ts`) so it is tested for real. Never mock `drizzle-orm` or `@/lib/db/client` from a screen test.
+- **Database boundary = the data hooks.** expo-sqlite has no JS implementation in Jest, so screens over SQLite mock their hook module — `jest.mock('../../data/queries')` in a module screen, `jest.mock('./use-home-layout')` in Home — and set return values with `jest.mocked(useThing).mockReturnValue(...)` (copy the Home test or a generated module test). Keep business logic out of hooks (in `domain/` / `home-groups.ts`) so it is tested for real. Never mock `drizzle-orm` or `@/lib/db/client` from a screen test.
 - **Network boundary:** `jest.mock('@/lib/api', ...)` ([src/lib/api.ts](../../src/lib/api.ts)) — copy the Settings test's factory (`...jest.requireActual('@/lib/api')`, `api: jest.fn()`); use `jest.mocked(api)` for typed access. Everything above that boundary runs real code.
 - NEVER mock `fetch` per component, a child component you can render, or TanStack Query.
 - Native modules: jest-expo mocks the Expo SDK; add minimal mocks only for what it misses (pattern: `expo-updates` in [jest.setup.ts](../../jest.setup.ts)) — only the fields the app reads.

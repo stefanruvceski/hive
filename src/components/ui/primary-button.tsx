@@ -7,11 +7,13 @@ import { useTheme } from '@/hooks/use-theme';
 type Props = {
   label: string;
   onPress: () => void;
+  /** Shown but not usable yet; the label dims. */
+  disabled?: boolean;
   testID: string;
 };
 
 /** Accent-filled primary action ("Customize Home", "Try again" in docs/design/canvas/Empty.dc.html). */
-export function PrimaryButton({ label, onPress, testID }: Props) {
+export function PrimaryButton({ label, onPress, disabled = false, testID }: Props) {
   const theme = useTheme();
 
   return (
@@ -20,10 +22,12 @@ export function PrimaryButton({ label, onPress, testID }: Props) {
       aria-label={label}
       testID={testID}
       onPress={onPress}
+      disabled={disabled}
+      aria-disabled={disabled}
       style={({ pressed }) => [
         styles.button,
         { backgroundColor: theme.accent },
-        pressed && styles.pressed,
+        (pressed || disabled) && styles.pressed,
       ]}>
       <ThemedText type="button" themeColor="onAccent" style={styles.label}>
         {label}

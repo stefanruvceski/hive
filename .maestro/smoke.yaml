@@ -1,4 +1,4 @@
-# Smoke test: the app launches and the home screen renders.
+# Smoke test: the app launches and Home renders its header.
 # Run locally: pnpm test:e2e   (needs a dev build installed on the simulator/emulator)
 # https://docs.maestro.dev
 appId: com.ruvceski.hive.dev
@@ -9,8 +9,4 @@ tags:
 - assertVisible:
     id: 'home-title'
 - assertVisible:
-    id: 'app-info-card'
-- runFlow: subflows/navigate-to-explore.yaml
-- tapOn:
-    id: 'explore-routing'
-- assertVisible: 'Expo Router docs'
+    id: 'home-settings'

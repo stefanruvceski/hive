@@ -33,6 +33,12 @@ export const Colors = {
     /** Switch: track when off, and the knob. */
     switchOff: 'rgba(15,23,42,0.18)',
     switchKnob: '#FFFFFF',
+    /** Dock: capsule fill, its teal edge (also the Customize button's), the divider in it. */
+    dock: 'rgba(255,255,255,0.72)',
+    accentEdge: 'rgba(45,212,191,0.4)',
+    divider: 'rgba(15,23,42,0.12)',
+    /** Dashed outline of an empty app slot (empty Home). */
+    dashedSlot: 'rgba(15,23,42,0.18)',
     onAccent: '#042F2A',
     danger: '#DC2626',
   },
@@ -56,6 +62,10 @@ export const Colors = {
     segmentSelectedBorder: 'rgba(45,212,191,0.55)',
     switchOff: '#334155',
     switchKnob: '#FFFFFF',
+    dock: 'rgba(255,255,255,0.08)',
+    accentEdge: 'rgba(45,212,191,0.4)',
+    divider: 'rgba(255,255,255,0.16)',
+    dashedSlot: 'rgba(255,255,255,0.18)',
     onAccent: '#042F2A',
     danger: '#F87171',
   },
@@ -82,6 +92,13 @@ export const Effects = {
     /** Hex alpha appended to an app tint for the tile's 1 px border. */
     tileBorderAlpha: '33',
     switchKnobShadow: '0 2px 6px rgba(0,0,0,0.3)',
+    dockHighlight: 'inset 0 1px 0 rgba(255,255,255,0.9)',
+    dockShadow: '0 10px 30px rgba(15,23,42,0.15)',
+    /** Home: content fades under the fixed header and under the Dock. */
+    scrimTop:
+      'linear-gradient(180deg, rgba(238,242,245,0.78) 0%, rgba(238,242,245,0.6) 70%, rgba(238,242,245,0) 100%)',
+    scrimBottom:
+      'linear-gradient(0deg, rgba(238,242,245,0.92) 0%, rgba(238,242,245,0.55) 55%, rgba(238,242,245,0) 100%)',
   },
   dark: {
     wallpaper:
@@ -95,6 +112,12 @@ export const Effects = {
     tileShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 3px 10px rgba(0,0,0,0.45)',
     tileBorderAlpha: '45',
     switchKnobShadow: '0 2px 6px rgba(0,0,0,0.3)',
+    dockHighlight: 'inset 0 1px 0 rgba(255,255,255,0.28)',
+    dockShadow: '0 10px 30px rgba(0,0,0,0.5)',
+    scrimTop:
+      'linear-gradient(180deg, rgba(10,15,28,0.70) 0%, rgba(10,15,28,0.55) 70%, rgba(10,15,28,0) 100%)',
+    scrimBottom:
+      'linear-gradient(0deg, rgba(10,15,28,0.92) 0%, rgba(10,15,28,0.55) 55%, rgba(10,15,28,0) 100%)',
   },
 } as const;
 
@@ -161,6 +184,26 @@ export const Layout = {
   segmented: { height: 38, radius: 19, trackPadding: 3, trackRadius: 22 },
   /** Switch (Settings): track, inner padding, knob. */
   switch: { width: 51, height: 31, padding: 2, knob: 27 },
+  /** Home: gap between sections, scrim heights (top = under the header), Dock. */
+  home: {
+    sectionGap: 22,
+    /** The design's header sits 58 from the top of an 844 pt iPhone (47 pt safe area + 11). */
+    headerTop: 11,
+    scrimTopExtra: 10,
+    scrimBottom: 150,
+    /** Empty Home: description width, space kept free at the bottom, dashed slot outline. */
+    emptyTextMaxWidth: 300,
+    emptyBottom: 80,
+    slotBorder: 1.5,
+  },
+  dock: {
+    bottom: 28,
+    gap: 12,
+    padding: { vertical: 10, end: 10, start: 14 },
+    dividerHeight: 32,
+    customize: 52,
+    glyph: 22,
+  },
   /** Primary (accent-filled) button. */
   button: { height: 50, paddingHorizontal: 26 },
   /** Round glass button (Settings, Close, Back). */
@@ -176,6 +219,8 @@ export const Layout = {
 export const Blur = {
   glass: 40,
   control: 44,
+  /** The Dock's `blur(28px)`. */
+  dock: 50,
 } as const;
 
 export const MaxContentWidth = 800;

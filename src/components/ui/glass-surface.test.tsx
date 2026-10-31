@@ -31,4 +31,14 @@ describe('GlassSurface', () => {
       boxShadow: Effects.light.controlHighlight,
     });
   });
+
+  it('uses the Dock tokens for the Dock: teal edge, its own fill and shadow', async () => {
+    await render(<GlassSurface kind="dock" radius={34} testID="dock" />);
+
+    expect(screen.getByTestId('dock')).toHaveStyle({ boxShadow: Effects.light.dockShadow });
+    expect(screen.getByTestId('dock-edge')).toHaveStyle({
+      borderColor: Colors.light.accentEdge,
+      boxShadow: Effects.light.dockHighlight,
+    });
+  });
 });
