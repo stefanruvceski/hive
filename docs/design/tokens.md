@@ -22,8 +22,16 @@ Both themes are required (Settings → Appearance: System / Dark / Light).
 | `segmentTrack`    | `rgba(10,15,28,0.45)`                                      | `rgba(15,23,42,0.06)`                                    | Segmented control track                                         |
 | `segmentSelected` | `rgba(45,212,191,0.18)` + border `rgba(45,212,191,0.55)`   | `rgba(45,212,191,0.22)` + border `rgba(45,212,191,0.55)` | Chosen segment (text `accentText`; others `textSecondary`)      |
 | `switchOff`       | `#334155`                                                  | `rgba(15,23,42,0.18)`                                    | Switch track when off (on = `accent`); knob `#FFFFFF`           |
+| `dock`            | `rgba(255,255,255,0.08)`                                   | `rgba(255,255,255,0.72)`                                 | Dock capsule (blur 28)                                          |
+| `accentEdge`      | `rgba(45,212,191,0.4)`                                     | `rgba(45,212,191,0.4)`                                   | Dock border, Customize button border                            |
+| `divider`         | `rgba(255,255,255,0.16)`                                   | `rgba(15,23,42,0.12)`                                    | Divider between pinned apps and Customize in the Dock           |
+| `dashedSlot`      | `rgba(255,255,255,0.18)`                                   | `rgba(15,23,42,0.18)`                                    | Dashed empty app slot (empty Home; the last slot is `accent`)   |
 | `onAccent`        | `#042F2A`                                                  | `#042F2A`                                                | Text on a teal fill                                             |
 | `danger`          | `#F87171`                                                  | `#DC2626`                                                | Delete group                                                    |
+
+**Scrims** (Home): content fades under the fixed header (`scrimTop`, header height + 10) and under the
+Dock (`scrimBottom`, 150 high). Exact gradients: `c.scrimTop` / `c.scrimBottom` in
+[canvas/Main.dc.html](canvas/Main.dc.html). The Dock's shadow: `c.dockShadow` there.
 
 **Wallpaper glow** (fixed, does not scroll): five soft radial glows over `background` — teal top-left,
 amber right at ~22 %, teal left at ~52 %, violet right at ~74 %, teal bottom. Dark uses deep, saturated
@@ -58,7 +66,8 @@ use the accent teal as its tint (it would read as "selected").
 | App icon (Dock)         | 52, radius 14                                 | Glyph 26                               |
 | Card radius             | 30                                            | Sheets 38, list groups in Settings 26  |
 | Grid gap                | 12 across, 14 down                            | Group name sits 6 below its card       |
-| Dock                    | Glass capsule, radius 34, 28 above the bottom | Max 4 pinned + Customize button        |
+| Dock                    | Glass capsule, radius 34, 28 above the bottom | Max 4 pinned + Customize button (52)   |
+| Dock padding            | 10 · 10 · 10 · 14 (start), gap 12             | Divider 1 × 32                         |
 | Touch targets           | ≥ 44                                          | Buttons, dots (28 × 20 hit area)       |
 | Settings row            | ≥ 54 high, 16 side padding, 12 gap            | Icon tile 30, radius 8, glyph 16       |
 | Segmented control       | Segments 38 high, radius 19; track padding 3  | Track radius 22, 12 inside its card    |
