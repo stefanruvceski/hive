@@ -32,6 +32,15 @@ describe('Wallpaper', () => {
     expect(glow).toHaveStyle({ backgroundImage: Effects.light.wallpaper });
   });
 
+  // Android: glass blurs only what is inside the target. Without the base color there, light glass
+  // blurred empty pixels and turned grey.
+  it('puts the base color inside the blur target, under the glow', async () => {
+    await render(<Wallpaper />);
+
+    const glow = screen.getByTestId('wallpaper-glow', { includeHiddenElements: true });
+    expect(glow).toHaveStyle({ backgroundColor: Colors.light.background });
+  });
+
   it('gives glass surfaces inside it a blur target', async () => {
     await render(
       <>

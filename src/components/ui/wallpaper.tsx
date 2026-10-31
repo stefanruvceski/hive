@@ -31,10 +31,15 @@ export function Wallpaper({ style, children, ...rest }: ViewProps) {
         importantForAccessibility="no-hide-descendants"
         pointerEvents="none"
         style={StyleSheet.absoluteFill}>
-        {/* Android draws `backgroundImage` only on plain RN views, not on BlurTargetView itself. */}
+        {/* Android draws `backgroundImage` only on plain RN views, not on BlurTargetView itself.
+            The base color sits here too: Android glass blurs only the target, and empty pixels
+            under the glow turned light glass grey. */}
         <View
           testID="wallpaper-glow"
-          style={[StyleSheet.absoluteFill, { backgroundImage: effects.wallpaper }]}
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: theme.background, backgroundImage: effects.wallpaper },
+          ]}
         />
       </BlurTargetView>
       <WallpaperTarget value={target}>{children}</WallpaperTarget>
