@@ -1,0 +1,29 @@
+# Manual trigger: creates development builds (dev client) for simulators/emulators and devices.
+# Run with: eas workflow:run .eas/workflows/create-development-builds.yml
+# Prefer `pnpm build:dev:ios` / `pnpm build:dev:android` locally — it is free and unlimited.
+name: Create development builds
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  android_development_build:
+    name: Android development build
+    type: build
+    params:
+      platform: android
+      profile: development
+
+  ios_simulator_development_build:
+    name: iOS simulator development build
+    type: build
+    params:
+      platform: ios
+      profile: development-simulator
+
+  ios_device_development_build:
+    name: iOS device development build
+    type: build
+    params:
+      platform: ios
+      profile: development

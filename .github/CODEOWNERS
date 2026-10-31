@@ -1,0 +1,22 @@
+# Default owners for everything. Add path-specific owners as the team grows, e.g.
+# /src/screens/payments/  @payments-team
+*       @stefanruvceski
+
+# Guardrails: changes here weaken or redefine the rules agents work under, so they
+# always need the maintainer's review (docs/agent-rules/10, 13).
+/AGENTS.md                @stefanruvceski
+/CLAUDE.md                @stefanruvceski
+/docs/agent-rules/        @stefanruvceski
+/.claude/                 @stefanruvceski
+/.github/                 @stefanruvceski
+/.eas/                    @stefanruvceski
+/.husky/                  @stefanruvceski
+/eslint.config.js         @stefanruvceski
+/eslint/                  @stefanruvceski
+/tsconfig.json            @stefanruvceski
+/jest.setup.ts            @stefanruvceski
+/package.json             @stefanruvceski
+/pnpm-workspace.yaml      @stefanruvceski
+/renovate.json            @stefanruvceski
+/app.config.ts            @stefanruvceski
+/eas.json                 @stefanruvceski

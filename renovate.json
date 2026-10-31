@@ -1,0 +1,55 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    ":dependencyDashboard",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "timezone": "Europe/Belgrade",
+  "schedule": ["before 6am on monday"],
+  "minimumReleaseAge": "3 days",
+  "prConcurrentLimit": 5,
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "Expo SDK upgrade: one PR, approved on the dashboard, finished by hand with `npx expo install --fix` + `pnpm doctor:expo` (hosted Renovate cannot run it). Native change ⇒ store release.",
+      "matchSourceUrls": ["https://github.com/expo/expo"],
+      "matchUpdateTypes": ["major", "minor"],
+      "groupName": "Expo SDK",
+      "dependencyDashboardApproval": true,
+      "labels": ["dependencies", "expo-sdk"]
+    },
+    {
+      "description": "React and React Native move only together with the Expo SDK.",
+      "matchPackageNames": ["react", "react-dom", "react-native", "@types/react"],
+      "groupName": "Expo SDK",
+      "dependencyDashboardApproval": true,
+      "labels": ["dependencies", "expo-sdk"]
+    },
+    {
+      "description": "Patch releases within the current SDK — check the fingerprint label before merging.",
+      "matchSourceUrls": ["https://github.com/expo/expo"],
+      "matchUpdateTypes": ["patch"],
+      "groupName": "Expo SDK patches"
+    },
+    {
+      "description": "SDK-pinned native libraries: `npx expo install` owns their versions, never bump them alone.",
+      "matchPackageNames": [
+        "react-native-reanimated",
+        "react-native-worklets",
+        "react-native-gesture-handler",
+        "react-native-screens",
+        "react-native-safe-area-context",
+        "react-native-web"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Pinned tooling majors (docs/agent-rules/10): eslint 9 for eslint-config-expo, Jest 30 for jest-expo.",
+      "matchPackageNames": ["eslint", "jest", "@types/jest"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ]
+}

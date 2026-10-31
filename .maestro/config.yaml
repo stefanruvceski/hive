@@ -1,0 +1,7 @@
+# Flow discovery: only top-level files are flows; subflows/ are reusable steps
+# included via runFlow and never run standalone. (docs/agent-rules/09 §Maestro)
+flows:
+  - '*.yaml'
+# Scaffolded flows start as `wip` until their screen is wired into navigation.
+excludeTags:
+  - wip

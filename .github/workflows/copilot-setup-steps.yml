@@ -1,0 +1,33 @@
+# Prepares the GitHub Copilot cloud agent's environment so it can run `pnpm check`
+# instead of guessing. The job name must be exactly `copilot-setup-steps`.
+# https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/customize-the-agent-environment
+name: Copilot setup steps
+
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/copilot-setup-steps.yml']
+  pull_request:
+    paths: ['.github/workflows/copilot-setup-steps.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile

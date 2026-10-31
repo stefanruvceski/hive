@@ -1,0 +1,21 @@
+# pnpm settings (single-package repo — no `packages:` list needed).
+# Supply-chain guardrails: https://pnpm.io/supply-chain-security
+
+# Don't install versions published less than 3 days ago (most malicious releases are
+# yanked within hours). Matches Renovate's minimumReleaseAge.
+minimumReleaseAge: 4320
+# Expo's own packages are exempt: `npx expo install` pins them to the SDK, and SDK patch
+# releases (incl. platform binaries like @expo/modules-macros-*) must be installable on day one.
+minimumReleaseAgeExclude:
+  - expo
+  - 'expo-*'
+  - '@expo/*'
+  # Type declarations only (never executed); already locked transitively via Jest.
+  - '@types/node'
+
+# Dependency install scripts are blocked by default; allow-list them explicitly.
+# None are needed today — these two were reviewed and are safe to skip.
+onlyBuiltDependencies: []
+ignoredBuiltDependencies:
+  - '@parcel/watcher'
+  - unrs-resolver

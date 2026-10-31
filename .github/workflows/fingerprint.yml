@@ -1,0 +1,64 @@
+# Tells reviewers and agents whether a PR changes native code (docs/agent-rules/10):
+# `fingerprint:changed` ⇒ merging means a store build + submit, not an OTA update.
+# The run on main keeps the fingerprint database (Actions cache) current.
+name: Fingerprint
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: ['main']
+
+concurrency:
+  group: fingerprint-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  fingerprint:
+    name: Native fingerprint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: write # fingerprint database lives in the Actions cache
+      pull-requests: write # PR comment + label
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - id: fingerprint
+        uses: expo/expo-github-action/fingerprint@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e # v8
+        with:
+          packager: pnpm
+
+      - name: Label the PR
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          DIFF: ${{ steps.fingerprint.outputs.fingerprint-diff }}
+        run: |
+          gh label create 'fingerprint:changed' --color B60205 --force \
+            --description 'Native change: merge ships a store build, not OTA'
+          gh label create 'fingerprint:compatible' --color 0E8A16 --force \
+            --description 'JS-only: merge ships an OTA update'
+          if [ "$DIFF" = "[]" ]; then
+            gh pr edit "$PR" --add-label 'fingerprint:compatible' --remove-label 'fingerprint:changed'
+          else
+            gh pr edit "$PR" --add-label 'fingerprint:changed' --remove-label 'fingerprint:compatible'
+          fi

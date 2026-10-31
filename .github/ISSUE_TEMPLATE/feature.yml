@@ -1,0 +1,92 @@
+name: Feature
+description: A user-visible feature, specified so a human or an agent can implement it without guessing.
+labels: ['feature']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Write it so an agent can implement it from this issue alone. Unknowns are fine — mark them with ⚠️.
+        Implementation follows the `implement-feature` skill (`.claude/skills/implement-feature/SKILL.md`).
+
+  - type: input
+    id: module
+    attributes:
+      label: Module / area
+      description: Which part of Hive (e.g. Health, Habits, Money, Wallet, Books, shell/navigation).
+      placeholder: Habits
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: User goal
+      description: Who wants what, and why. One or two sentences.
+      placeholder: As a user I want to mark a habit done from the Today list so that my streak updates without opening the habit.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria (Given / When / Then)
+      description: One block per behavior, including empty, error and offline cases.
+      placeholder: |
+        Given a habit not done today
+        When I tap its checkbox
+        Then it shows as done and the streak count increases by one
+
+        Given the save fails
+        When I tap its checkbox
+        Then the checkbox reverts and a retryable error is shown
+    validations:
+      required: true
+
+  - type: textarea
+    id: screens
+    attributes:
+      label: Screens, routes and data
+      description: New or changed screens and routes; where the data comes from (local storage, API, device); shape of the data if known.
+      placeholder: |
+        - Changed: Today tab (src/screens/today)
+        - Data: habits are stored locally; a completion is { habitId, date }
+    validations:
+      required: true
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope / must not change
+      description: What the implementation must leave alone (shared components, navigation, data formats, other modules).
+    validations:
+      required: true
+
+  - type: dropdown
+    id: native
+    attributes:
+      label: Native change?
+      description: New native dependency, permission, config plugin, app.config.ts or eas.json change ⇒ store release instead of an OTA update (docs/agent-rules/08 §5).
+      options:
+        - No (OTA-safe)
+        - Yes (requires store release)
+        - Not sure ⚠️
+    validations:
+      required: true
+
+  - type: textarea
+    id: verify
+    attributes:
+      label: How to verify
+      description: What a reviewer does on the simulator/device to see it working (becomes the Maestro flow).
+      placeholder: |
+        1. Open Habits → Today
+        2. Tap the first habit's checkbox
+        3. See the streak change from 3 to 4
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Designs, screenshots, the hive-poc implementation, related issues.

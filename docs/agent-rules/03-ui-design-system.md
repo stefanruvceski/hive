@@ -1,0 +1,119 @@
+# 03 — UI & Design System
+
+**Scope:** Visual code in Hive — theme tokens, text and surfaces, dark mode, native controls, images, icons, animation, pressables, styles. Layout and safe areas: [04](04-responsive-adaptive.md). Accessibility: [12](12-accessibility-platform.md).
+
+## Non-negotiables
+
+- [ ] Colors only from `src/constants/theme.ts` via `useTheme()` / `ThemedText` / `ThemedView`. (lint)
+- [ ] Padding/margin/gap only from `Spacing` tokens.
+- [ ] Text through `ThemedText`; colored containers through `ThemedView`.
+- [ ] Every screen works in light **and** dark mode.
+- [ ] Native controls use `@expo/ui` first.
+- [ ] Images via `expo-image` (lint); animation via Reanimated 4 + Gesture Handler (lint for `Animated`/`Easing`).
+- [ ] Icons: `SymbolView` with a per-platform name object.
+- [ ] One `StyleSheet.create` at the bottom of the file — no `.styles.ts` files.
+- [ ] Stable kebab-case `testID` on interactive elements (lint for presence; naming is on you).
+
+---
+
+## 1. Theme tokens — the only source of color and spacing
+
+[src/constants/theme.ts](../../src/constants/theme.ts) holds `Colors.light`/`Colors.dark` (keys `text`, `background`, `backgroundElement`, `backgroundSelected`, `textSecondary`, `link`), `Spacing` (`half` 2, `one` 4, `two` 8, `three` 16, `four` 24, `five` 32, `six` 64), `Fonts` (`sans`, `serif`, `rounded`, `mono`), `MaxContentWidth`. (`BottomTabInset` and the `Fonts.web` entry are leftovers from the removed tab bar / web target — don't use them.)
+
+- Color literals outside `theme.ts`: enforced by `local/no-color-literals` (lint). In components resolve colors with `useTheme()` or Themed\* props, not `Colors.light.x`.
+- Spacing is not lint-checked: use `Spacing`; if a step is missing, add it to `theme.ts` in the same PR.
+- New colors are added as a **pair** (same key in `light` and `dark`) — a one-sided key drops out of `ThemeColor`.
+- No second theming mechanism (styled-components themes, color context providers, NativeWind color classes).
+
+```tsx
+// ✅
+<View style={[styles.card, { backgroundColor: theme.backgroundElement }]} /> // card: { padding: Spacing.three }
+// ❌
+<View style={{ backgroundColor: '#F0F0F3', padding: 16 }} />
+```
+
+## 2. ThemedText / ThemedView
+
+- [ThemedText](../../src/components/themed-text.tsx) `type` is the typography scale — never re-specify `fontSize`/`lineHeight`/`fontWeight` inline: `title` 48/52/600, `subtitle` 32/44/600, `default` 16/24/500, `small`/`smallBold` 14/20/500·700, `link`/`linkPrimary` 14/30 (`linkPrimary` colored `link`), `code` 12 mono.
+- Text color via `themeColor` (a `ThemeColor` key), never `style={{ color }}`.
+- [ThemedView](../../src/components/themed-view.tsx) `type` = any `ThemeColor` surface, default `background`.
+- A recurring new text style = a new `type` in `themed-text.tsx`. Font families from `Fonts`, never string literals.
+
+## 3. Dark mode
+
+- `userInterfaceStyle: 'automatic'` in `app.config.ts` (with `expo-system-ui` for Android) — never lock a scheme.
+- Scheme comes from `@/hooks/use-color-scheme` — RN's hook is a lint error. Don't branch on scheme for raw values; add a token pair.
+- `<StatusBar style="auto" />` lives in the root layout; never hardcode light/dark.
+- Check both schemes before calling UI done (iOS sim `Cmd+Shift+A`; Android `adb shell "cmd uimode night yes|no"`).
+
+## 4. @expo/ui first for native controls
+
+`@expo/ui` renders real SwiftUI / Jetpack Compose. Use it for sheets, pickers, switches, menus, date-time pickers, sliders, segmented controls, progress, and confirmation dialogs.
+
+- PREFER `@expo/ui/universal` (`BottomSheet`, `Button`, `Checkbox`, `Picker`, `Switch`, `Slider`, `TextInput`, `List`, `Icon`, `Host`, `Row`, `Column`, …) — one tree for all platforms. Use `@expo/ui/swift-ui` / `jetpack-compose` only for platform-specific needs and provide the other platform's version ([01 §7](01-architecture.md#7-platform-specific-code)); `swift-ui` renders nothing on Android.
+- Every `@expo/ui` subtree sits in a `Host` (`<Host matchContents><Switch … /></Host>`). Flexbox applies to the `Host` only; inside, lay out with `Row`/`Column` (or `HStack`/`VStack`). Re-entering `@expo/ui` from RN children needs a new `Host` — keep boundaries coarse.
+- Fallback only when `@expo/ui` lacks the component: RN built-ins (`Modal`, `Pressable`) or SDK-vetted libs. Before adding a community lib check the drop-ins (`BottomSheet`, `DateTimePicker`, `Menu`, `Picker`, `SegmentedControl`, `Slider`, `PagerView`, `MaskedView`).
+
+## 5. Images — expo-image only
+
+RN `Image`/`ImageBackground` are lint errors — import both from `expo-image`.
+
+- Always set `contentFit`; never `resizeMode`.
+- Remote images: `placeholder` (`{ blurhash }`/`{ thumbhash }`, else a themed background) with matching `placeholderContentFit`, and `transition={{ duration: 200, skipOnCacheHit: 'all' }}`.
+- In recycling lists, `recyclingKey={item.id}`.
+- `cachePolicy`: default `disk`; `memory-disk` for hot images; `none` only for privacy-sensitive content. `priority="high"` only above the fold; `Image.prefetch(urls)` for the next screen. Request sized remote images.
+- Meaningful images get `alt`; decorative ones none plus `aria-hidden`. Tint monochrome assets with `tintColor` from the theme.
+
+## 6. Icons — expo-symbols
+
+`SymbolView` renders SF Symbols on iOS and Material Symbols on Android. A bare string name renders **nothing** on Android. (The code also fills the `web` key so the name object type-checks; web is not a target.)
+
+```tsx
+// ✅
+<SymbolView name={{ ios: 'trash', android: 'delete', web: 'delete' }} tintColor={theme.text} size={24} />
+// ✅ deliberately iOS-only: give a fallback
+<SymbolView name="airpods.chargingcase" fallback={<SymbolView name={{ android: 'headphones', web: 'headphones' }} />} />
+// ❌
+<SymbolView name="trash" />
+```
+
+- `tintColor` from `useTheme()`. Weights: `weight={{ ios: 'bold', android: bold }}` with `bold` imported from `expo-symbols/androidWeights/bold`.
+- Hive has no tab bar and no tab icons ([02 §5](02-navigation.md#5-layouts-and-stack)). Module icons are the `icon` name objects in `src/modules/registry.ts`, rendered by Home's cards.
+- `GlassView` (`expo-glass-effect`) is iOS 26+ only: gate with `isLiquidGlassAvailable()` and ship a `ThemedView` fallback.
+
+## 7. Animations — Reanimated 4 + Gesture Handler only
+
+RN `Animated`/`Easing` imports are lint errors. `LayoutAnimation` and `PanResponder` are banned too (not lint-caught).
+
+- Never read or write `sharedValue.value` during render (breaks React Compiler); `setState` from a worklet only via `runOnJS`.
+- PREFER declarative `entering`/`exiting`/`layout` (`FadeIn`, `LinearTransition`) over hand-rolled mount animations — see [collapsible.tsx](../../src/components/ui/collapsible.tsx).
+- Animate `transform`/`opacity`, not layout props, especially in lists. Performance rules: [05](05-performance.md).
+- Gate decorative animation behind `useReducedMotion()` ([12](12-accessibility-platform.md)).
+
+## 8. Pressables & feedback
+
+- `Pressable` (or Gesture Handler equivalents); no new `TouchableOpacity`/`TouchableHighlight`.
+- Pressed feedback from theme tokens: `style={({ pressed }) => pressed && styles.pressed}` — copy [error-state.tsx](../../src/components/ui/error-state.tsx).
+- Haptics: `expo-haptics` is **not installed**. Adding it = `npx expo install expo-haptics` (native dep ⇒ store release, flag it in the PR). Then `Haptics.selectionAsync()` for selection changes, `impactAsync(ImpactFeedbackStyle.Light)` for confirmations. Never on scroll/passive events.
+
+## 9. StyleSheet conventions
+
+- `const styles = StyleSheet.create({ … })` at the **bottom** of the component file; no `.styles.ts`, no inline literals for static styles.
+- Dynamic values (theme colors, insets, animated values) merge via arrays — never spread one style into another.
+- Keys named by role (`container`, `row`), not appearance (`redBox`). Shared styles ⇒ promote a component, not an exported stylesheet.
+
+## 10. Accessibility & testID (summary — full rules in file 12)
+
+- Roles, accessible names, touch targets, contrast: [12](12-accessibility-platform.md).
+- `testID` presence on `Pressable`/`TextInput`/`Switch`/`Touchable*` is enforced by `local/require-testid` (lint). Naming is not: stable, kebab-case, semantic (`submit-order`, `` `hive-card-${id}` ``); never from display text or index alone; never renamed casually — Maestro and RNTL depend on them.
+
+## Common agent mistakes
+
+1. `padding: 16` "just this once" instead of `Spacing`.
+2. Bare RN `Text`/`View` with colors where `ThemedText`/`ThemedView` exist — breaks dark mode.
+3. A bare SF Symbol string in `SymbolView` — blank icons on Android.
+4. Reading `sharedValue.value` during render.
+5. `@expo/ui` without a `Host`, or flexbox inside the native context.
+6. A JS-styled fake switch/sheet/menu when `@expo/ui` has the native one.
+7. Missing `recyclingKey` on `expo-image` in lists.
+8. Adding a color to only one scheme.

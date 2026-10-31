@@ -1,0 +1,57 @@
+# Quality gate on every PR and on main. Runs on GitHub's free Linux runners —
+# no EAS minutes, no macOS runners (10x minute multiplier).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: ['main']
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Typecheck, lint, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Expo doctor
+        run: pnpm doctor:expo
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Agent docs (links, scripts, length)
+        run: pnpm docs:check
+
+      # Thresholds in package.json are a ratchet: raise them as coverage grows, never lower them.
+      - name: Unit tests (coverage ratchet)
+        run: pnpm test:coverage --ci
+
+      - name: Export Android bundle (smoke check that the app compiles)
+        run: pnpm exec expo export --platform android
+        env:
+          # Inlined at bundle time; src/lib/env.ts throws without it. Placeholder is fine for a compile check.
+          EXPO_PUBLIC_API_URL: http://ci.invalid

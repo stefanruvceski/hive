@@ -1,0 +1,20 @@
+# Normalize line endings: LF in the repo and in every checkout (matches .editorconfig).
+* text=auto eol=lf
+
+# Binary assets: never diff or normalize.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.db binary
+
+# Generated files: collapsed in GitHub diffs and excluded from language stats.
+pnpm-lock.yaml linguist-generated=true -diff
+src/lib/db/migrations/meta/** linguist-generated=true
+src/lib/db/migrations/migrations.js linguist-generated=true

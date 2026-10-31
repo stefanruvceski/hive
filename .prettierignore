@@ -1,0 +1,10 @@
+node_modules
+.expo
+dist
+ios
+android
+coverage
+pnpm-lock.yaml
+*.png
+*.svg
+src/lib/db/migrations
