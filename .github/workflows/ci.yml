@@ -34,8 +34,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Upstream Expo patch releases only warn on regular PRs (#21); every other doctor check fails
+      # the job. Renovate dependency PRs run the strict check, since they are what fixes the drift.
       - name: Expo doctor
-        run: pnpm doctor:expo
+        run: pnpm ${{ startsWith(github.head_ref, 'renovate/') && 'doctor:expo' || 'doctor:ci' }}
 
       - name: Typecheck
         run: pnpm typecheck
