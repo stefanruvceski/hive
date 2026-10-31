@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Write it so an agent can implement it from this issue alone. Unknowns are fine — mark them with ⚠️.
+        Write it in English, so an agent can implement it from this issue alone. Unknowns are fine — mark them with ⚠️.
         Implementation follows the `implement-feature` skill (`.claude/skills/implement-feature/SKILL.md`).
 
   - type: input

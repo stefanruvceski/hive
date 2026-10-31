@@ -24,6 +24,11 @@ solo maintainer, and a hard rule that **agents never run git**.
 - Every implementation task is tracked by a GitHub issue before code changes start. If none
   exists, draft one (title + body) for the user to create — or create it only if explicitly
   asked.
+- English only: titles, bodies, comments, labels and milestones — even when the user talks to
+  you in another language. Translate their words; don't paste them.
+- Epics are issues labeled `epic`; their stories are linked as sub-issues. Each story carries a
+  `feature`/`bug`/`chore` label, one `module:<id>` or `area:<name>` label and, when planned, a
+  milestone.
 - Never write a story straight from a vague prompt. Interview first: the user-facing goal, who
   the user is, where it lives (screen/route/platform), and what done looks like; what must not
   change (shared components, navigation, API contracts, theme tokens).

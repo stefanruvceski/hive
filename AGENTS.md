@@ -3,7 +3,8 @@
 Hive is an Expo / React Native app (iOS + Android only — web is not a target) built with Expo SDK 58,
 Expo Router and TypeScript. It is a home for mini-apps ("modules": Health, Habits, Money, Wallet,
 Books…) that keep all data on the phone in SQLite ([ADR 0001](docs/decisions/0001-modules-sqlite-native-only.md)).
-It is developed by people and AI agents together; these rules apply to both.
+It is developed by people and AI agents together; these rules apply to both. **All repo and GitHub
+content is in English** (code, docs, commits, issues, PRs, comments); only live chat may differ.
 
 **Detailed rulebooks live in [docs/agent-rules/](docs/agent-rules/README.md).** Before working on a
 feature, open the index there and read the files for the domains you'll touch (architecture,
