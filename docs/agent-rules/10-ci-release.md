@@ -5,7 +5,7 @@
 ## Non-negotiables
 
 - [ ] `pnpm check` passes before a task is done (hook: Stop; CI re-runs it with coverage).
-- [ ] `pnpm deps:check` clean before every PR; `pnpm doctor:expo` after any dependency change (CI runs `doctor:expo`).
+- [ ] `pnpm deps:check` clean before every PR; `pnpm doctor:expo` after any dependency change. CI runs `pnpm doctor:ci`: a new upstream Expo patch release only warns on regular PRs; Renovate PRs run the strict `doctor:expo` (#21).
 - [ ] Local agents never change git state — hand over commit/PR text (hook: guard-git). Whoever commits never uses `--no-verify`.
 - [ ] A PR labelled `fingerprint:changed` (CI: fingerprint.yml) MUST say **"requires store release"** in its description, with the reason.
 - [ ] NEVER publish (or let merge publish) an OTA update that depends on new native code.
