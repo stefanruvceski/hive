@@ -94,7 +94,7 @@ export function useCreateHabit() {
 - MUST invalidate (or `setQueryData`) every affected key via the factory hierarchy. Prefer invalidation unless the write returns the complete updated entity. Multi-statement writes run in one `getDb().transaction((tx) => …)`.
 - **Callback placement:** cache work (invalidate, writes, rollback) in the hook's `useMutation` callbacks; UI effects (navigation, toasts) in the call-site `mutate(vars, { onSuccess })`, which don't fire after unmount.
 - Prefer `mutate`. `mutateAsync` only for promise-shaped needs (`Promise.all`, sequential mutations) and always inside `try/catch`.
-- **Optimistic updates** for instant-feedback actions (toggles, reorders) — local writes rarely fail, so they suit SQLite well; reference: `useSaveHomeLayout` in [use-home-layout.ts](../../src/screens/home/use-home-layout.ts). One consumer → render `variables` while `isPending`. Several screens → cache pattern: `onMutate` must `cancelQueries`, snapshot, `setQueryData`, return the snapshot; `onError` restores; `onSettled` invalidates. Submit-and-close/redirect forms use `isPending` on the button instead.
+- **Optimistic updates** for instant-feedback actions (toggles, reorders) — local writes rarely fail, so they suit SQLite well; reference: `useSetAppSetting` in [use-app-settings.ts](../../src/hooks/use-app-settings.ts). One consumer → render `variables` while `isPending`. Several screens → cache pattern: `onMutate` must `cancelQueries`, snapshot, `setQueryData`, return the snapshot; `onError` restores; `onSettled` invalidates. Submit-and-close/redirect forms use `isPending` on the button instead.
 
 ## 3. API client (remote — secondary)
 
@@ -138,7 +138,7 @@ Only when all hold: the state is client-only, used by 3+ unrelated screens/compo
 ## 8. Persistence — SQLite + Drizzle
 
 - **One database:** `hive.db`, opened lazily by `getDb()` in [src/lib/db/client.ts](../../src/lib/db/client.ts) — never at import time ([review-lessons L-001](review-lessons.md)). Don't open other databases.
-- **Schema:** core tables in [src/lib/db/schema.ts](../../src/lib/db/schema.ts) (e.g. `home_modules`); module tables in `src/modules/<id>/data/schema.ts`, every name prefixed `<id_snake>_`. A module only reads/writes its own tables.
+- **Schema:** core tables in [src/lib/db/schema.ts](../../src/lib/db/schema.ts) (e.g. `home_groups`, `home_apps`, `settings`); module tables in `src/modules/<id>/data/schema.ts`, every name prefixed `<id_snake>_`. A module only reads/writes its own tables.
 - **Migrations:** [drizzle.config.ts](../../drizzle.config.ts) collects all schema files; `pnpm db:generate` (drizzle-kit) writes SQL + `migrations.js` to `src/lib/db/migrations/`. Generated, lint/prettier-ignored, committed, never hand-edited; review the SQL before committing. A destructive change (drop/rename column) needs a data-preserving migration — say so in the PR.
 - **Applying:** the root layout runs `useMigrations(getDb(), migrations)` and keeps the splash up until done; a migration error throws to the root ErrorBoundary ([14 §1](14-errors-resilience.md)). `babel.config.js` (inline-import for `.sql`) and `metro.config.js` (`sql` source extension) make the migrations bundleable — don't remove them.
 - **Tests:** expo-sqlite has no JS implementation in Jest — mock the data hooks and test pure logic directly ([09 §5](09-testing.md)).
