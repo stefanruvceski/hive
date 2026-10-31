@@ -14,6 +14,8 @@ type TextType =
   | 'body'
   | 'groupLabel'
   | 'row'
+  | 'listHeader'
+  | 'footnote'
   | 'stateTitle'
   | 'stateBody'
   | 'button'
@@ -28,6 +30,8 @@ const defaultColor: Partial<Record<TextType, ThemeColor>> = {
   date: 'textTertiary',
   groupLabel: 'textQuaternary',
   stateBody: 'textTertiary',
+  listHeader: 'textQuaternary',
+  footnote: 'textQuaternary',
 };
 
 export function ThemedText({ style, type = 'row', themeColor, ...rest }: ThemedTextProps) {
@@ -88,6 +92,16 @@ const styles = StyleSheet.create({
   /** List rows (Settings, sheets). */
   row: {
     fontSize: 17,
+  },
+  /** Header above a Settings list group. */
+  listHeader: {
+    fontSize: 15,
+    fontWeight: 600,
+  },
+  /** Explanation under a Settings list group. */
+  footnote: {
+    fontSize: 13,
+    lineHeight: 18,
   },
   /** Empty-state title (docs/design/canvas/Empty.dc.html). */
   stateTitle: {

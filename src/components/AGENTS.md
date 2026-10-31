@@ -1,6 +1,6 @@
 # src/components — reusable UI
 
-Components used by two or more screens or modules. `ui/` holds lower-level primitives: the design's base components (`Wallpaper`, `GlassSurface`, `GlassCard`, `GlassButton`, `AppIcon`, `SectionLabel`, `PrimaryButton`), loading/error/empty states, collapsible. Build new UI from them instead of re-creating glass or tiles, and never put `opacity` on glass or its parents (iOS stops blurring) — fade the content inside. Never import from `src/app`, `src/screens` or `src/modules` (lint enforces it).
+Components used by two or more screens or modules. `ui/` holds lower-level primitives: the design's base components (`Wallpaper`, `GlassSurface`, `GlassCard`, `GlassButton`, `AppIcon`, `SectionLabel`, `PrimaryButton`, `SegmentedControl`), loading/error/empty states, collapsible. Build new UI from them instead of re-creating glass or tiles, and never put `opacity` on glass or its parents (iOS stops blurring) — fade the content inside. Never import from `src/app`, `src/screens` or `src/modules` (lint enforces it).
 
 - **Theme only.** Text via `ThemedText` (pick a `type`, color via `themeColor`), surfaces via `ThemedView`, spacing via `Spacing`, colors via `useTheme()`. Color literals fail lint ([03 §1–2](../../docs/agent-rules/03-ui-design-system.md)).
 - **Text never overflows its container.** `ThemedText` shrinks by default — don't set `flexShrink: 0` on growing text; label + value rows use `ui/key-value-row.tsx`; wrap, never truncate ([03 §2](../../docs/agent-rules/03-ui-design-system.md)).

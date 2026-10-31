@@ -1,0 +1,22 @@
+# Settings: open it from Home, switch Appearance, come back.
+# Run locally: pnpm test:e2e   (needs a dev build installed on the simulator/emulator)
+appId: com.ruvceski.hive.dev
+tags:
+  - settings
+---
+- launchApp
+- tapOn:
+    id: 'home-settings'
+- assertVisible:
+    id: 'settings-title'
+- assertVisible:
+    id: 'settings-show-today'
+# Native segmented control: the option text is the behavior under test.
+- tapOn: 'Light'
+- assertVisible:
+    id: 'app-info-card'
+- tapOn: 'System'
+- tapOn:
+    id: 'settings-back'
+- assertVisible:
+    id: 'home-title'

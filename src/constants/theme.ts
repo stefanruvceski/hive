@@ -24,6 +24,8 @@ export const Colors = {
     accent: '#2DD4BF',
     /** Teal text and icons (light needs the darker shade for contrast). */
     accentText: '#0F766E',
+    /** Faint teal behind a list-row icon (Settings). */
+    accentFill: 'rgba(45,212,191,0.22)',
     onAccent: '#042F2A',
     danger: '#DC2626',
   },
@@ -41,6 +43,7 @@ export const Colors = {
     separator: 'rgba(255,255,255,0.08)',
     accent: '#2DD4BF',
     accentText: '#2DD4BF',
+    accentFill: 'rgba(45,212,191,0.16)',
     onAccent: '#042F2A',
     danger: '#F87171',
   },
@@ -129,6 +132,8 @@ export const Layout = {
   /** Group name sits this far below its card. */
   groupLabelGap: 6,
   minTouch: 44,
+  /** Settings list: row height, icon tile. */
+  listRow: { minHeight: 54, paddingHorizontal: 16, icon: { size: 30, radius: 8, glyph: 16 } },
   /** Primary (accent-filled) button. */
   button: { height: 50, paddingHorizontal: 26 },
   /** Round glass button (Settings, Close, Back). */

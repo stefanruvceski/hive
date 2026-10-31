@@ -5,7 +5,7 @@ import { Settings } from '@/screens/settings';
 export default function SettingsRoute() {
   return (
     <>
-      <Stack.Screen options={{ title: 'Settings' }} />
+      <Stack.Screen options={{ title: 'Settings', headerShown: false }} />
       <Settings />
     </>
   );

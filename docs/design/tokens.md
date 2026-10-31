@@ -18,6 +18,7 @@ Both themes are required (Settings → Appearance: System / Dark / Light).
 | `separator`      | `rgba(255,255,255,0.08)`                                   | `rgba(15,23,42,0.08)`                                   | List row dividers                                               |
 | `accent`         | `#2DD4BF`                                                  | `#2DD4BF`                                               | Fills: primary buttons, switches, active dot, selection ring    |
 | `accentText`     | `#2DD4BF`                                                  | `#0F766E`                                               | Teal text and icons (light needs the darker shade for contrast) |
+| `accentFill`     | `rgba(45,212,191,0.16)`                                    | `rgba(45,212,191,0.22)`                                 | Faint teal behind a Settings row icon                           |
 | `onAccent`       | `#042F2A`                                                  | `#042F2A`                                               | Text on a teal fill                                             |
 | `danger`         | `#F87171`                                                  | `#DC2626`                                               | Delete group                                                    |
 
@@ -56,19 +57,22 @@ use the accent teal as its tint (it would read as "selected").
 | Grid gap                | 12 across, 14 down                            | Group name sits 6 below its card       |
 | Dock                    | Glass capsule, radius 34, 28 above the bottom | Max 4 pinned + Customize button        |
 | Touch targets           | ≥ 44                                          | Buttons, dots (28 × 20 hit area)       |
+| Settings row            | ≥ 54 high, 16 side padding                    | Icon tile 30, radius 8, glyph 16       |
 
 ## Type (SF Pro on iOS, Roboto on Android — system font, no custom font)
 
-| Style                        | Default                     | Largest accessibility size |
-| ---------------------------- | --------------------------- | -------------------------- |
-| Date line                    | 13 semibold, uppercase      | 17                         |
-| Screen title                 | 30 bold, one line           | 40 bold, may wrap          |
-| Section title ("Today")      | 17 semibold                 | 24                         |
-| Widget headline              | 20 bold                     | 28                         |
-| Widget big number            | 26 bold                     | 38                         |
-| Body / labels                | 13                          | 18–19                      |
-| Group name under a card      | 11 medium, `textQuaternary` | 17                         |
-| List rows (Settings, sheets) | 17                          | follows Dynamic Type       |
+| Style                        | Default                       | Largest accessibility size |
+| ---------------------------- | ----------------------------- | -------------------------- |
+| Date line                    | 13 semibold, uppercase        | 17                         |
+| Screen title                 | 30 bold, one line             | 40 bold, may wrap          |
+| Section title ("Today")      | 17 semibold                   | 24                         |
+| Widget headline              | 20 bold                       | 28                         |
+| Widget big number            | 26 bold                       | 38                         |
+| Body / labels                | 13                            | 18–19                      |
+| Group name under a card      | 11 medium, `textQuaternary`   | 17                         |
+| List rows (Settings, sheets) | 17                            | follows Dynamic Type       |
+| Settings group header        | 15 semibold, `textQuaternary` | follows Dynamic Type       |
+| Settings footnote            | 13 / 18, `textQuaternary`     | follows Dynamic Type       |
 
 At the largest sizes Today widgets become full width (one per page); group cards stay square because
 they hold no text.

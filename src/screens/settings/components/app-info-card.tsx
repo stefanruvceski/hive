@@ -1,21 +1,23 @@
-import { StyleSheet } from 'react-native';
-
-import { GlassCard } from '@/components/ui/glass-card';
-import { KeyValueRow } from '@/components/ui/key-value-row';
-import { Spacing } from '@/constants/theme';
 import { isApiConfigured } from '@/lib/api';
 import { getAppInfo } from '@/lib/app-info';
 
 import { useHealth } from '../use-health';
+import { SettingsGroup } from './settings-group';
+import { SettingsRow } from './settings-row';
 
 const info = getAppInfo();
 
-const rows: [label: string, value: string][] = [
-  ['Variant', info.variant],
-  ['Version', info.version],
-  ['Runtime', info.runtimeVersion],
-  ['Channel', info.updateChannel],
-  ['Update', info.isEmbeddedLaunch ? 'embedded' : info.updateId],
+const rows: { label: string; value: string; code?: boolean; testID: string }[] = [
+  { label: 'Variant', value: info.variant, testID: 'app-info-variant' },
+  { label: 'Version', value: info.version, testID: 'app-info-version' },
+  { label: 'Runtime', value: info.runtimeVersion, code: true, testID: 'app-info-runtime' },
+  { label: 'Channel', value: info.updateChannel, testID: 'app-info-channel' },
+  {
+    label: 'Update',
+    value: info.isEmbeddedLaunch ? 'embedded' : info.updateId,
+    code: true,
+    testID: 'app-info-update',
+  },
 ];
 
 /** Server reachability. Rendered only when an API URL is configured — Hive is local-first. */
@@ -28,25 +30,23 @@ function ServerRow() {
       ? 'unreachable'
       : health.data.status;
 
-  return <KeyValueRow label="Server" value={serverValue} testID="app-info-server" />;
+  return <SettingsRow label="Server" value={serverValue} testID="app-info-server" />;
 }
 
 /** Build and OTA metadata. Keep it reachable in production — it makes bug reports actionable. */
 export function AppInfoCard() {
   return (
-    <GlassCard style={styles.card} testID="app-info-card">
-      {rows.map(([label, value]) => (
-        <KeyValueRow key={label} label={label} value={value} />
+    <SettingsGroup title="About" testID="app-info-card" titleTestID="settings-about">
+      {rows.map((row) => (
+        <SettingsRow
+          key={row.label}
+          label={row.label}
+          value={row.value}
+          valueType={row.code ? 'code' : 'row'}
+          testID={row.testID}
+        />
       ))}
       {isApiConfigured() && <ServerRow />}
-    </GlassCard>
+    </SettingsGroup>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    gap: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-  },
-});
