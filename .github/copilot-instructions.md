@@ -3,6 +3,7 @@ The project conventions for humans and agents live in [AGENTS.md](../AGENTS.md).
 Hard rules (some Copilot surfaces don't load AGENTS.md, so they are repeated here):
 
 - English only for everything in the repo and on GitHub (code, comments, docs, commits, issues, PRs, reviews).
+- No AI attribution in commits or PRs: never add a `Co-authored-by:` trailer for Copilot, Claude or any other AI tool, or any "Generated with/by …" text, to commit messages, PR titles or PR descriptions.
 - pnpm only. `npx expo install <pkg>` for any `expo-*` / `react-native-*` package.
 - Done means `pnpm check` (typecheck + lint + test) passes. Lint runs with `--max-warnings 0`.
 - Never edit, skip or delete a test to make it pass; report the spec/test conflict instead.
