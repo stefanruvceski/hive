@@ -19,4 +19,16 @@ describe('PrimaryButton', () => {
     await userEvent.setup().press(button);
     expect(onPress).toHaveBeenCalledTimes(1);
   });
+
+  it('can be shown but not usable yet', async () => {
+    const onPress = jest.fn();
+    await render(
+      <PrimaryButton label="Customize Home" onPress={onPress} disabled testID="customize" />,
+    );
+
+    const button = screen.getByRole('button', { name: 'Customize Home' });
+    expect(button).toBeDisabled();
+    await userEvent.setup().press(button);
+    expect(onPress).not.toHaveBeenCalled();
+  });
 });
