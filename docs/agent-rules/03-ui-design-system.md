@@ -23,15 +23,15 @@
 
 [src/constants/theme.ts](../../src/constants/theme.ts) turns [docs/design/tokens.md](../design/tokens.md) into code. Change the design first, then the token.
 
-| Export                           | Holds                                                                                                                                                                                                         | Read with                                     |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| `Colors.light` / `Colors.dark`   | `background`, `text`, `textSecondary`/`Tertiary`/`Quaternary`, `glass` + `glassBorder`, `control` + `controlBorder` + `controlGlyph`, `separator`, `accent`, `accentText`, `onAccent`, `danger`               | `useTheme()`, `ThemedText`/`ThemedView` props |
-| `Effects.light` / `Effects.dark` | Non-color values: `wallpaper` (radial glows), `tile` (gradient), `glassShadow`/`controlShadow` (drop), `glassHighlight`/`controlHighlight` (inset top edge), `blurTint`, `tileShadow`, `tileBorderAlpha`      | `useThemeEffects()`                           |
-| `AppTints`                       | Per-app glyph/border color, `{ dark, light }`; never the accent teal                                                                                                                                          | `AppIcon`                                     |
-| `Layout`                         | Design sizes: `screenMargin` 20, `card` 169, `cardPadding` 13, grid gaps 12/14, `minTouch` 44, `control` 44 (glyph 21), `icon.card` 65/17, `icon.dock` 52/14, `radius` card 30 · sheet 38 · list 26 · dock 34 | import                                        |
-| `Spacing`                        | Generic steps `half` 2 … `six` 64 for spacing the design does not name                                                                                                                                        | import                                        |
-| `Blur`                           | `expo-blur` intensities matching the design's `blur(22px)` / `blur(24px)`                                                                                                                                     | glass components                              |
-| `Fonts`                          | `sans` (system font), `mono`                                                                                                                                                                                  | `ThemedText`                                  |
+| Export                           | Holds                                                                                                                                                                                                                                   | Read with                                     |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `Colors.light` / `Colors.dark`   | `background`, `text`, `textSecondary`/`Tertiary`/`Quaternary`, `glass` + `glassBorder`, `control` + `controlBorder` + `controlGlyph`, `separator`, `accent`, `accentText`, `accentFill`, `onAccent`, `danger`                           | `useTheme()`, `ThemedText`/`ThemedView` props |
+| `Effects.light` / `Effects.dark` | Non-color values: `wallpaper` (radial glows), `tile` (gradient), `glassShadow`/`controlShadow` (drop), `glassHighlight`/`controlHighlight` (inset top edge), `blurTint`, `tileShadow`, `tileBorderAlpha`                                | `useThemeEffects()`                           |
+| `AppTints`                       | Per-app glyph/border color, `{ dark, light }`; never the accent teal                                                                                                                                                                    | `AppIcon`                                     |
+| `Layout`                         | Design sizes: `screenMargin` 20, `card` 169, `cardPadding` 13, grid gaps 12/14, `minTouch` 44, `listRow` 54 (icon 30/8), `control` 44 (glyph 21), `icon.card` 65/17, `icon.dock` 52/14, `radius` card 30 · sheet 38 · list 26 · dock 34 | import                                        |
+| `Spacing`                        | Generic steps `half` 2 … `six` 64 for spacing the design does not name                                                                                                                                                                  | import                                        |
+| `Blur`                           | `expo-blur` intensities matching the design's `blur(22px)` / `blur(24px)`                                                                                                                                                               | glass components                              |
+| `Fonts`                          | `sans` (system font), `mono`                                                                                                                                                                                                            | `ThemedText`                                  |
 
 Gradients and shadows use React Native's built-in `backgroundImage` / `boxShadow` styles — no gradient library.
 
@@ -61,7 +61,7 @@ Gradients and shadows use React Native's built-in `backgroundImage` / `boxShadow
 
 ## 2. ThemedText / ThemedView
 
-- [ThemedText](../../src/components/themed-text.tsx) `type` is the typography scale from the design — never re-specify `fontSize`/`lineHeight`/`fontWeight` inline: `date` 13/600 uppercase (`textTertiary`), `title` 30/700, `section` 17/600, `headline` 20/700, `number` 26/700, `body` 13, `groupLabel` 11/500 (`textQuaternary`), `row` 17 (default, list rows), `stateTitle` 22/28/700 and `stateBody` 15/21 (`textTertiary`) for empty states, `button` 16/600, `code` 13 mono. Sizes follow the system text size — no caps ([12 §3](12-accessibility-platform.md#3-dynamic-type--font-scaling)).
+- [ThemedText](../../src/components/themed-text.tsx) `type` is the typography scale from the design — never re-specify `fontSize`/`lineHeight`/`fontWeight` inline: `date` 13/600 uppercase (`textTertiary`), `title` 30/700, `section` 17/600, `headline` 20/700, `number` 26/700, `body` 13, `groupLabel` 11/500 (`textQuaternary`), `row` 17 (default, list rows), `listHeader` 15/600 and `footnote` 13/18 (`textQuaternary`) around Settings list groups, `stateTitle` 22/28/700 and `stateBody` 15/21 (`textTertiary`) for empty states, `button` 16/600, `code` 13 mono. Sizes follow the system text size — no caps ([12 §3](12-accessibility-platform.md#3-dynamic-type--font-scaling)).
 - Text color via `themeColor` (a `ThemeColor` key), never `style={{ color }}`.
 - [ThemedView](../../src/components/themed-view.tsx) `type` = any `ThemeColor` surface, default `background`.
 - A recurring new text style = a new `type` in `themed-text.tsx`. Font families from `Fonts`, never string literals.
@@ -72,7 +72,7 @@ RN `Text` defaults to `flexShrink: 0`, so in a row a long string keeps its full 
 
 - Label + value rows use [KeyValueRow](../../src/components/ui/key-value-row.tsx): the label keeps its width, the value wraps, and at accessibility text sizes (`fontScale` ≥ 1.5) the value stacks under the label.
 - Other rows: give the growing text `flex: 1` (or keep the default shrink) so it has room to wrap.
-- Wrap, don't truncate: no `numberOfLines` to "fix" overflow ([12 §3](12-accessibility-platform.md#3-dynamic-type--font-scaling)). Check at the largest system font size.
+- Wrap, don't truncate: no `numberOfLines` to "fix" overflow ([12 §3](12-accessibility-platform.md#3-dynamic-type--font-scaling)). Check at the largest system font size. One exception: opaque identifiers (hashes, update ids) stay on one line with `ellipsizeMode="middle"` — wrapped hex is noise (Settings → About).
 
 ## 3. Dark mode
 
@@ -85,7 +85,8 @@ RN `Text` defaults to `flexShrink: 0`, so in a row a long string keeps its full 
 
 `@expo/ui` renders real SwiftUI / Jetpack Compose. Use it for sheets, pickers, switches, menus, date-time pickers, sliders, segmented controls, progress, and confirmation dialogs.
 
-- PREFER `@expo/ui/universal` (`BottomSheet`, `Button`, `Checkbox`, `Picker`, `Switch`, `Slider`, `TextInput`, `List`, `Icon`, `Host`, `Row`, `Column`, …) — one tree for all platforms. Use `@expo/ui/swift-ui` / `jetpack-compose` only for platform-specific needs and provide the other platform's version ([01 §7](01-architecture.md#7-platform-specific-code)); `swift-ui` renders nothing on Android.
+- PREFER the universal components from `@expo/ui` (import from `@expo/ui` itself; `BottomSheet`, `Button`, `Checkbox`, `Picker`, `Switch`, `Slider`, `TextInput`, `List`, `Icon`, `Host`, `Row`, `Column`, …) — one tree for all platforms. Use `@expo/ui/swift-ui` / `jetpack-compose` only for platform-specific needs and provide the other platform's version ([01 §7](01-architecture.md#7-platform-specific-code)); `swift-ui` renders nothing on Android.
+- Segmented choice: [SegmentedControl](../../src/components/ui/segmented-control.tsx) (SwiftUI segmented `Picker` / Compose segmented buttons) — the universal `Picker` has no segmented style.
 - Every `@expo/ui` subtree sits in a `Host` (`<Host matchContents><Switch … /></Host>`). Flexbox applies to the `Host` only; inside, lay out with `Row`/`Column` (or `HStack`/`VStack`). Re-entering `@expo/ui` from RN children needs a new `Host` — keep boundaries coarse.
 - Fallback only when `@expo/ui` lacks the component: RN built-ins (`Modal`, `Pressable`) or SDK-vetted libs. Before adding a community lib check the drop-ins (`BottomSheet`, `DateTimePicker`, `Menu`, `Picker`, `SegmentedControl`, `Slider`, `PagerView`, `MaskedView`).
 
