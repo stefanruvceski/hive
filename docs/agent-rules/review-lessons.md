@@ -69,3 +69,13 @@ Accepted review findings from past PRs, kept so the same mistake is never made t
   `await waitFor(() => expect(screen.getByTestId('…')).toHaveTextContent('ok'))` — see
   [src/screens/settings/index.test.tsx](../../src/screens/settings/index.test.tsx).
 - Seen: 1
+
+### L-004 — 2026-11-01 — review of #37
+
+- Domain: 04
+- Mistake: Settings wrapped its `ScrollView` in a `SafeAreaView` with the `bottom` edge, so the
+  scroll area ended above the home indicator and the last card was cut off with a hard edge.
+- Instead: leave `bottom` out of the `SafeAreaView` edges and add `useSafeAreaInsets().bottom` to
+  the scroll content's `paddingBottom` — content scrolls to the screen edge and still clears the
+  indicator ([src/screens/settings/index.tsx](../../src/screens/settings/index.tsx)).
+- Seen: 1

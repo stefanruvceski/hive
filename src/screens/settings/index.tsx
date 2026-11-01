@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ErrorState } from '@/components/ui/error-state';
@@ -31,10 +31,16 @@ const dateFormatOptions: SegmentedOption<DateFormat>[] = [
 
 /** Settings from docs/design/canvas/Settings.dc.html: preferences, backup (not yet live), about. */
 export function Settings() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Wallpaper style={styles.container}>
-      <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.container}>
-        <ScrollView contentContainerStyle={styles.content}>
+      {/* No bottom edge: the list scrolls to the screen edge and clears the home indicator with
+          padding, instead of being cut off above it. */}
+      <SafeAreaView edges={['top', 'right', 'left']} style={styles.container}>
+        <ScrollView
+          contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Spacing.five }]}
+          testID="settings-scroll">
           <View style={styles.header}>
             <GlassButton
               icon={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
@@ -154,7 +160,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: Layout.screenMargin,
     paddingTop: Spacing.two,
-    paddingBottom: Spacing.five,
     gap: Spacing.two,
   },
   header: {
