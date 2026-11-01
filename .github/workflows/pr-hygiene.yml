@@ -1,0 +1,42 @@
+# PR rules that are not about the code. Squash merges use the PR title and body as the commit
+# message on main, so they are checked as well as every commit, and again whenever the PR is edited.
+name: PR hygiene
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+concurrency:
+  group: pr-hygiene-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  attribution:
+    name: No AI attribution
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .nvmrc
+
+      # Title and body come in through env, never interpolated into the script (injection).
+      - name: PR title and body
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+          BODY: ${{ github.event.pull_request.body }}
+        run: printf '%s\n\n%s\n' "$TITLE" "$BODY" | node scripts/check-attribution.mjs
+
+      - name: Commit messages
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: git log --format=%B "$BASE..$HEAD" | node scripts/check-attribution.mjs
