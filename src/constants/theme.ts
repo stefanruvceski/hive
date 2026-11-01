@@ -41,14 +41,11 @@ export const Colors = {
     dashedSlot: 'rgba(15,23,42,0.18)',
     onAccent: '#042F2A',
     danger: '#DC2626',
-    /** Group sheet (GroupSheet.dc.html): sheet fill where there is no Liquid Glass — the design's
-     *  rgba(248,250,252,0.86) over `background`, opaque because a native sheet can't blur Home. */
-    sheet: '#F7F9FB',
-    /** Group sheet: the app list's fill, the row chevron, the drawn grabber (Android). */
-    inset: 'rgba(255,255,255,0.8)',
-    chevron: '#94A3B8',
-    grabber: 'rgba(15,23,42,0.2)',
-    /** No fill: lets the system's Liquid Glass sheet show (iOS 26+). */
+    /** Group folder (GroupSheet.dc.html): the tint over the blurred Home behind an open folder. */
+    folderDim: 'rgba(238,242,245,0.45)',
+    /** The same where Home can't be blurred (Android: the folder is its own screen). */
+    folderDimSolid: 'rgba(238,242,245,0.92)',
+    /** No fill: a screen that shows the one under it (the folder's modal). */
     clear: 'transparent',
   },
   dark: {
@@ -77,11 +74,8 @@ export const Colors = {
     dashedSlot: 'rgba(255,255,255,0.18)',
     onAccent: '#042F2A',
     danger: '#F87171',
-    /** rgba(19,27,46,0.82) over `background`. */
-    sheet: '#11192B',
-    inset: 'rgba(10,15,28,0.45)',
-    chevron: '#475569',
-    grabber: 'rgba(255,255,255,0.22)',
+    folderDim: 'rgba(3,6,14,0.45)',
+    folderDimSolid: 'rgba(10,15,28,0.92)',
     clear: 'transparent',
   },
 } as const;
@@ -221,18 +215,18 @@ export const Layout = {
     customize: 52,
     glyph: 22,
   },
-  /** Group sheet (GroupSheet.dc.html): padding, gap between header/list/action, header inset. */
-  sheet: {
-    padding: { top: 10, horizontal: 16, bottom: 28 },
-    gap: 16,
-    headerInset: 4,
-    /** Resting heights as a share of the screen: ≈ the design's 560 of 844, then full height. */
-    detents: [0.66, 1],
-    grabber: { width: 40, height: 5, radius: 3 },
-    /** App row: min height, side padding, gap between icon/text/chevron, chevron size. */
-    row: { minHeight: 76, padding: 14, gap: 14, chevron: 14 },
-    /** "Edit group": min height, icon-label gap, side padding, glyph. */
-    action: { minHeight: 44, gap: 8, padding: 6, glyph: 18 },
+  /**
+   * Group folder (GroupSheet.dc.html): space between title, panel and Edit group; the panel's
+   * padding; the app grid (four columns of card icons, fewer on narrow windows); Edit group.
+   */
+  folder: {
+    gap: 20,
+    padding: { vertical: 24, horizontal: 20 },
+    columns: 4,
+    minColumnGap: 12,
+    rowGap: 18,
+    labelGap: 6,
+    edit: { paddingHorizontal: 16, gap: 8, glyph: 18 },
   },
   /** Primary (accent-filled) button. */
   button: { height: 50, paddingHorizontal: 26 },
@@ -241,6 +235,8 @@ export const Layout = {
   icon: {
     card: { size: 65, radius: 17, glyph: 30 },
     dock: { size: 52, radius: 14, glyph: 26 },
+    /** The small icons in a group card's fourth spot (2×2 in a 65 tile). */
+    mini: { size: 30, radius: 8, glyph: 16 },
   },
   radius: { card: 30, sheet: 38, list: 26, dock: 34 },
 } as const;

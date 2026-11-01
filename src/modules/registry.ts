@@ -17,7 +17,7 @@ export type HiveModule = {
   /** kebab-case; also the route segment (`/<id>`) and the prefix of the module's tables. */
   id: string;
   title: string;
-  /** One line shown where the app is listed by name (group sheet). */
+  /** One line describing the app, shown where it is listed by name. */
   description: string;
   /** Per-platform name — a bare SF Symbol string renders nothing on Android (agent-rules/03 §6). */
   icon: Exclude<SymbolViewProps['name'], string>;

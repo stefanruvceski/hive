@@ -21,8 +21,7 @@ type TextType =
   | 'stateTitle'
   | 'stateBody'
   | 'button'
-  | 'sheetTitle'
-  | 'rowTitle'
+  | 'tileLabel'
   | 'code'
   | 'rowCode';
 
@@ -37,6 +36,7 @@ const defaultColor: Partial<Record<TextType, ThemeColor>> = {
   stateBody: 'textTertiary',
   listHeader: 'textQuaternary',
   footnote: 'textQuaternary',
+  tileLabel: 'textSecondary',
 };
 
 export function ThemedText({ style, type = 'row', themeColor, ...rest }: ThemedTextProps) {
@@ -132,16 +132,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 600,
   },
-  /** Sheet title (group sheet). */
-  sheetTitle: {
-    fontSize: 24,
-    lineHeight: 30,
-    fontWeight: 700,
-  },
-  /** A list row's name over a second line (group sheet). */
-  rowTitle: {
-    fontSize: 17,
-    fontWeight: 600,
+  /** An app's name under its icon (group folder). */
+  tileLabel: {
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: 500,
   },
   code: {
     fontFamily: Fonts.mono,

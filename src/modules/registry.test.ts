@@ -1,6 +1,6 @@
 import { defaultHomeGroups, hiveModules } from './registry';
 
-// The group sheet lists every app by name with this line under it (#30).
+// Every module needs a one-line description and a Home group it starts in.
 describe('hiveModules', () => {
   it.each(hiveModules.map((module) => [module.id, module] as const))(
     '%s has a description and a default Home group',
