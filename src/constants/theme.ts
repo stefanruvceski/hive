@@ -41,6 +41,15 @@ export const Colors = {
     dashedSlot: 'rgba(15,23,42,0.18)',
     onAccent: '#042F2A',
     danger: '#DC2626',
+    /** Group sheet (GroupSheet.dc.html): sheet fill where there is no Liquid Glass — the design's
+     *  rgba(248,250,252,0.86) over `background`, opaque because a native sheet can't blur Home. */
+    sheet: '#F7F9FB',
+    /** Group sheet: the app list's fill, the row chevron, the drawn grabber (Android). */
+    inset: 'rgba(255,255,255,0.8)',
+    chevron: '#94A3B8',
+    grabber: 'rgba(15,23,42,0.2)',
+    /** No fill: lets the system's Liquid Glass sheet show (iOS 26+). */
+    clear: 'transparent',
   },
   dark: {
     background: '#0A0F1C',
@@ -68,6 +77,12 @@ export const Colors = {
     dashedSlot: 'rgba(255,255,255,0.18)',
     onAccent: '#042F2A',
     danger: '#F87171',
+    /** rgba(19,27,46,0.82) over `background`. */
+    sheet: '#11192B',
+    inset: 'rgba(10,15,28,0.45)',
+    chevron: '#475569',
+    grabber: 'rgba(255,255,255,0.22)',
+    clear: 'transparent',
   },
 } as const;
 
@@ -169,6 +184,8 @@ export const Layout = {
   /** Group name sits this far below its card. */
   groupLabelGap: 6,
   minTouch: 44,
+  /** Android's minimum touch target (48 dp); design against it when one layout serves both. */
+  minTouchAndroid: 48,
   /**
    * Settings list: row height, padding, gap between icon/label/value, icon tile. `controlPadding`
    * surrounds a lone control (segmented) in a group.
@@ -203,6 +220,19 @@ export const Layout = {
     dividerHeight: 32,
     customize: 52,
     glyph: 22,
+  },
+  /** Group sheet (GroupSheet.dc.html): padding, gap between header/list/action, header inset. */
+  sheet: {
+    padding: { top: 10, horizontal: 16, bottom: 28 },
+    gap: 16,
+    headerInset: 4,
+    /** Resting heights as a share of the screen: ≈ the design's 560 of 844, then full height. */
+    detents: [0.66, 1],
+    grabber: { width: 40, height: 5, radius: 3 },
+    /** App row: min height, side padding, gap between icon/text/chevron, chevron size. */
+    row: { minHeight: 76, padding: 14, gap: 14, chevron: 14 },
+    /** "Edit group": min height, icon-label gap, side padding, glyph. */
+    action: { minHeight: 44, gap: 8, padding: 6, glyph: 18 },
   },
   /** Primary (accent-filled) button. */
   button: { height: 50, paddingHorizontal: 26 },
