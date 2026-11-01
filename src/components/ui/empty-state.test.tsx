@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react-native';
+import { Text } from 'react-native';
 
 import { Colors } from '@/constants/theme';
 
@@ -20,6 +21,14 @@ describe('EmptyState', () => {
       lineHeight: 21,
       color: Colors.light.textTertiary,
     });
+  });
+
+  it('shows an action under the copy when one is given', async () => {
+    await render(
+      <EmptyState title="No habits yet" action={<Text>Add habit</Text>} testID="x-empty" />,
+    );
+
+    expect(screen.getByText('Add habit')).toBeOnTheScreen();
   });
 
   // At the largest text sizes the copy is taller than the screen; it must scroll, not be cut off.

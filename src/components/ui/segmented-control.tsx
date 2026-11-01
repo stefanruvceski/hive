@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Layout } from '@/constants/theme';
@@ -16,13 +16,17 @@ type Props<T extends string> = {
   testID: string;
 };
 
+/** From ~1.5× text four labels side by side break mid-word; the options stack (as `KeyValueRow`). */
+const STACK_FONT_SCALE = 1.5;
+
 // Segments are 38 high; the slop brings the touch target to 48 (agent-rules/12).
 const hitSlop = { top: 5, bottom: 5 };
 
 /**
  * Single-choice segmented control drawn from the design (docs/design/canvas/Settings.dc.html):
  * equal segments on a tinted track, the chosen one a teal pill. Drawn, not `@expo/ui`, so it looks
- * the same on iOS and Android (agent-rules/03 §4).
+ * the same on iOS and Android (agent-rules/03 §4). At accessibility text sizes the segments stack
+ * into a column so labels wrap between words, never inside one.
  */
 export function SegmentedControl<T extends string>({
   options,
@@ -32,6 +36,7 @@ export function SegmentedControl<T extends string>({
   testID,
 }: Props<T>) {
   const theme = useTheme();
+  const stacked = useWindowDimensions().fontScale >= STACK_FONT_SCALE;
 
   return (
     // Not `accessible`: that would merge the segments into one element on iOS.
@@ -39,7 +44,11 @@ export function SegmentedControl<T extends string>({
       role="radiogroup"
       aria-label={label}
       testID={testID}
-      style={[styles.track, { backgroundColor: theme.segmentTrack }]}>
+      style={[
+        styles.track,
+        stacked && styles.stackedTrack,
+        { backgroundColor: theme.segmentTrack },
+      ]}>
       {options.map((option) => {
         const selected = option.value === value;
         return (
@@ -52,7 +61,7 @@ export function SegmentedControl<T extends string>({
             onPress={() => onChange(option.value)}
             testID={`${testID}-${option.value}`}
             style={[
-              styles.segment,
+              stacked ? styles.stackedSegment : styles.segment,
               // RN borders sit inside the box, so only the chosen segment needs one.
               selected && [
                 styles.selected,
@@ -83,10 +92,21 @@ const styles = StyleSheet.create({
     padding: Layout.segmented.trackPadding,
     borderRadius: Layout.segmented.trackRadius,
   },
+  stackedTrack: {
+    flexDirection: 'column',
+  },
   segment: {
     flex: 1,
     minHeight: Layout.segmented.height,
     borderRadius: Layout.segmented.radius,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Full width, as tall as its wrapped label (no `flex: 1`, which would size it to zero height).
+  stackedSegment: {
+    minHeight: Layout.segmented.height,
+    borderRadius: Layout.segmented.radius,
+    paddingHorizontal: Layout.segmented.radius,
     alignItems: 'center',
     justifyContent: 'center',
   },
