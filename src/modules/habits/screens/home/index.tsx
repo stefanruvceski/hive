@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -10,10 +10,17 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { PrimaryButton } from '@/components/ui/primary-button';
 import { Wallpaper } from '@/components/ui/wallpaper';
 import { Layout, MaxContentWidth, Spacing } from '@/constants/theme';
+import { useToday } from '@/hooks/use-today';
 
 import { HabitSection } from './components/habit-section';
-import { useHabits } from '../../data/queries';
+import {
+  type CompletionChange,
+  useCompletions,
+  useHabits,
+  useSetCompletion,
+} from '../../data/queries';
 import { groupByTimeOfDay } from '../../domain/habits';
+import { doneDatesByHabit } from '../../domain/streak';
 
 const addHabit = () => router.push('/habits/new');
 
@@ -52,12 +59,35 @@ function Title() {
   );
 }
 
-// Four states, data first: cached data stays visible if a refetch fails (07 §1, 14 §3).
+// Four states, data first: cached data stays visible if a refetch fails (07 §1, 14 §3). The list
+// needs both the habits and the days they were done.
 function HabitsContent() {
   const insets = useSafeAreaInsets();
-  const { data, error, isError, refetch } = useHabits();
+  const today = useToday();
+  const habits = useHabits();
+  const completions = useCompletions();
+  const setCompletion = useSetCompletion();
+
+  // Optimistic: the check flips at once and rolls back on failure, then offers a retry (07 §2).
+  const save = (change: CompletionChange) =>
+    setCompletion.mutate(change, {
+      onError: () =>
+        Alert.alert("Couldn't save", 'Your change was not saved. Please try again.', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Try again', onPress: () => save(change) },
+        ]),
+    });
+
+  const data = habits.data && completions.data ? habits.data : undefined;
+  const error = habits.error ?? completions.error;
+  const isError = !data && (habits.isError || completions.isError);
+  const refetch = () => {
+    void habits.refetch();
+    void completions.refetch();
+  };
 
   if (data && data.length > 0) {
+    const doneDates = doneDatesByHabit(completions.data ?? []);
     return (
       <ScrollView
         contentContainerStyle={[
@@ -68,7 +98,13 @@ function HabitsContent() {
         testID="habits-list">
         <Title />
         {groupByTimeOfDay(data).map((group) => (
-          <HabitSection key={group.timeOfDay} {...group} />
+          <HabitSection
+            key={group.timeOfDay}
+            {...group}
+            doneDates={doneDates}
+            today={today}
+            onToggle={(habitId, done) => save({ habitId, date: today, done })}
+          />
         ))}
       </ScrollView>
     );
@@ -85,7 +121,7 @@ function HabitsContent() {
           testID="habits-empty"
         />
       ) : isError ? (
-        <ErrorState error={error} onRetry={() => void refetch()} testID="habits-error" />
+        <ErrorState error={error} onRetry={refetch} testID="habits-error" />
       ) : (
         <LoadingState testID="habits-loading" />
       )}

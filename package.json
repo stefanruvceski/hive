@@ -87,6 +87,7 @@
   "packageManager": "pnpm@10.34.9",
   "jest": {
     "preset": "jest-expo",
+    "globalSetup": "./jest.global-setup.js",
     "setupFilesAfterEnv": [
       "./jest.setup.ts"
     ],
