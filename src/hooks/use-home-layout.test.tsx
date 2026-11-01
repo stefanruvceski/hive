@@ -31,7 +31,7 @@ function fakeDb(tables: Tables, { failWrites = false } = {}) {
     insert: (table: unknown) => ({
       values: (rows: never[]) => ({
         run: () => {
-          data[name(table)] = [...data[name(table)], ...structuredClone(rows)];
+          (data[name(table)] as unknown[]).push(...structuredClone(rows));
         },
       }),
     }),
