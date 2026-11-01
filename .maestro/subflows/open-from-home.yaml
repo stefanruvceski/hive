@@ -1,8 +1,0 @@
-# Opens an app from Home: its group card, then its row in the group sheet (#30).
-# env: GROUP = the group id (home-group-<GROUP>), APP = the module id (home-open-<APP>).
-appId: com.ruvceski.hive.dev
----
-- tapOn:
-    id: 'home-group-${GROUP}'
-- tapOn:
-    id: 'home-open-${APP}'
