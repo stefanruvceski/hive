@@ -14,7 +14,7 @@ import { useThemeName } from '@/hooks/use-theme';
 import { getDb } from '@/lib/db/client';
 import migrations from '@/lib/db/migrations/migrations';
 import { queryClient } from '@/lib/query-client';
-import { groupSheetOptions } from '@/screens/group-sheet/sheet-options';
+import { groupFolderOptions } from '@/screens/group-folder/folder-options';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -45,7 +45,7 @@ export default function RootLayout() {
           <ThemeProvider value={navigationTheme[scheme]}>
             <Stack>
               {/* Presentation is navigator-level, so it lives here (agent-rules/02 §5). */}
-              <Stack.Screen name="group/[id]" options={groupSheetOptions(scheme)} />
+              <Stack.Screen name="group/[id]" options={groupFolderOptions(scheme)} />
             </Stack>
             <StatusBar style="auto" />
           </ThemeProvider>
