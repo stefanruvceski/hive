@@ -1,11 +1,12 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { asc, max } from 'drizzle-orm';
+import { and, asc, eq, max } from 'drizzle-orm';
 
 import { getDb } from '@/lib/db/client';
 import { toIsoDate } from '@/utils/format-date';
 
-import { habitsHabits } from './schema';
+import { habitsCompletions, habitsHabits } from './schema';
 import { type NewHabit, newHabitId, normalizeName } from '../domain/habits';
+import { type Completion, setCompletion } from '../domain/streak';
 
 export type Habit = typeof habitsHabits.$inferSelect;
 
@@ -13,6 +14,7 @@ export type Habit = typeof habitsHabits.$inferSelect;
 export const habitsKeys = {
   all: ['habits'] as const,
   lists: () => [...habitsKeys.all, 'list'] as const,
+  completions: () => [...habitsKeys.all, 'completions'] as const,
 };
 
 /** Every habit, in the order it was added. */
@@ -52,5 +54,50 @@ export function useCreateHabit() {
       });
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: habitsKeys.lists() }),
+  });
+}
+
+/** Every day each habit was done. Streaks and "done today" are worked out from it in `domain/`. */
+export const habitsCompletionsQuery = () =>
+  queryOptions({
+    queryKey: habitsKeys.completions(),
+    queryFn: async (): Promise<Completion[]> => getDb().select().from(habitsCompletions).all(),
+  });
+
+export function useCompletions() {
+  return useQuery(habitsCompletionsQuery());
+}
+
+export type CompletionChange = Completion & { done: boolean };
+
+/**
+ * Marks a habit done or not done on a day (the caller passes the day it shows). Optimistic: the
+ * row changes at once and rolls back if the write fails.
+ */
+export function useSetCompletion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ habitId, date, done }: CompletionChange) => {
+      if (done) {
+        getDb().insert(habitsCompletions).values({ habitId, date }).onConflictDoNothing().run();
+      } else {
+        getDb()
+          .delete(habitsCompletions)
+          .where(and(eq(habitsCompletions.habitId, habitId), eq(habitsCompletions.date, date)))
+          .run();
+      }
+    },
+    onMutate: async (change) => {
+      await queryClient.cancelQueries({ queryKey: habitsKeys.completions() });
+      const previous = queryClient.getQueryData<Completion[]>(habitsKeys.completions());
+      if (previous) {
+        queryClient.setQueryData(habitsKeys.completions(), setCompletion(previous, change));
+      }
+      return { previous };
+    },
+    onError: (_error, _change, context) => {
+      queryClient.setQueryData(habitsKeys.completions(), context?.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: habitsKeys.completions() }),
   });
 }

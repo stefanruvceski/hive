@@ -28,6 +28,7 @@
 ## 2. Jest + jest-expo configuration (facts, do not fight them)
 
 - Config lives in `package.json` → `"jest"` (preset `jest-expo`, `setupFilesAfterEnv: ["./jest.setup.ts"]`, `.maestro/` ignored, CSS mapped to `__mocks__/style-mock.js`, coverage settings). Do not create a `jest.config.js`.
+- Jest always runs in `Europe/Belgrade`: `globalSetup` ([jest.global-setup.js](../../jest.global-setup.js)) sets `TZ` before the workers start, so date tests cross real daylight saving changes on every machine and in CI. Never set `TZ` in `jest.setup.ts` or a test: tests see a copy of `process.env` that `Date` ignores.
 - jest-expo ~58 requires Jest 30 — do not change either major.
 - New dependency throws `SyntaxError: Unexpected token`? Extend `transformIgnorePatterns` (keep the `.pnpm` entry) — never mock the whole package to dodge the transform.
 - Module mocks every test needs go in [jest.setup.ts](../../jest.setup.ts) (it already mocks `expo-updates`; it deliberately sets no `EXPO_PUBLIC_*` values, so tests run like an EAS Update bundle), not in individual test files.

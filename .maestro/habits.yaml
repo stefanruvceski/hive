@@ -1,5 +1,5 @@
-# Habits (#6): empty state → add a habit → it is listed under its part of the day → it survives a
-# restart. Opened by deep link: Home can't open an app from a group until #30 (decided in #6).
+# Habits (#6, #7): empty state → add a habit → it is listed under its part of the day → mark it
+# done today and back → its streak follows → both survive a restart. Opened by deep link: Home can't open an app from a group until #30 (decided in #6).
 # Run locally: pnpm test:e2e   (needs a dev build installed on the simulator/emulator)
 appId: com.ruvceski.hive.dev
 tags:
@@ -28,6 +28,25 @@ tags:
 - assertVisible:
     id: 'habits-section-evening'
 - assertVisible: 'Read 10 pages'
+# Done today (#7). The habit's id is random, so its check and streak are matched by pattern.
+- assertVisible:
+    id: 'habits-streak-.*'
+    text: 'Streak: 0 days'
+- tapOn:
+    id: 'habits-check-.*'
+- assertVisible:
+    id: 'habits-streak-.*'
+    text: 'Streak: 1 day'
+- tapOn:
+    id: 'habits-check-.*'
+- assertVisible:
+    id: 'habits-streak-.*'
+    text: 'Streak: 0 days'
+- tapOn:
+    id: 'habits-check-.*'
+- assertVisible:
+    id: 'habits-streak-.*'
+    text: 'Streak: 1 day'
 # Stored on the phone: still listed after the app is killed and reopened.
 - stopApp
 - launchApp
@@ -35,3 +54,6 @@ tags:
 - assertVisible:
     id: 'habits-section-evening'
 - assertVisible: 'Read 10 pages'
+- assertVisible:
+    id: 'habits-streak-.*'
+    text: 'Streak: 1 day'
