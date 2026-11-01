@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -15,13 +15,7 @@ import { EmojiGrid } from './components/emoji-grid';
 import { FormGroup } from './components/form-group';
 import { useCreateHabit } from '../../data/queries';
 import type { TimeOfDay } from '../../data/schema';
-import {
-  canSave,
-  defaultEmoji,
-  habitEmojis,
-  normalizeName,
-  timeOfDayOptions,
-} from '../../domain/habits';
+import { canSave, defaultEmoji, habitEmojis, timeOfDayOptions } from '../../domain/habits';
 
 /** Add habit: name, emoji, part of the day. Saves and goes back to the list. */
 export function HabitsNew() {
@@ -32,12 +26,27 @@ export function HabitsNew() {
   const [emoji, setEmoji] = useState(defaultEmoji);
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('anytime');
   const create = useCreateHabit();
+  // `isPending` disables Save only after a re-render; this stops a second quick tap before it.
+  // Cleared only on error: after a save the form is on its way out and stays locked.
+  const saving = useRef(false);
 
-  const save = () =>
+  // Back and Save both land on the list, also when the form was opened by deep link.
+  const close = () => router.dismissTo('/habits');
+
+  const save = () => {
+    if (saving.current) return;
+    saving.current = true;
+    // The mutation trims and validates the name (07 §7).
     create.mutate(
-      { name: normalizeName(name), emoji, timeOfDay },
-      { onSuccess: () => router.back() },
+      { name, emoji, timeOfDay },
+      {
+        onSuccess: close,
+        onError: () => {
+          saving.current = false;
+        },
+      },
     );
+  };
 
   return (
     <Wallpaper style={styles.container} testID="habits-new-screen">
@@ -51,7 +60,7 @@ export function HabitsNew() {
             <GlassButton
               icon={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
               label="Back"
-              onPress={() => router.back()}
+              onPress={close}
               testID="habits-new-back"
             />
           </View>

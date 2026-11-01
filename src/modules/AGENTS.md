@@ -11,7 +11,8 @@ src/modules/<id>/
   screens/<name>/       index.tsx (named export) + index.test.tsx; private parts in ./components/
   domain/               pure logic (no React, no database) + colocated *.test.ts
 src/app/<id>/index.tsx  thin route → screens/home;  src/app/<id>/<name>.tsx → screens/<name>
-.maestro/<id>.yaml      opens the module from its Home card (`home-open-<id>`)
+.maestro/<id>.yaml      opens the module from its Home card (`home-open-<id>`); until Home opens
+                        apps (#30) it opens it by deep link (`openLink: hive-dev://<id>`)
 ```
 
 - **Isolation (lint).** A module never imports another module (`local/no-cross-module-imports`) or `src/app`. Shared code moves down to `src/components`, `src/hooks`, `src/lib` or `src/utils` — which in turn never import `src/modules`.

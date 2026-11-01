@@ -5,7 +5,6 @@ import {
   newHabitId,
   normalizeName,
   timeOfDayOptions,
-  toLocalIsoDate,
 } from './habits';
 
 const habit = (
@@ -77,12 +76,6 @@ describe('habitEmojis', () => {
     expect(habitEmojis).toHaveLength(24);
     expect(new Set(habitEmojis).size).toBe(24);
     expect(habitEmojis).toContain('📚');
-  });
-});
-
-describe('toLocalIsoDate', () => {
-  it('formats the local calendar date, zero-padded', () => {
-    expect(toLocalIsoDate(new Date(2026, 0, 5, 23, 59))).toBe('2026-01-05');
   });
 });
 

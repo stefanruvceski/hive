@@ -2,9 +2,10 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/r
 import { asc, max } from 'drizzle-orm';
 
 import { getDb } from '@/lib/db/client';
+import { toIsoDate } from '@/utils/format-date';
 
 import { habitsHabits } from './schema';
-import { type NewHabit, newHabitId, normalizeName, toLocalIsoDate } from '../domain/habits';
+import { type NewHabit, newHabitId, normalizeName } from '../domain/habits';
 
 export type Habit = typeof habitsHabits.$inferSelect;
 
@@ -45,7 +46,7 @@ export function useCreateHabit() {
             emoji: input.emoji,
             timeOfDay: input.timeOfDay,
             position: (last?.position ?? -1) + 1,
-            createdAt: toLocalIsoDate(new Date()),
+            createdAt: toIsoDate(new Date()),
           })
           .run();
       });

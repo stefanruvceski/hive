@@ -107,6 +107,7 @@ describe('HabitsHome', () => {
     expect(screen.queryByTestId('habits-error')).not.toBeOnTheScreen();
   });
 
+  // Home is under every deep link (`unstable_settings.anchor` in src/app/_layout.tsx).
   it('goes back to Home', async () => {
     mockedHabits.mockReturnValue(result({ data: [] }));
     await renderHabits();

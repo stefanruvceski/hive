@@ -57,7 +57,8 @@ export function SegmentedControl<T extends string>({
             role="radio"
             aria-checked={selected}
             aria-label={option.label}
-            hitSlop={hitSlop}
+            // Stacked segments touch, so a slop would overlap the neighbour's; they are 48 high instead.
+            hitSlop={stacked ? undefined : hitSlop}
             onPress={() => onChange(option.value)}
             testID={`${testID}-${option.value}`}
             style={[
@@ -103,8 +104,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   // Full width, as tall as its wrapped label (no `flex: 1`, which would size it to zero height).
+  // No slop when stacked, so the segment itself is the 48 a row segment reaches with its slop.
   stackedSegment: {
-    minHeight: Layout.segmented.height,
+    minHeight: Layout.segmented.height + hitSlop.top + hitSlop.bottom,
     borderRadius: Layout.segmented.radius,
     paddingHorizontal: Layout.segmented.radius,
     alignItems: 'center',

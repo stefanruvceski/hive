@@ -66,12 +66,6 @@ export function groupByTimeOfDay<H extends { timeOfDay: TimeOfDay; position: num
     .filter((group) => group.habits.length > 0);
 }
 
-/** `YYYY-MM-DD` in the phone's time zone. */
-export function toLocalIsoDate(date: Date): string {
-  const pad = (value: number) => String(value).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-}
-
 /** A unique id for a new habit (no crypto dependency: time + randomness). */
 export function newHabitId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;

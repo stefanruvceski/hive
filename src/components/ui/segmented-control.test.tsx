@@ -77,6 +77,9 @@ describe('SegmentedControl', () => {
     );
 
     expect(screen.getByTestId('appearance')).toHaveStyle({ flexDirection: 'column' });
+    // Stacked segments touch: overlapping hit slop would let a tap pick the neighbour (#42 review).
+    expect(screen.getByTestId('appearance-dark').props.hitSlop).toBeUndefined();
+    expect(screen.getByTestId('appearance-dark')).toHaveStyle({ minHeight: 48 });
     expect(screen.getByRole('radio', { name: 'System' })).toBeChecked();
     await userEvent.setup().press(screen.getByRole('radio', { name: 'Dark' }));
     expect(onChange).toHaveBeenCalledWith('dark');
