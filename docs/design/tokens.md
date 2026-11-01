@@ -29,6 +29,20 @@ Both themes are required (Settings → Appearance: System / Dark / Light).
 | `onAccent`        | `#042F2A`                                                  | `#042F2A`                                                | Text on a teal fill                                             |
 | `danger`          | `#F87171`                                                  | `#DC2626`                                                | Delete group                                                    |
 
+**Group sheet** ([canvas/GroupSheet.dc.html](canvas/GroupSheet.dc.html)), as implemented in `theme.ts`:
+
+| Token     | Dark                                       | Light                                        | Use                                                                |
+| --------- | ------------------------------------------ | -------------------------------------------- | ------------------------------------------------------------------ |
+| `sheet`   | `#11192B` (`rgba(19,27,46,0.82)` on bg)    | `#F7F9FB` (`rgba(248,250,252,0.86)` on bg)   | Sheet fill without Liquid Glass; opaque, a native sheet can't blur |
+| `inset`   | `rgba(10,15,28,0.45)` + border `separator` | `rgba(255,255,255,0.8)` + border `separator` | The app list inside the sheet (radius 26)                          |
+| `chevron` | `#475569`                                  | `#94A3B8`                                    | Row chevron                                                        |
+| `grabber` | `rgba(255,255,255,0.22)`                   | `rgba(15,23,42,0.2)`                         | Grabber, drawn on Android only (iOS draws its own)                 |
+
+Sheet: radius 38, padding 10 · 16 · 28, gap 16; title 24/30 bold, count 13 `textQuaternary`; Close is
+the round glass control; app rows ≥ 76 high, padding 14, gap 14, icon 52/14, name 17 semibold,
+description 13 `textQuaternary`; "Edit group" 16 semibold `accentText`, ≥ 44 high. On iOS 26+ the
+sheet is the system's Liquid Glass; the dimming behind it is the system's on both platforms.
+
 **Scrims** (Home): content fades under the fixed header (`scrimTop`, header height + 10) and under the
 Dock (`scrimBottom`, 150 high). Exact gradients: `c.scrimTop` / `c.scrimBottom` in
 [canvas/Main.dc.html](canvas/Main.dc.html). The Dock's shadow: `c.dockShadow` there.
