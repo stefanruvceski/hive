@@ -1,0 +1,110 @@
+# Customize Home (#31), the issue's "How to verify" with Habits — the only module so far (the issue
+# names Wallet, Health and Music, which don't exist yet; agreed at checkpoint A):
+#   1. Customize → tap Habits → Move here on Creative → Done → Habits is in Creative
+#   2. Pin Habits → it is in the Dock; Hide it → gone from Home, listed under Hidden, then back
+#   3. Restart the app → everything kept
+# A full Dock and the folder of a group with more than four apps need five modules: covered by Jest
+# (src/utils/home-edits.test.ts, src/screens/customize, src/screens/group-folder) until they exist.
+# Run locally: pnpm test:e2e   (needs a dev build installed on the simulator/emulator)
+appId: com.ruvceski.hive.dev
+tags:
+  - home
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: 'home-group-body-mind'
+
+# 1. Move Habits to Creative.
+- tapOn:
+    id: 'home-customize'
+- assertVisible:
+    id: 'customize-title'
+- tapOn:
+    id: 'customize-app-habits'
+- assertVisible:
+    id: 'customize-actions'
+- scrollUntilVisible:
+    element:
+      id: 'customize-group-creative-move-here'
+- tapOn:
+    id: 'customize-group-creative-move-here'
+- tapOn:
+    id: 'customize-done'
+- assertVisible:
+    id: 'home-group-creative'
+- assertNotVisible:
+    id: 'home-group-body-mind'
+
+# Rename Creative; Home shows the new name.
+- tapOn:
+    id: 'home-customize'
+- scrollUntilVisible:
+    element:
+      id: 'customize-group-creative-name'
+- tapOn:
+    id: 'customize-group-creative-name'
+- eraseText: 20
+- inputText: 'Making'
+- pressKey: Enter
+- tapOn:
+    id: 'customize-done'
+- assertVisible:
+    id: 'home-group-creative-name'
+    text: 'Making'
+
+# 2. Pin Habits: it moves to the Dock.
+- tapOn:
+    id: 'home-customize'
+- tapOn:
+    id: 'customize-app-habits'
+- tapOn:
+    id: 'customize-pin'
+- assertVisible:
+    id: 'customize-dock-habits'
+- tapOn:
+    id: 'customize-done'
+- assertVisible:
+    id: 'home-dock-habits'
+
+# Hide Habits: Home is empty, and "Customize Home" there lists it under Hidden.
+- tapOn:
+    id: 'home-customize'
+- tapOn:
+    id: 'customize-app-habits'
+- tapOn:
+    id: 'customize-hide'
+- scrollUntilVisible:
+    element:
+      id: 'customize-hidden-habits'
+- tapOn:
+    id: 'customize-done'
+- assertVisible:
+    id: 'home-all-hidden'
+- tapOn:
+    id: 'home-empty-customize'
+- scrollUntilVisible:
+    element:
+      id: 'customize-hidden-habits'
+- tapOn:
+    id: 'customize-hidden-habits'
+- scrollUntilVisible:
+    element:
+      id: 'customize-group-creative-move-here'
+    direction: UP
+- tapOn:
+    id: 'customize-group-creative-move-here'
+- tapOn:
+    id: 'customize-done'
+- assertVisible:
+    id: 'home-group-creative'
+
+# 3. Restart (no clearState): everything is kept, and Habits still opens.
+- launchApp
+- assertVisible:
+    id: 'home-group-creative-name'
+    text: 'Making'
+- tapOn:
+    id: 'home-open-habits'
+- assertVisible:
+    id: 'habits-screen'

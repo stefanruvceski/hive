@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -48,12 +49,11 @@ export function HomeEmpty({ reason }: Props) {
         {body}
       </ThemedText>
       {reason === 'all-hidden' && (
-        // Customize Home opens with #31; until then the button is shown but does nothing.
+        // Customize Home is where hidden apps come back (#31).
         <View style={styles.action}>
           <PrimaryButton
             label="Customize Home"
-            onPress={() => {}}
-            disabled
+            onPress={() => router.push('/customize')}
             testID="home-empty-customize"
           />
         </View>

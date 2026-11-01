@@ -41,4 +41,22 @@ describe('GlassSurface', () => {
       boxShadow: Effects.light.dockHighlight,
     });
   });
+
+  it('can draw its edge in another color (a Customize section that is a drop target)', async () => {
+    await render(
+      <GlassSurface kind="glass" radius={30} edgeColor={Colors.light.accentTarget} testID="s" />,
+    );
+
+    expect(screen.getByTestId('s-edge')).toHaveStyle({ borderColor: Colors.light.accentTarget });
+  });
+
+  it("uses the bar tokens for Customize's action bar: teal edge, its own highlight and shadow", async () => {
+    await render(<GlassSurface kind="bar" radius={32} testID="bar" />);
+
+    expect(screen.getByTestId('bar')).toHaveStyle({ boxShadow: Effects.light.barShadow });
+    expect(screen.getByTestId('bar-edge')).toHaveStyle({
+      borderColor: Colors.light.accentEdge,
+      boxShadow: Effects.light.barHighlight,
+    });
+  });
 });

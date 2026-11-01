@@ -23,7 +23,11 @@ type TextType =
   | 'button'
   | 'tileLabel'
   | 'code'
-  | 'rowCode';
+  | 'rowCode'
+  | 'hint'
+  | 'action'
+  | 'pill'
+  | 'pillRegular';
 
 export type ThemedTextProps = TextProps & {
   type?: TextType;
@@ -37,6 +41,7 @@ const defaultColor: Partial<Record<TextType, ThemeColor>> = {
   listHeader: 'textQuaternary',
   footnote: 'textQuaternary',
   tileLabel: 'textSecondary',
+  hint: 'textTertiary',
 };
 
 export function ThemedText({ style, type = 'row', themeColor, ...rest }: ThemedTextProps) {
@@ -147,5 +152,23 @@ const styles = StyleSheet.create({
   rowCode: {
     fontFamily: Fonts.mono,
     fontSize: 15,
+  },
+  /** Explanation under a screen title (Customize Home). */
+  hint: {
+    fontSize: 14,
+    lineHeight: 19,
+  },
+  /** Outlined or dashed action ("Move Habits here", "+ New group"). */
+  action: {
+    fontSize: 15,
+    fontWeight: 600,
+  },
+  /** Pill button in an action bar (Pin), and its quieter sibling (Hide). */
+  pill: {
+    fontSize: 14,
+    fontWeight: 600,
+  },
+  pillRegular: {
+    fontSize: 14,
   },
 });

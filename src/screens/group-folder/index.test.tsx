@@ -88,8 +88,23 @@ describe('GroupFolder', () => {
       'group-open-films',
     ]);
     expect(screen.getByTestId('group-open-books')).toHaveTextContent('Books');
-    // Customize Home comes with #31: shown, not usable yet.
-    expect(screen.getByRole('button', { name: 'Edit group' })).toBeDisabled();
+  });
+
+  it('closes the folder and opens Customize Home at this group from "Edit group"', async () => {
+    mockModules.push(module('books'));
+    await render(folder('creative'));
+
+    // Disabled until #31; now it closes the folder first, so Customize isn't presented inside it.
+    await userEvent.setup().press(screen.getByRole('button', { name: 'Edit group' }));
+
+    expect(router.dismiss).toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenCalledWith({
+      pathname: '/customize',
+      params: { group: 'creative' },
+    });
+    expect(jest.mocked(router.dismiss).mock.invocationCallOrder[0]).toBeLessThan(
+      jest.mocked(router.navigate).mock.invocationCallOrder[0]!,
+    );
   });
 
   it('counts the open and closes the folder before opening an app, so Back returns to Home', async () => {

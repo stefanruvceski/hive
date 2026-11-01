@@ -107,7 +107,7 @@ router.push({ pathname: '/users/[id]', params: { user: JSON.stringify(user) } })
 
 ## 6. Modals
 
-- A modal is a normal route whose `presentation` (`modal`, `formSheet`, `transparentModal`, `fullScreenModal`) is set in the parent Stack layout. `formSheet` on Android: max 3 `sheetAllowedDetents`, no header, no native grabber (`sheetGrabberVisible` is iOS-only). Exemplar: the group folder, a `transparentModal` that draws its own backdrop — options in [src/screens/group-folder/folder-options.ts](../../src/screens/group-folder/folder-options.ts), registered in `src/app/_layout.tsx`.
+- A modal is a normal route whose `presentation` (`modal`, `formSheet`, `transparentModal`, `fullScreenModal`) is set in the parent Stack layout. `formSheet` on Android: max 3 `sheetAllowedDetents`, no header, no native grabber (`sheetGrabberVisible` is iOS-only). Exemplar: the group folder, a `transparentModal` that draws its own backdrop — options in [src/screens/group-folder/folder-options.ts](../../src/screens/group-folder/folder-options.ts), registered in `src/app/_layout.tsx`. Customize Home is a `fullScreenModal` (Android falls back to `modal`) with its own title and Done — options in [src/screens/customize/customize-options.ts](../../src/screens/customize/customize-options.ts); it saves every edit at once, so leaving it never loses work.
 - To open a regular screen from a modal, dismiss the modal first (`router.dismiss()`, then `router.navigate(href)`); a screen pushed on top of a modal is presented inside it on iOS.
 - Deep-linked modals need an anchor so a screen exists behind them: `export const unstable_settings = { anchor: 'index' };` in the stack's `_layout.tsx`.
 - RN `Modal` only for self-contained confirmations that should not be part of the URL.

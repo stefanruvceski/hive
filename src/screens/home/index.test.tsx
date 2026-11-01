@@ -118,8 +118,9 @@ describe('Home', () => {
     expect(screen.getByRole('button', { name: 'Open Habits' })).toBeOnTheScreen();
     expect(screen.queryByTestId('home-group-body-mind')).not.toBeOnTheScreen();
     expect(screen.queryByTestId('home-app-habits')).not.toBeOnTheScreen();
-    // Customize comes with #31: shown, not usable yet.
-    expect(screen.getByTestId('home-customize')).toBeDisabled();
+    // The Dock's Customize button opens Customize Home (#31; it was shown disabled until then).
+    await userEvent.setup().press(screen.getByRole('button', { name: 'Customize Home' }));
+    expect(router.push).toHaveBeenCalledWith('/customize');
   });
 
   it('opens an app straight from a group card with four apps or fewer, and counts the open', async () => {
@@ -182,7 +183,9 @@ describe('Home', () => {
     await render(home);
 
     expect(screen.getByText('Your Home is empty')).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'Customize Home' })).toBeDisabled();
+    // Opens Customize Home, where hidden apps are brought back (#31; disabled until then).
+    await userEvent.setup().press(screen.getByRole('button', { name: 'Customize Home' }));
+    expect(router.push).toHaveBeenCalledWith('/customize');
   });
 
   it('shows a loading state while the layout is read', async () => {

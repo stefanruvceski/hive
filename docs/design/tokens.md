@@ -44,6 +44,26 @@ style) above a glass panel (radius 38, padding 24 · 20) with a grid of four car
 each (12/15 medium, `textSecondary`, row gap 18); "Edit group" as a 44-high glass pill under it. A tap
 on the dimmed Home closes it.
 
+**Customize Home** ([canvas/Customize.dc.html](canvas/Customize.dc.html)), as implemented in `theme.ts`:
+
+| Token          | Dark                     | Light                    | Use                                                            |
+| -------------- | ------------------------ | ------------------------ | -------------------------------------------------------------- |
+| `field`        | `rgba(10,15,28,0.45)`    | `rgba(255,255,255,0.85)` | Group name field                                               |
+| `fieldBorder`  | `rgba(255,255,255,0.12)` | `rgba(15,23,42,0.10)`    | Group name field border, Hide button border                    |
+| `iconMuted`    | `#94A3B8`                | `#64748B`                | Up / down chevrons, Cancel ×                                   |
+| `bar`          | `rgba(19,27,46,0.72)`    | `rgba(255,255,255,0.78)` | Action bar for the selected app (blur 28, border `accentEdge`) |
+| `accentTarget` | `rgba(45,212,191,0.53)`  | `rgba(45,212,191,0.53)`  | Border of a group that offers "Move <app> here"                |
+
+The Dock section's border is `accentEdge`; other groups use `glassBorder`. The selected app has a
+3 px `accent` ring 2 px outside its tile; a pinned app carries a 22 pt `accent` badge with an
+`onAccent` pin (12), 6 pt over its top-end corner; hidden apps are drawn at 55 % opacity. Action
+bar shadow: `c.barShadow` in [canvas/Customize.dc.html](canvas/Customize.dc.html). Sizes: sections
+14 apart, padding 13 · 13 · 16, gap 13; name field radius 14, padding 14, text 16 semibold; Move
+here radius 16; New group 54 high, radius 27; action bar 16 from the sides and 28 from the bottom,
+radius 32, padding 8 · 8 · 8 · 18, gap 8, buttons 42 high (radius 21, padding 16, text 14). Touch
+targets: the group row's up / down / delete and the name field are 48 (the design draws 40 × 42),
+Move here at least 48 (#31).
+
 **Scrims** (Home): content fades under the fixed header (`scrimTop`, header height + 10) and under the
 Dock (`scrimBottom`, 150 high). Exact gradients: `c.scrimTop` / `c.scrimBottom` in
 [canvas/Main.dc.html](canvas/Main.dc.html). The Dock's shadow: `c.dockShadow` there.

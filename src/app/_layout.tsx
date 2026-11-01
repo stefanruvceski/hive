@@ -14,6 +14,7 @@ import { useThemeName } from '@/hooks/use-theme';
 import { getDb } from '@/lib/db/client';
 import migrations from '@/lib/db/migrations/migrations';
 import { queryClient } from '@/lib/query-client';
+import { customizeOptions } from '@/screens/customize/customize-options';
 import { groupFolderOptions } from '@/screens/group-folder/folder-options';
 
 void SplashScreen.preventAutoHideAsync();
@@ -46,6 +47,7 @@ export default function RootLayout() {
             <Stack>
               {/* Presentation is navigator-level, so it lives here (agent-rules/02 §5). */}
               <Stack.Screen name="group/[id]" options={groupFolderOptions(scheme)} />
+              <Stack.Screen name="customize" options={customizeOptions(scheme)} />
             </Stack>
             <StatusBar style="auto" />
           </ThemeProvider>

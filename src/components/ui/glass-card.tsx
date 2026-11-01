@@ -6,6 +6,8 @@ import { Layout } from '@/constants/theme';
 type Props = ViewProps & {
   /** `card` (radius 30) for cards and widgets, `sheet` (radius 38) for sheets. */
   variant?: 'card' | 'sheet';
+  /** Another border color than the glass default (Customize's Dock and drop targets). */
+  edgeColor?: string;
   testID: string;
 };
 
