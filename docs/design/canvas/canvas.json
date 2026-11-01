@@ -2,33 +2,189 @@
   "v": 3,
   "attachments": {},
   "boards": {
-    "Main.dc.html": { "x": 0, "y": 0, "w": 390, "h": 844, "title": "Home", "is_interactive": true },
-    "HomeScrolled.dc.html": { "x": 470, "y": 0, "w": 390, "h": 844, "title": "Home — scrolled down", "is_interactive": true },
-    "GroupSheet.dc.html": { "x": 940, "y": 0, "w": 390, "h": 844, "title": "Group opened", "is_interactive": true },
-    "Customize.dc.html": { "x": 1410, "y": 0, "w": 390, "h": 1420, "title": "Customize Home", "is_interactive": true },
-    "Empty.dc.html": { "x": 1880, "y": 0, "w": 390, "h": 844, "title": "Everything hidden", "is_interactive": true },
-    "Settings.dc.html": { "x": 2350, "y": 0, "w": 390, "h": 1380, "title": "Settings", "is_interactive": true },
-    "LargeText.dc.html": { "x": 2820, "y": 0, "w": 390, "h": 844, "title": "Home — largest text size", "is_interactive": true },
-    "MainLight.dc.html": { "x": 0, "y": 1700, "w": 390, "h": 844, "title": "Home — light", "is_interactive": true },
-    "HomeScrolledLight.dc.html": { "x": 470, "y": 1700, "w": 390, "h": 844, "title": "Home — scrolled down, light", "is_interactive": true },
-    "GroupSheetLight.dc.html": { "x": 940, "y": 1700, "w": 390, "h": 844, "title": "Group opened — light", "is_interactive": true },
-    "CustomizeLight.dc.html": { "x": 1410, "y": 1700, "w": 390, "h": 1420, "title": "Customize Home — light", "is_interactive": true },
-    "EmptyLight.dc.html": { "x": 1880, "y": 1700, "w": 390, "h": 844, "title": "Everything hidden — light", "is_interactive": true },
-    "SettingsLight.dc.html": { "x": 2350, "y": 1700, "w": 390, "h": 1380, "title": "Settings — light", "is_interactive": true },
-    "LargeTextLight.dc.html": { "x": 2820, "y": 1700, "w": 390, "h": 844, "title": "Home — largest text size, light", "is_interactive": true }
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Home",
+      "is_interactive": true
+    },
+    "HomeScrolled.dc.html": {
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Home — scrolled down",
+      "is_interactive": true
+    },
+    "GroupSheet.dc.html": {
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Group opened",
+      "is_interactive": true
+    },
+    "Customize.dc.html": {
+      "x": 1410,
+      "y": 0,
+      "w": 390,
+      "h": 1420,
+      "title": "Customize Home",
+      "is_interactive": true
+    },
+    "Empty.dc.html": {
+      "x": 1880,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Everything hidden",
+      "is_interactive": true
+    },
+    "Settings.dc.html": {
+      "x": 2350,
+      "y": 0,
+      "w": 390,
+      "h": 1380,
+      "title": "Settings",
+      "is_interactive": true
+    },
+    "LargeText.dc.html": {
+      "x": 2820,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Home — largest text size",
+      "is_interactive": true
+    },
+    "MainLight.dc.html": {
+      "x": 0,
+      "y": 1700,
+      "w": 390,
+      "h": 844,
+      "title": "Home — light",
+      "is_interactive": true
+    },
+    "HomeScrolledLight.dc.html": {
+      "x": 470,
+      "y": 1700,
+      "w": 390,
+      "h": 844,
+      "title": "Home — scrolled down, light",
+      "is_interactive": true
+    },
+    "GroupSheetLight.dc.html": {
+      "x": 940,
+      "y": 1700,
+      "w": 390,
+      "h": 844,
+      "title": "Group opened — light",
+      "is_interactive": true
+    },
+    "CustomizeLight.dc.html": {
+      "x": 1410,
+      "y": 1700,
+      "w": 390,
+      "h": 1420,
+      "title": "Customize Home — light",
+      "is_interactive": true
+    },
+    "EmptyLight.dc.html": {
+      "x": 1880,
+      "y": 1700,
+      "w": 390,
+      "h": 844,
+      "title": "Everything hidden — light",
+      "is_interactive": true
+    },
+    "SettingsLight.dc.html": {
+      "x": 2350,
+      "y": 1700,
+      "w": 390,
+      "h": 1380,
+      "title": "Settings — light",
+      "is_interactive": true
+    },
+    "LargeTextLight.dc.html": {
+      "x": 2820,
+      "y": 1700,
+      "w": 390,
+      "h": 844,
+      "title": "Home — largest text size, light",
+      "is_interactive": true
+    }
   },
-  "createdOnFiles": { "at": "2026-10-31T13:20:00Z", "v": 1 },
+  "createdOnFiles": {
+    "at": "2026-10-31T13:20:00Z",
+    "v": 1
+  },
   "designSystems": [],
-  "launch": { "view": "canvas" },
-  "noteOrder": ["title", "lightTitle", "how", "scroll", "large"],
-  "notes": {
-    "title": { "kind": "title1", "maxW": 3210, "text": "Hive Home — iteration 3 · dark", "w": 240, "x": 0, "y": -280 },
-    "lightTitle": { "kind": "title1", "maxW": 3210, "text": "Hive Home — iteration 3 · light", "w": 240, "x": 0, "y": 1450 },
-    "how": { "fill": "purple", "text": "Press Play on Home. Tap Creative → group sheet. Customize (Dock, right) → move, pin, hide, rename, reorder, add groups. Gear → Settings.\n\nAccent: teal #2DD4BF (fills), #0F766E for teal text on light. Tinted icons, one square size 169 × 169 (13 · 65 · 13 · 65 · 13), Dock for pinned (max 4).", "w": 300, "x": 3290, "y": 0 },
-    "scroll": { "fill": "teal", "text": "Scrolling: Today swipes sideways and snaps per card (dots are tappable). The header stays put; Today and the groups slide under it and fade, and slide under the Dock at the bottom. The glow stays fixed like a wallpaper.", "w": 300, "x": 3290, "y": 420 },
-    "large": { "fill": "orange", "text": "Largest text size: Today widgets become full-width (one per swipe), the title may wrap to two lines, group names grow. Group cards stay square — they hold no text.", "w": 300, "x": 3290, "y": 760 }
+  "launch": {
+    "view": "canvas"
   },
-  "order": ["Main.dc.html", "HomeScrolled.dc.html", "GroupSheet.dc.html", "Customize.dc.html", "Empty.dc.html", "Settings.dc.html", "LargeText.dc.html", "MainLight.dc.html", "HomeScrolledLight.dc.html", "GroupSheetLight.dc.html", "CustomizeLight.dc.html", "EmptyLight.dc.html", "SettingsLight.dc.html", "LargeTextLight.dc.html"],
+  "noteOrder": [
+    "title",
+    "lightTitle",
+    "how",
+    "scroll",
+    "large"
+  ],
+  "notes": {
+    "title": {
+      "kind": "title1",
+      "maxW": 3210,
+      "text": "Hive Home — iteration 3 · dark",
+      "w": 240,
+      "x": 0,
+      "y": -280
+    },
+    "lightTitle": {
+      "kind": "title1",
+      "maxW": 3210,
+      "text": "Hive Home — iteration 3 · light",
+      "w": 240,
+      "x": 0,
+      "y": 1450
+    },
+    "how": {
+      "fill": "purple",
+      "text": "Press Play on Home. A group with four apps or fewer: tap an icon to open that app. More than four: the three most used apps stay big (opens in the last 30 days, recent ones weigh more), the rest shrink into the fourth spot — tap it to open the group as a folder over a blurred Home (Creative); tap outside the folder to close it. Customize (Dock, right) → move, pin, hide, rename, reorder, add groups. Gear → Settings.\n\nAccent: teal #2DD4BF (fills), #0F766E for teal text on light. Tinted icons, one square size 169 × 169 (13 · 65 · 13 · 65 · 13), Dock for pinned (max 4).",
+      "w": 300,
+      "x": 3290,
+      "y": 0
+    },
+    "scroll": {
+      "fill": "teal",
+      "text": "Scrolling: Today swipes sideways and snaps per card (dots are tappable). The header stays put; Today and the groups slide under it and fade, and slide under the Dock at the bottom. The glow stays fixed like a wallpaper.",
+      "w": 300,
+      "x": 3290,
+      "y": 420
+    },
+    "large": {
+      "fill": "orange",
+      "text": "Largest text size: Today widgets become full-width (one per swipe), the title may wrap to two lines, group names grow. Group cards stay square — they hold no text.",
+      "w": 300,
+      "x": 3290,
+      "y": 760
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "HomeScrolled.dc.html",
+    "GroupSheet.dc.html",
+    "Customize.dc.html",
+    "Empty.dc.html",
+    "Settings.dc.html",
+    "LargeText.dc.html",
+    "MainLight.dc.html",
+    "HomeScrolledLight.dc.html",
+    "GroupSheetLight.dc.html",
+    "CustomizeLight.dc.html",
+    "EmptyLight.dc.html",
+    "SettingsLight.dc.html",
+    "LargeTextLight.dc.html"
+  ],
   "pages": [],
   "title": "Hive design"
 }
