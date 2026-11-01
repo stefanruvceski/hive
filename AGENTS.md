@@ -189,7 +189,7 @@ Typed routes are enabled; never build hrefs from untyped strings.
   branch through its harness; that is the one exception. Full ticket-to-PR process:
   [.github/instructions/ticket-workflow.instructions.md](.github/instructions/ticket-workflow.instructions.md).
 - Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `docs:`, `ci:`). No AI attribution in commits/PRs: no `Co-authored-by:` trailer or "Generated with …" line for Copilot, Claude or any AI tool. The PR body becomes the squash commit on `main`, so this covers it too; CI (`pr-hygiene.yml`) and the `commit-msg` hook enforce it.
-- Small PRs, one concern each. Agent-authored PRs open as drafts.
+- Small PRs, one concern each. Agent-authored PRs open as drafts. Update a branch with `git rebase origin/main` and `git push --force-with-lease`, never by merging `main` into it — also in handed-over commands.
 - Never commit: `ios/`, `android/`, `.env`, credentials, `google-service-account.json`.
 
 ## When unsure
