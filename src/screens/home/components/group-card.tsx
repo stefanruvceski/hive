@@ -1,4 +1,5 @@
-import { StyleSheet, View } from 'react-native';
+import { Link } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppIcon } from '@/components/ui/app-icon';
 import { GlassCard } from '@/components/ui/glass-card';
@@ -24,13 +25,17 @@ export function GroupCard({ group }: { group: HomeGroup<HiveModule> }) {
         <GlassCard style={styles.card} testID={`home-group-${group.id}-card`}>
           <View style={styles.tiles}>
             {group.apps.slice(0, TILES).map((app) => (
-              <AppIcon
-                key={app.id}
-                tint={app.tint}
-                icon={app.icon}
-                label={app.title}
-                testID={`home-app-${app.id}`}
-              />
+              // Temporary until the group sheet (#30): a tile opens its app. Remove with #30.
+              <Link key={app.id} href={app.href} asChild>
+                <Pressable testID={`home-open-${app.id}`}>
+                  <AppIcon
+                    tint={app.tint}
+                    icon={app.icon}
+                    label={app.title}
+                    testID={`home-app-${app.id}`}
+                  />
+                </Pressable>
+              </Link>
             ))}
           </View>
         </GlassCard>
