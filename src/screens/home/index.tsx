@@ -6,16 +6,16 @@ import { ErrorState } from '@/components/ui/error-state';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Wallpaper } from '@/components/ui/wallpaper';
 import { Layout, MaxContentWidth } from '@/constants/theme';
+import { useHomeLayout } from '@/hooks/use-home-layout';
 import { useNow } from '@/hooks/use-now';
 import { useThemeEffects } from '@/hooks/use-theme';
 import { defaultHomeGroups, type HiveModule, hiveModules } from '@/modules/registry';
+import { arrangeHome, type HomeGroup } from '@/utils/home-groups';
 
 import { Dock } from './components/dock';
 import { GroupCard } from './components/group-card';
 import { HomeEmpty } from './components/home-empty';
 import { HomeHeader } from './components/home-header';
-import { arrangeHome, type HomeGroup } from './home-groups';
-import { useHomeLayout } from './use-home-layout';
 
 /**
  * Hive's launcher (docs/design/canvas/Main.dc.html): a fixed header, the user's app groups as

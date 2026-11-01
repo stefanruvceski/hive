@@ -2,10 +2,10 @@ import { render, screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { useHomeLayout } from '@/hooks/use-home-layout';
 import type { HiveModule } from '@/modules/registry';
 
 import { Home } from './index';
-import { useHomeLayout } from './use-home-layout';
 
 // The registry is the input under test; each test sets the modules it needs.
 const mockModules: HiveModule[] = [];
@@ -20,7 +20,7 @@ jest.mock('@/modules/registry', () => ({
 }));
 
 // The database boundary: Home's data hook (docs/agent-rules/09 §5).
-jest.mock('./use-home-layout');
+jest.mock('@/hooks/use-home-layout');
 
 // Link needs a navigation container; here we only check what Home renders and where it goes.
 jest.mock('expo-router', () => ({
@@ -103,10 +103,7 @@ describe('Home', () => {
     });
     await render(home);
 
-    expect(screen.getByTestId('home-group-money')).toHaveProp(
-      'aria-label',
-      'Money: Wallet, Invest',
-    );
+    expect(screen.getByRole('button', { name: 'Money: Wallet, Invest' })).toBeOnTheScreen();
     expect(screen.getByTestId('home-group-money-name')).toHaveTextContent('Money');
     expect(screen.getByTestId('home-group-creative')).toBeOnTheScreen();
     // Habits is pinned: in the Dock, not repeated in Body & mind (which is then empty and not shown).
@@ -117,12 +114,17 @@ describe('Home', () => {
     expect(screen.getByTestId('home-customize')).toBeDisabled();
   });
 
-  // Temporary until the group sheet (#30): an app in a group card opens with one tap.
-  it('opens an app from its group card', async () => {
+  // #30: the whole card is one button that opens the group's sheet; its tiles open nothing.
+  it("opens a group's sheet from its card", async () => {
     mockModules.push(module('habits', 'body-mind', 'habits'));
     await render(home);
 
-    expect(screen.getByTestId('home-open-habits')).toBeOnTheScreen();
+    expect(screen.queryByTestId('home-open-habits')).not.toBeOnTheScreen();
+    await userEvent.setup().press(screen.getByRole('button', { name: 'Body & mind: Habits' }));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/group/[id]',
+      params: { id: 'body-mind' },
+    });
   });
 
   it('shows the empty Home with Customize when every app is hidden', async () => {
