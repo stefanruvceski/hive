@@ -142,26 +142,31 @@ function FolderContent({ group }: { group: HomeGroup<HiveModule> }) {
           ))}
         </View>
       </GlassCard>
-      {/* Opens Customize Home with #31; until then it is shown dimmed and does nothing. */}
+      {/* Customize Home at this group (#31). Close the folder first: a screen opened over a
+          modal is presented inside it on iOS (agent-rules/02 §6). */}
       <Pressable
         role="button"
         aria-label="Edit group"
-        disabled
-        aria-disabled
+        onPress={() => {
+          router.dismiss();
+          router.navigate({ pathname: '/customize', params: { group: group.id } });
+        }}
         hitSlop={(Layout.minTouchAndroid - Layout.minTouch) / 2}
         testID="group-folder-edit">
-        <GlassSurface kind="control" radius={Layout.minTouch / 2} style={styles.edit}>
-          <View style={[styles.editContent, styles.dimmed]}>
-            <SymbolView
-              name={{ ios: 'pencil', android: 'edit', web: 'edit' }}
-              size={Layout.folder.edit.glyph}
-              tintColor={theme.accentText}
-            />
-            <ThemedText type="button" themeColor="accentText">
-              Edit group
-            </ThemedText>
-          </View>
-        </GlassSurface>
+        {({ pressed }) => (
+          <GlassSurface kind="control" radius={Layout.minTouch / 2} style={styles.edit}>
+            <View style={[styles.editContent, pressed && styles.pressed]}>
+              <SymbolView
+                name={{ ios: 'pencil', android: 'edit', web: 'edit' }}
+                size={Layout.folder.edit.glyph}
+                tintColor={theme.accentText}
+              />
+              <ThemedText type="button" themeColor="accentText">
+                Edit group
+              </ThemedText>
+            </View>
+          </GlassSurface>
+        )}
       </Pressable>
     </>
   );
@@ -207,8 +212,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Layout.folder.edit.gap,
   },
-  // Same as the Dock's Customize button until #31.
-  dimmed: {
-    opacity: 0.45,
+  // Pressed feedback on the content, never on the glass (agent-rules/03 §1).
+  pressed: {
+    opacity: 0.6,
   },
 });

@@ -47,6 +47,15 @@ export const Colors = {
     folderDimSolid: 'rgba(238,242,245,0.92)',
     /** No fill: a screen that shows the one under it (the folder's modal). */
     clear: 'transparent',
+    /** Customize Home (Customize.dc.html): group name field, its border (also Hide's). */
+    field: 'rgba(255,255,255,0.85)',
+    fieldBorder: 'rgba(15,23,42,0.10)',
+    /** Quiet icons: up / down chevrons, Cancel. */
+    iconMuted: '#64748B',
+    /** The action bar for the selected app. */
+    bar: 'rgba(255,255,255,0.78)',
+    /** Border of a group that offers "Move <app> here". */
+    accentTarget: 'rgba(45,212,191,0.53)',
   },
   dark: {
     background: '#0A0F1C',
@@ -77,6 +86,11 @@ export const Colors = {
     folderDim: 'rgba(3,6,14,0.45)',
     folderDimSolid: 'rgba(10,15,28,0.92)',
     clear: 'transparent',
+    field: 'rgba(10,15,28,0.45)',
+    fieldBorder: 'rgba(255,255,255,0.12)',
+    iconMuted: '#94A3B8',
+    bar: 'rgba(19,27,46,0.72)',
+    accentTarget: 'rgba(45,212,191,0.53)',
   },
 } as const;
 
@@ -103,6 +117,9 @@ export const Effects = {
     switchKnobShadow: '0 2px 6px rgba(0,0,0,0.3)',
     dockHighlight: 'inset 0 1px 0 rgba(255,255,255,0.9)',
     dockShadow: '0 10px 30px rgba(15,23,42,0.15)',
+    /** Customize's action bar. */
+    barHighlight: 'inset 0 1px 0 #FFFFFF',
+    barShadow: '0 10px 30px rgba(15,23,42,0.16)',
     /** Home: content fades under the fixed header and under the Dock. */
     scrimTop:
       'linear-gradient(180deg, rgba(238,242,245,0.78) 0%, rgba(238,242,245,0.6) 70%, rgba(238,242,245,0) 100%)',
@@ -123,6 +140,8 @@ export const Effects = {
     switchKnobShadow: '0 2px 6px rgba(0,0,0,0.3)',
     dockHighlight: 'inset 0 1px 0 rgba(255,255,255,0.28)',
     dockShadow: '0 10px 30px rgba(0,0,0,0.5)',
+    barHighlight: 'inset 0 1px 0 rgba(255,255,255,0.22)',
+    barShadow: '0 10px 30px rgba(0,0,0,0.5)',
     scrimTop:
       'linear-gradient(180deg, rgba(10,15,28,0.70) 0%, rgba(10,15,28,0.55) 70%, rgba(10,15,28,0) 100%)',
     scrimBottom:
@@ -228,8 +247,41 @@ export const Layout = {
     labelGap: 6,
     edit: { paddingHorizontal: 16, gap: 8, glyph: 18 },
   },
-  /** Primary (accent-filled) button. */
-  button: { height: 50, paddingHorizontal: 26 },
+  /**
+   * Customize Home (Customize.dc.html): sections, the hint, group rows (name field and 48 pt
+   * controls, #31), app tiles (selection ring, pin badge, hidden fade), Move here, New group and the
+   * action bar for the selected app.
+   */
+  customize: {
+    sectionGap: 14,
+    hintMargin: 4,
+    section: { paddingTop: 13, paddingHorizontal: 13, paddingBottom: 16, gap: 13, titleInset: 3 },
+    field: { radius: 14, paddingHorizontal: 14 },
+    rowGap: 2,
+    controlGlyph: 18,
+    headingGlyph: 15,
+    /** Between the Dock heading's pin and its word. */
+    titleGap: 6,
+    ring: { width: 3, offset: 2 },
+    badge: { size: 22, offset: 6, glyph: 12 },
+    hiddenOpacity: 0.55,
+    moveHere: { radius: 16, border: 1.5 },
+    addGroup: { height: 54, border: 1.5 },
+    bar: {
+      inset: 16,
+      radius: 32,
+      padding: { vertical: 8, end: 8, start: 18 },
+      gap: 8,
+      button: { height: 42, paddingHorizontal: 16 },
+      glyph: 16,
+      /** Text this much larger than default stacks the name above the buttons. */
+      stackAtFontScale: 1.5,
+    },
+    /** Room under the last section so the action bar never covers it. */
+    bottomRoom: 140,
+  },
+  /** Primary (accent-filled) button; `compact` is the 44 pt Done in Customize's header. */
+  button: { height: 50, paddingHorizontal: 26, compact: { height: 44, paddingHorizontal: 22 } },
   /** Round glass button (Settings, Close, Back). */
   control: { size: 44, glyph: 21 },
   icon: {

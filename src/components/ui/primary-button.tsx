@@ -9,11 +9,19 @@ type Props = {
   onPress: () => void;
   /** Shown but not usable yet; the label dims. */
   disabled?: boolean;
+  /** `compact` (44 high) sits in a header: Done in Customize Home. */
+  size?: 'regular' | 'compact';
   testID: string;
 };
 
 /** Accent-filled primary action ("Customize Home", "Try again" in docs/design/canvas/Empty.dc.html). */
-export function PrimaryButton({ label, onPress, disabled = false, testID }: Props) {
+export function PrimaryButton({
+  label,
+  onPress,
+  disabled = false,
+  size = 'regular',
+  testID,
+}: Props) {
   const theme = useTheme();
 
   return (
@@ -24,8 +32,13 @@ export function PrimaryButton({ label, onPress, disabled = false, testID }: Prop
       onPress={onPress}
       disabled={disabled}
       aria-disabled={disabled}
+      // 44 pt high; the slop makes Android's 48 dp target (agent-rules/12 §2).
+      hitSlop={
+        size === 'compact' ? (Layout.minTouchAndroid - Layout.button.compact.height) / 2 : undefined
+      }
       style={({ pressed }) => [
         styles.button,
+        size === 'compact' && styles.compact,
         { backgroundColor: theme.accent },
         (pressed || disabled) && styles.pressed,
       ]}>
@@ -43,6 +56,11 @@ const styles = StyleSheet.create({
     borderRadius: Layout.button.height / 2,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  compact: {
+    minHeight: Layout.button.compact.height,
+    paddingHorizontal: Layout.button.compact.paddingHorizontal,
+    borderRadius: Layout.button.compact.height / 2,
   },
   label: {
     textAlign: 'center',

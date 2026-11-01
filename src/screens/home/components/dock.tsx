@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -15,8 +16,8 @@ type Props = {
 };
 
 /**
- * The Dock: pinned apps (one tap opens them), a divider and the Customize button (Main.dc.html).
- * Customize opens with #31; until then it is shown dimmed and does nothing.
+ * The Dock: pinned apps (one tap opens them), a divider and the Customize button (Main.dc.html),
+ * which opens Customize Home (#31).
  */
 export function Dock({ pinned, bottom, onOpen }: Props) {
   const theme = useTheme();
@@ -51,24 +52,25 @@ export function Dock({ pinned, bottom, onOpen }: Props) {
           </Pressable>
         ))}
         {pinned.length > 0 && <View style={[styles.divider, { backgroundColor: theme.divider }]} />}
-        <View
-          accessible
+        <Pressable
           role="button"
           aria-label="Customize Home"
-          aria-disabled
+          onPress={() => router.push('/customize')}
           testID="home-customize"
           style={[
             styles.customize,
             { backgroundColor: theme.accentFill, borderColor: theme.accentEdge },
           ]}>
-          <View style={styles.dimmed}>
-            <SymbolView
-              name={{ ios: 'slider.horizontal.3', android: 'tune', web: 'tune' }}
-              size={Layout.dock.glyph}
-              tintColor={theme.accentText}
-            />
-          </View>
-        </View>
+          {({ pressed }) => (
+            <View style={pressed && styles.pressed}>
+              <SymbolView
+                name={{ ios: 'slider.horizontal.3', android: 'tune', web: 'tune' }}
+                size={Layout.dock.glyph}
+                tintColor={theme.accentText}
+              />
+            </View>
+          )}
+        </Pressable>
       </GlassSurface>
     </View>
   );
@@ -103,8 +105,5 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.6,
-  },
-  dimmed: {
-    opacity: 0.45,
   },
 });

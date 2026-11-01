@@ -20,6 +20,15 @@ describe('PrimaryButton', () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
+  it('comes in a compact size (Done in Customize Home)', async () => {
+    await render(<PrimaryButton label="Done" onPress={jest.fn()} size="compact" testID="done" />);
+
+    expect(screen.getByRole('button', { name: 'Done' })).toHaveStyle({
+      minHeight: Layout.button.compact.height,
+      paddingHorizontal: Layout.button.compact.paddingHorizontal,
+    });
+  });
+
   it('can be shown but not usable yet', async () => {
     const onPress = jest.fn();
     await render(

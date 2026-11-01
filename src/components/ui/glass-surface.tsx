@@ -5,12 +5,17 @@ import { useWallpaperTarget } from '@/components/ui/wallpaper';
 import { Blur } from '@/constants/theme';
 import { useTheme, useThemeEffects } from '@/hooks/use-theme';
 
-type Kind = 'glass' | 'control' | 'dock';
+type Kind = 'glass' | 'control' | 'dock' | 'bar';
 
 type Props = ViewProps & {
-  /** `glass` for cards and sheets, `control` for round buttons, `dock` for the Dock capsule. */
+  /**
+   * `glass` for cards and sheets, `control` for round buttons, `dock` for the Dock capsule, `bar`
+   * for Customize's action bar.
+   */
   kind: Kind;
   radius: number;
+  /** Replaces the kind's border color (a theme color): Customize's Dock and drop-target sections. */
+  edgeColor?: string;
 };
 
 /** Which tokens each kind of glass uses. */
@@ -42,6 +47,14 @@ function useGlassTokens(kind: Kind) {
         shadow: effects.dockShadow,
         blur: Blur.dock,
       };
+    case 'bar':
+      return {
+        fill: theme.bar,
+        border: theme.accentEdge,
+        highlight: effects.barHighlight,
+        shadow: effects.barShadow,
+        blur: Blur.dock,
+      };
   }
 }
 
@@ -51,7 +64,7 @@ function useGlassTokens(kind: Kind) {
  * content inside instead. On Android the blur needs a `Wallpaper` ancestor; without one it is the
  * translucent tint alone.
  */
-export function GlassSurface({ kind, radius, style, children, ...rest }: Props) {
+export function GlassSurface({ kind, radius, edgeColor, style, children, ...rest }: Props) {
   const effects = useThemeEffects();
   const tokens = useGlassTokens(kind);
   const target = useWallpaperTarget();
@@ -81,7 +94,7 @@ export function GlassSurface({ kind, radius, style, children, ...rest }: Props) 
           styles.edge,
           round,
           {
-            borderColor: tokens.border,
+            borderColor: edgeColor ?? tokens.border,
             boxShadow: tokens.highlight,
           },
         ]}
