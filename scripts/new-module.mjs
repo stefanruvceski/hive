@@ -210,6 +210,8 @@ export default function ${pascal}Route() {
 }
 `;
 
+// Opens the module from its tile on its group card (#30). In a group of more than four apps only the
+// three most used have a tile; the rest open from the folder (home-group-<group>-more → group-open-<id>).
 const flow = `# ${title}: opens from its Home card and renders.
 appId: com.ruvceski.hive.dev
 tags:

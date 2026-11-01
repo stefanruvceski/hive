@@ -1,0 +1,21 @@
+# Group cards (#30): an app in a group of four or fewer opens straight from its tile, and Back
+# returns to Home. A group with more than four apps opens as a folder from the card's fourth spot
+# (home-group-<id>-more → group-open-<id>); no group has five apps yet, so that path is covered by
+# Jest (src/screens/home, src/screens/group-folder) until one does.
+# Run locally: pnpm test:e2e   (needs a dev build installed on the simulator/emulator)
+appId: com.ruvceski.hive.dev
+tags:
+  - home
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: 'home-group-body-mind'
+- tapOn:
+    id: 'home-open-habits'
+- assertVisible:
+    id: 'habits-screen'
+- tapOn:
+    id: 'habits-back'
+- assertVisible:
+    id: 'home-title'

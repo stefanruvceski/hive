@@ -9,8 +9,8 @@ type Props = {
   tint: AppTint;
   /** Per-platform name — a bare SF Symbol string renders nothing on Android (agent-rules/03 §6). */
   icon: Exclude<SymbolViewProps['name'], string>;
-  /** `card` (65) inside group cards and sheets, `dock` (52) in the Dock. */
-  size?: 'card' | 'dock';
+  /** `card` (65) in group cards and folders, `dock` (52) in the Dock, `mini` (30) in a card's fourth spot. */
+  size?: 'card' | 'dock' | 'mini';
   /** The app's name, read by screen readers. */
   label: string;
   testID: string;

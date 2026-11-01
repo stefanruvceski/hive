@@ -29,6 +29,21 @@ Both themes are required (Settings → Appearance: System / Dark / Light).
 | `onAccent`        | `#042F2A`                                                  | `#042F2A`                                                | Text on a teal fill                                             |
 | `danger`          | `#F87171`                                                  | `#DC2626`                                                | Delete group                                                    |
 
+**Group card and folder** ([canvas/Main.dc.html](canvas/Main.dc.html), [canvas/GroupSheet.dc.html](canvas/GroupSheet.dc.html)), as implemented in `theme.ts`:
+
+| Token            | Dark                  | Light                    | Use                                               |
+| ---------------- | --------------------- | ------------------------ | ------------------------------------------------- |
+| `folderDim`      | `rgba(3,6,14,0.45)`   | `rgba(238,242,245,0.45)` | Over the blurred Home behind an open folder (iOS) |
+| `folderDimSolid` | `rgba(10,15,28,0.92)` | `rgba(238,242,245,0.92)` | The same where Home can't be blurred (Android)    |
+| `clear`          | `transparent`         | `transparent`            | The folder's modal screen, so Home shows through  |
+
+Card: four apps or fewer → every tile (65) opens its app. More → the three most used stay big; the rest
+shrink to 2×2 icons of 30 (radius 8, glyph 16, gap 5) in the fourth spot, which opens the folder. "Most
+used" = opens in the last 30 days, each worth half as much a week later. Folder: the group name (title
+style) above a glass panel (radius 38, padding 24 · 20) with a grid of four card icons per row, name under
+each (12/15 medium, `textSecondary`, row gap 18); "Edit group" as a 44-high glass pill under it. A tap
+on the dimmed Home closes it.
+
 **Scrims** (Home): content fades under the fixed header (`scrimTop`, header height + 10) and under the
 Dock (`scrimBottom`, 150 high). Exact gradients: `c.scrimTop` / `c.scrimBottom` in
 [canvas/Main.dc.html](canvas/Main.dc.html). The Dock's shadow: `c.dockShadow` there.

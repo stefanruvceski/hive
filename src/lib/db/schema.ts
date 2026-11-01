@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 // Core (shell) tables. Module tables live in src/modules/<id>/data/schema.ts and are prefixed
 // with the module id (e.g. `habits_entries`) so modules never collide in the shared database.
@@ -30,3 +30,17 @@ export const settings = sqliteTable('settings', {
   key: text('key').primaryKey(),
   value: text('value').notNull(),
 });
+
+/**
+ * How often each app was opened from Home, per local day (`YYYY-MM-DD`). Ranks the apps on a group
+ * card (`src/utils/app-usage.ts`); rows older than the 30-day window are deleted on the next open.
+ */
+export const homeAppUsage = sqliteTable(
+  'home_app_usage',
+  {
+    moduleId: text('module_id').notNull(),
+    date: text('date').notNull(),
+    opens: integer('opens').notNull().default(0),
+  },
+  (table) => [primaryKey({ columns: [table.moduleId, table.date] })],
+);

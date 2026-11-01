@@ -22,7 +22,7 @@ Each screen exists in dark (`<Screen>.dc.html`) and light (`<Screen>Light.dc.htm
 | ----------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | Home              | [Main](canvas/Main.dc.html)                 | Fixed header, Today widgets (swipe sideways), group cards (App Library style), Dock       |
 | Home, scrolled    | [HomeScrolled](canvas/HomeScrolled.dc.html) | Today and groups sliding under the fixed header and under the Dock                        |
-| Group opened      | [GroupSheet](canvas/GroupSheet.dc.html)     | Sheet listing the group's apps with names                                                 |
+| Group opened      | [GroupSheet](canvas/GroupSheet.dc.html)     | Folder over a blurred Home: every app in the group, icons with names (App Library style)  |
 | Customize Home    | [Customize](canvas/Customize.dc.html)       | Dock slots, groups (rename, reorder, delete empty), move / pin / hide an app, hidden apps |
 | Everything hidden | [Empty](canvas/Empty.dc.html)               | Empty state with "Customize Home"                                                         |
 | Settings          | [Settings](canvas/Settings.dc.html)         | Home, Appearance (System / Dark / Light), Date format, Backup, About                      |
@@ -36,7 +36,9 @@ Placeholders in the screens are not product copy: `[AMOUNT]`, `[DESCRIPTION]`, `
 - Home = **Today** (glanceable summaries from modules) above **groups** of apps; pinned apps live in
   the **Dock** (max 4) and are not repeated in their group on Home.
 - Groups are user-editable (rename, reorder, add, delete when empty); apps can be moved, pinned, hidden.
-- Group cards are 2×2 squares without text inside; the group name is small, under the card.
+- Group cards are 2×2 squares without text inside; the group name is small, under the card. Up to four apps:
+  each tile opens its app. More: the three most used stay big, the rest shrink into the fourth spot, which
+  opens the group as a folder (decided in #30).
 - Liquid Glass only on floating controls (header buttons, Dock, action bars); content sits on frosted
   cards over a fixed wallpaper glow.
 - Scrolling: the header stays put; content slides under it and under the Dock with a soft fade.

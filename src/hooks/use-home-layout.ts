@@ -2,8 +2,7 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 
 import { getDb } from '@/lib/db/client';
 import { homeApps, homeGroups } from '@/lib/db/schema';
-
-import type { HomeRows } from './home-groups';
+import type { HomeRows } from '@/utils/home-groups';
 
 export const homeLayoutKeys = {
   all: ['home-layout'] as const,

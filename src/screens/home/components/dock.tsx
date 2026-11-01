@@ -1,4 +1,3 @@
-import { Link } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -12,13 +11,14 @@ type Props = {
   pinned: readonly HiveModule[];
   /** Distance from the screen bottom. */
   bottom: number;
+  onOpen: (app: HiveModule) => void;
 };
 
 /**
  * The Dock: pinned apps (one tap opens them), a divider and the Customize button (Main.dc.html).
  * Customize opens with #31; until then it is shown dimmed and does nothing.
  */
-export function Dock({ pinned, bottom }: Props) {
+export function Dock({ pinned, bottom, onOpen }: Props) {
   const theme = useTheme();
 
   return (
@@ -31,24 +31,24 @@ export function Dock({ pinned, bottom }: Props) {
         style={styles.dock}
         testID="home-dock">
         {pinned.map((app) => (
-          <Link key={app.id} href={app.href} asChild>
-            <Pressable
-              role="button"
-              aria-label={`Open ${app.title}`}
-              testID={`home-dock-${app.id}`}>
-              {({ pressed }) => (
-                <View style={pressed && styles.pressed}>
-                  <AppIcon
-                    tint={app.tint}
-                    icon={app.icon}
-                    size="dock"
-                    label={app.title}
-                    testID={`home-dock-${app.id}-icon`}
-                  />
-                </View>
-              )}
-            </Pressable>
-          </Link>
+          <Pressable
+            key={app.id}
+            role="button"
+            aria-label={`Open ${app.title}`}
+            onPress={() => onOpen(app)}
+            testID={`home-dock-${app.id}`}>
+            {({ pressed }) => (
+              <View style={pressed && styles.pressed}>
+                <AppIcon
+                  tint={app.tint}
+                  icon={app.icon}
+                  size="dock"
+                  label={app.title}
+                  testID={`home-dock-${app.id}-icon`}
+                />
+              </View>
+            )}
+          </Pressable>
         ))}
         {pinned.length > 0 && <View style={[styles.divider, { backgroundColor: theme.divider }]} />}
         <View

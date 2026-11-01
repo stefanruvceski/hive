@@ -41,6 +41,12 @@ export const Colors = {
     dashedSlot: 'rgba(15,23,42,0.18)',
     onAccent: '#042F2A',
     danger: '#DC2626',
+    /** Group folder (GroupSheet.dc.html): the tint over the blurred Home behind an open folder. */
+    folderDim: 'rgba(238,242,245,0.45)',
+    /** The same where Home can't be blurred (Android: the folder is its own screen). */
+    folderDimSolid: 'rgba(238,242,245,0.92)',
+    /** No fill: a screen that shows the one under it (the folder's modal). */
+    clear: 'transparent',
   },
   dark: {
     background: '#0A0F1C',
@@ -68,6 +74,9 @@ export const Colors = {
     dashedSlot: 'rgba(255,255,255,0.18)',
     onAccent: '#042F2A',
     danger: '#F87171',
+    folderDim: 'rgba(3,6,14,0.45)',
+    folderDimSolid: 'rgba(10,15,28,0.92)',
+    clear: 'transparent',
   },
 } as const;
 
@@ -169,6 +178,8 @@ export const Layout = {
   /** Group name sits this far below its card. */
   groupLabelGap: 6,
   minTouch: 44,
+  /** Android's minimum touch target (48 dp); design against it when one layout serves both. */
+  minTouchAndroid: 48,
   /**
    * Settings list: row height, padding, gap between icon/label/value, icon tile. `controlPadding`
    * surrounds a lone control (segmented) in a group.
@@ -204,6 +215,19 @@ export const Layout = {
     customize: 52,
     glyph: 22,
   },
+  /**
+   * Group folder (GroupSheet.dc.html): space between title, panel and Edit group; the panel's
+   * padding; the app grid (four columns of card icons, fewer on narrow windows); Edit group.
+   */
+  folder: {
+    gap: 20,
+    padding: { vertical: 24, horizontal: 20 },
+    columns: 4,
+    minColumnGap: 12,
+    rowGap: 18,
+    labelGap: 6,
+    edit: { paddingHorizontal: 16, gap: 8, glyph: 18 },
+  },
   /** Primary (accent-filled) button. */
   button: { height: 50, paddingHorizontal: 26 },
   /** Round glass button (Settings, Close, Back). */
@@ -211,6 +235,8 @@ export const Layout = {
   icon: {
     card: { size: 65, radius: 17, glyph: 30 },
     dock: { size: 52, radius: 14, glyph: 26 },
+    /** The small icons in a group card's fourth spot (2×2 in a 65 tile). */
+    mini: { size: 30, radius: 8, glyph: 16 },
   },
   radius: { card: 30, sheet: 38, list: 26, dock: 34 },
 } as const;
