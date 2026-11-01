@@ -34,9 +34,7 @@ export type HomeEditRejection =
   | 'unknown-app'
   | 'unknown-group';
 
-export type HomeEditResult =
-  | { ok: true; rows: HomeRows }
-  | { ok: false; reason: HomeEditRejection };
+export type HomeEditResult = { ok: true; rows: HomeRows } | { ok: false; reason: HomeEditRejection };
 
 /** A refused edit, thrown by the save so the mutation fails and rolls back. */
 export class HomeEditError extends Error {

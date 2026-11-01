@@ -3,9 +3,9 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
 import { getDb } from '@/lib/db/client';
-import { homeApps, homeGroups } from '@/lib/db/schema';
-import type { HomeRows } from '@/utils/home-groups';
+import { homeGroups } from '@/lib/db/schema';
 import { HomeEditError } from '@/utils/home-edits';
+import type { HomeRows } from '@/utils/home-groups';
 
 import { homeLayoutKeys, useEditHome, useHomeLayout } from './use-home-layout';
 

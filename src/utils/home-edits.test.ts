@@ -1,4 +1,3 @@
-import { arrangeHome, type HomeAppRow, type HomeRows, MAX_PINNED } from './home-groups';
 import {
   appActions,
   applyHomeEdit,
@@ -8,6 +7,7 @@ import {
   materializeHome,
   MAX_GROUP_NAME,
 } from './home-edits';
+import { arrangeHome, type HomeAppRow, type HomeRows, MAX_PINNED } from './home-groups';
 
 const defaults = [
   { id: 'money', name: 'Money' },
