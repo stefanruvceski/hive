@@ -210,14 +210,19 @@ export default function ${pascal}Route() {
 }
 `;
 
-const flow = `# ${title}: opens from its Home card and renders.
+// Opened the way a user does: its group card on Home, then its row in the group sheet (#30). If you
+// change the module's Home group in the registry, change GROUP here too.
+const flow = `# ${title}: opens from its group on Home and renders.
 appId: com.ruvceski.hive.dev
 tags:
   - ${id}
 ---
 - launchApp
-- tapOn:
-    id: 'home-open-${id}'
+- runFlow:
+    file: subflows/open-from-home.yaml
+    env:
+      GROUP: ${group}
+      APP: ${id}
 - assertVisible:
     id: '${id}-screen'
 `;
@@ -264,7 +269,8 @@ console.warn(`
 Created module ${title} (${id}), registered it on Home and generated its first migration.
 
 Next steps:
-1. Set the real description, icon and Home group in src/modules/registry.ts.
+1. Set the real description, icon and Home group in src/modules/registry.ts (a new group also goes
+   in .maestro/${id}.yaml).
 2. Replace the sample \`${snake}_items\` table, then \`pnpm db:generate\` (review the SQL before committing).
 3. Add screens with \`pnpm new:screen ${id}/<name>\`; put pure logic in src/modules/${id}/domain/ with tests.
 4. pnpm check — then rebuild the dev client only if you added a native dependency.`);
