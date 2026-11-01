@@ -17,8 +17,10 @@ import { queryClient } from '@/lib/query-client';
 
 void SplashScreen.preventAutoHideAsync();
 
-// Keeps navigator chrome mounted when a screen throws; inherited by nested layouts.
-export const unstable_settings = { screenErrorBoundary: ErrorFallback };
+// `anchor` keeps Home under every deep link, so Back, Android's back button and iOS swipe-back
+// return to it even after a cold start (review of #42). `screenErrorBoundary` keeps navigator
+// chrome mounted when a screen throws; inherited by nested layouts.
+export const unstable_settings = { anchor: 'index', screenErrorBoundary: ErrorFallback };
 
 export { ErrorFallback as ErrorBoundary };
 

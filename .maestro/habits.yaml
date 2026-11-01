@@ -1,0 +1,37 @@
+# Habits (#6): empty state → add a habit → it is listed under its part of the day → it survives a
+# restart. Opened by deep link: Home can't open an app from a group until #30 (decided in #6).
+# Run locally: pnpm test:e2e   (needs a dev build installed on the simulator/emulator)
+appId: com.ruvceski.hive.dev
+tags:
+  - habits
+---
+- launchApp:
+    clearState: true
+- openLink: hive-dev://habits
+- assertVisible:
+    id: 'habits-empty'
+- tapOn:
+    id: 'habits-empty-add'
+- assertVisible:
+    id: 'habits-new-title'
+- tapOn:
+    id: 'habits-new-name'
+- inputText: 'Read 10 pages'
+- hideKeyboard
+# 📚 is the third emoji in the grid (habitEmojis in src/modules/habits/domain/habits.ts).
+- tapOn:
+    id: 'habits-new-emoji-2'
+- tapOn:
+    id: 'habits-new-time-evening'
+- tapOn:
+    id: 'habits-new-save'
+- assertVisible:
+    id: 'habits-section-evening'
+- assertVisible: 'Read 10 pages'
+# Stored on the phone: still listed after the app is killed and reopened.
+- stopApp
+- launchApp
+- openLink: hive-dev://habits
+- assertVisible:
+    id: 'habits-section-evening'
+- assertVisible: 'Read 10 pages'

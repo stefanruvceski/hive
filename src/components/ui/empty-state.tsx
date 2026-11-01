@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -6,6 +7,8 @@ import { Spacing } from '@/constants/theme';
 type Props = {
   title: string;
   description?: string;
+  /** A button under the copy ("Add habit"). */
+  action?: ReactNode;
   testID: string;
 };
 
@@ -13,7 +16,7 @@ type Props = {
  * Designed empty state — a successful query with no data is never a blank screen. Scrolls, so at
  * the largest text sizes the copy is never cut off.
  */
-export function EmptyState({ title, description, testID }: Props) {
+export function EmptyState({ title, description, action, testID }: Props) {
   return (
     <ScrollView contentContainerStyle={styles.container} testID={testID}>
       <ThemedText role="heading" type="stateTitle" style={styles.centerText}>
@@ -24,6 +27,7 @@ export function EmptyState({ title, description, testID }: Props) {
           {description}
         </ThemedText>
       ) : null}
+      {action}
     </ScrollView>
   );
 }

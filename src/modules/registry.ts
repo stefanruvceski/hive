@@ -32,4 +32,14 @@ export type HiveModule = {
  * Every module, in default order within its group. Where the user moved, pinned or hid an app is
  * stored in `home_apps`.
  */
-export const hiveModules: readonly HiveModule[] = [];
+export const hiveModules: readonly HiveModule[] = [
+  {
+    id: 'habits',
+    title: 'Habits',
+    description: 'What you want to do every day.',
+    icon: { ios: 'checkmark.circle', android: 'task_alt', web: 'task_alt' },
+    tint: 'habits',
+    group: 'body-mind',
+    href: '/habits',
+  },
+];

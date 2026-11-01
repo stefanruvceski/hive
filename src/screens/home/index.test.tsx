@@ -117,6 +117,14 @@ describe('Home', () => {
     expect(screen.getByTestId('home-customize')).toBeDisabled();
   });
 
+  // Temporary until the group sheet (#30): an app in a group card opens with one tap.
+  it('opens an app from its group card', async () => {
+    mockModules.push(module('habits', 'body-mind', 'habits'));
+    await render(home);
+
+    expect(screen.getByTestId('home-open-habits')).toBeOnTheScreen();
+  });
+
   it('shows the empty Home with Customize when every app is hidden', async () => {
     mockModules.push(module('books', 'creative', 'books'));
     mockLayout({
