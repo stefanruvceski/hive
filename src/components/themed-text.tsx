@@ -21,6 +21,8 @@ type TextType =
   | 'stateTitle'
   | 'stateBody'
   | 'button'
+  | 'sheetTitle'
+  | 'rowTitle'
   | 'code'
   | 'rowCode';
 
@@ -128,6 +130,17 @@ const styles = StyleSheet.create({
   /** Primary button label. */
   button: {
     fontSize: 16,
+    fontWeight: 600,
+  },
+  /** Sheet title (group sheet). */
+  sheetTitle: {
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: 700,
+  },
+  /** A list row's name over a second line (group sheet). */
+  rowTitle: {
+    fontSize: 17,
     fontWeight: 600,
   },
   code: {
