@@ -45,6 +45,8 @@ function walk(dir, out = []) {
     if (['node_modules', '.git', '.expo', 'dist', 'coverage', 'ios', 'android'].includes(name))
       continue;
     const path = join(dir, name);
+    // Claude Code session worktrees are whole copies of the repo, checked in their own runs.
+    if (relative(root, path) === join('.claude', 'worktrees')) continue;
     if (statSync(path).isDirectory()) walk(path, out);
     else out.push(path);
   }

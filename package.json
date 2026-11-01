@@ -92,7 +92,8 @@
     ],
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "/.maestro/"
+      "/.maestro/",
+      "/.claude/worktrees/"
     ],
     "moduleNameMapper": {
       "\\.css$": "<rootDir>/__mocks__/style-mock.js"
