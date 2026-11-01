@@ -2,6 +2,7 @@ import { render, screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { useAppUsage, useRecordAppOpen } from '@/hooks/use-app-usage';
 import { useHomeLayout } from '@/hooks/use-home-layout';
 import type { HiveModule } from '@/modules/registry';
 
@@ -19,8 +20,10 @@ jest.mock('@/modules/registry', () => ({
   },
 }));
 
-// The database boundary: Home's data hook (docs/agent-rules/09 §5).
+// The database boundary: Home's data hooks (docs/agent-rules/09 §5).
 jest.mock('@/hooks/use-home-layout');
+jest.mock('@/hooks/use-app-usage');
+const recordOpen = { mutate: jest.fn() };
 
 // Link needs a navigation container; here we only check what Home renders and where it goes.
 jest.mock('expo-router', () => ({
@@ -56,8 +59,11 @@ function mockLayout(result: object) {
 }
 
 beforeEach(() => {
+  jest.clearAllMocks();
   mockModules.length = 0;
   mockLayout({ data: noRows });
+  jest.mocked(useAppUsage).mockReturnValue({ data: [] } as never);
+  jest.mocked(useRecordAppOpen).mockReturnValue(recordOpen as never);
 });
 
 describe('Home', () => {
@@ -103,7 +109,9 @@ describe('Home', () => {
     });
     await render(home);
 
-    expect(screen.getByRole('button', { name: 'Money: Wallet, Invest' })).toBeOnTheScreen();
+    expect(screen.getByTestId('home-group-money')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Open Wallet' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Open Invest' })).toBeOnTheScreen();
     expect(screen.getByTestId('home-group-money-name')).toHaveTextContent('Money');
     expect(screen.getByTestId('home-group-creative')).toBeOnTheScreen();
     // Habits is pinned: in the Dock, not repeated in Body & mind (which is then empty and not shown).
@@ -114,16 +122,44 @@ describe('Home', () => {
     expect(screen.getByTestId('home-customize')).toBeDisabled();
   });
 
-  // #30: the whole card is one button that opens the group's sheet; its tiles open nothing.
-  it("opens a group's sheet from its card", async () => {
+  it('opens an app straight from a group card with four apps or fewer, and counts the open', async () => {
     mockModules.push(module('habits', 'body-mind', 'habits'));
     await render(home);
 
-    expect(screen.queryByTestId('home-open-habits')).not.toBeOnTheScreen();
-    await userEvent.setup().press(screen.getByRole('button', { name: 'Body & mind: Habits' }));
+    expect(screen.queryByTestId('home-group-body-mind-more')).not.toBeOnTheScreen();
+    await userEvent.setup().press(screen.getByRole('button', { name: 'Open Habits' }));
+    expect(recordOpen.mutate).toHaveBeenCalledWith({
+      moduleId: 'habits',
+      today: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+    });
+    expect(router.push).toHaveBeenCalledWith('/');
+  });
+
+  it('keeps the three most used apps big and opens the whole group from the fourth spot', async () => {
+    mockModules.push(
+      ...['books', 'drawify', 'music', 'photos', 'films'].map((id) =>
+        module(id, 'creative', 'books'),
+      ),
+    );
+    const today = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const date = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+    jest.mocked(useAppUsage).mockReturnValue({
+      data: [
+        { moduleId: 'films', date, opens: 3 },
+        { moduleId: 'music', date, opens: 1 },
+      ],
+    } as never);
+    await render(home);
+
+    const big = screen.getAllByRole('button', { name: /^Open / }).map((b) => b.props.testID);
+    expect(big).toEqual(['home-open-films', 'home-open-music', 'home-open-books']);
+    await userEvent
+      .setup()
+      .press(screen.getByRole('button', { name: 'Creative: show all 5 apps' }));
     expect(router.push).toHaveBeenCalledWith({
       pathname: '/group/[id]',
-      params: { id: 'body-mind' },
+      params: { id: 'creative' },
     });
   });
 

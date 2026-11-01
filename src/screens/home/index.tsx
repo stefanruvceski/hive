@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,10 +7,13 @@ import { ErrorState } from '@/components/ui/error-state';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Wallpaper } from '@/components/ui/wallpaper';
 import { Layout, MaxContentWidth } from '@/constants/theme';
+import { useAppUsage, useRecordAppOpen } from '@/hooks/use-app-usage';
 import { useHomeLayout } from '@/hooks/use-home-layout';
 import { useNow } from '@/hooks/use-now';
 import { useThemeEffects } from '@/hooks/use-theme';
+import { useToday } from '@/hooks/use-today';
 import { defaultHomeGroups, type HiveModule, hiveModules } from '@/modules/registry';
+import { rankByUsage } from '@/utils/app-usage';
 import { arrangeHome, type HomeGroup } from '@/utils/home-groups';
 
 import { Dock } from './components/dock';
@@ -88,6 +92,14 @@ type AppsProps = ContentProps & {
 /** Group cards scroll under the header and the Dock, fading out under both. */
 function AppsLayout({ groups, pinned, headerHeight, dockBottom }: AppsProps) {
   const effects = useThemeEffects();
+  const today = useToday();
+  // Ranking is a nicety: until usage loads (or if it can't be read) cards keep group order.
+  const usage = useAppUsage().data ?? [];
+  const recordOpen = useRecordAppOpen();
+  const openApp = (app: HiveModule) => {
+    recordOpen.mutate({ moduleId: app.id, today });
+    router.push(app.href);
+  };
   const { width } = useWindowDimensions();
   // Two 169 pt columns on a phone; more where the window (capped at MaxContentWidth) has room.
   const room = Math.min(width, MaxContentWidth) - 2 * Layout.screenMargin + Layout.gridGapAcross;
@@ -107,7 +119,12 @@ function AppsLayout({ groups, pinned, headerHeight, dockBottom }: AppsProps) {
         testID="home-scroll">
         <View aria-label="Apps" style={[styles.grid, { width: gridWidth }]} testID="home-groups">
           {groups.map((group) => (
-            <GroupCard key={group.id} group={group} />
+            <GroupCard
+              key={group.id}
+              group={group}
+              ranked={rankByUsage(group.apps, usage, today)}
+              onOpen={openApp}
+            />
           ))}
         </View>
       </ScrollView>
@@ -122,7 +139,7 @@ function AppsLayout({ groups, pinned, headerHeight, dockBottom }: AppsProps) {
         pointerEvents="none"
         style={[styles.scrimBottom, { backgroundImage: effects.scrimBottom }]}
       />
-      <Dock pinned={pinned} bottom={dockBottom} />
+      <Dock pinned={pinned} bottom={dockBottom} onOpen={openApp} />
     </>
   );
 }

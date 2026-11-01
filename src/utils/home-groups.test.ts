@@ -1,4 +1,4 @@
-import { arrangeHome, findGroup, type HomeAppRow } from './home-groups';
+import { arrangeHome, cardTiles, findGroup, type HomeAppRow } from './home-groups';
 
 const defaults = [
   { id: 'money', name: 'Money' },
@@ -146,5 +146,24 @@ describe('findGroup', () => {
     expect(findGroup(view, 'nope')).toBeNull();
     expect(findGroup(view, 'money')).toBeNull();
     expect(findGroup({ state: 'all-hidden' }, 'creative')).toBeNull();
+  });
+});
+
+describe('cardTiles', () => {
+  const apps = (...ids: string[]) => ids.map((id) => ({ id }));
+  const ids = (list: { id: string }[]) => list.map((a) => a.id);
+
+  it('opens every app straight from the card when the group has four or fewer, in group order', () => {
+    const tiles = cardTiles(apps('a', 'b', 'c', 'd'), apps('d', 'c', 'b', 'a'));
+
+    expect(ids(tiles.open)).toEqual(['a', 'b', 'c', 'd']);
+    expect(tiles.more).toEqual([]);
+  });
+
+  it('keeps the three most used big and moves the rest to the fourth spot when there are more', () => {
+    const tiles = cardTiles(apps('a', 'b', 'c', 'd', 'e'), apps('e', 'c', 'a', 'b', 'd'));
+
+    expect(ids(tiles.open)).toEqual(['e', 'c', 'a']);
+    expect(ids(tiles.more)).toEqual(['b', 'd']);
   });
 });

@@ -74,10 +74,23 @@ export function arrangeHome<M extends { id: string; group: string }>(
 }
 
 /**
- * One group as Home shows it (the group sheet): every app in it, in order, pinned and hidden apps
+ * One group as Home shows it (the group folder): every app in it, in order, pinned and hidden apps
  * left out. Null when the group is unknown, has nothing to show, or Home shows no groups.
  */
 export function findGroup<M>(view: HomeView<M>, groupId: string): HomeGroup<M> | null {
   if (view.state !== 'apps') return null;
   return view.groups.find((group) => group.id === groupId) ?? null;
+}
+
+/** A group card holds four tiles (2×2). */
+export const CARD_TILES = 4;
+
+/**
+ * What a group card shows (App Library style). Four apps or fewer: every app is a big tile that
+ * opens it, in group order. More: the three most used (`ranked`) stay big and the rest go to the
+ * fourth spot as small icons, which opens the whole group.
+ */
+export function cardTiles<M>(apps: readonly M[], ranked: readonly M[]): { open: M[]; more: M[] } {
+  if (apps.length <= CARD_TILES) return { open: [...apps], more: [] };
+  return { open: ranked.slice(0, CARD_TILES - 1), more: ranked.slice(CARD_TILES - 1) };
 }
