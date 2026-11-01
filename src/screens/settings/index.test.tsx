@@ -1,7 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
+import { StyleSheet } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { Spacing } from '@/constants/theme';
 import { useAppSettings, useSetAppSetting } from '@/hooks/use-app-settings';
 import { isApiConfigured } from '@/lib/api';
 import { defaultAppSettings } from '@/utils/app-settings';
@@ -44,6 +47,12 @@ beforeEach(() => {
   jest.mocked(useSetAppSetting).mockReturnValue({ mutate, isError: false } as never);
 });
 
+// Expo Router provides safe areas in the app; tests give a phone-sized frame (copy of the Home test).
+const metrics = {
+  frame: { x: 0, y: 0, width: 402, height: 874 },
+  insets: { top: 62, right: 0, bottom: 34, left: 0 },
+};
+
 function renderSettings() {
   // Fresh client per test; retries off so failures surface immediately.
   // gcTime: Infinity — no GC timers left running after the test (Jest teardown warning).
@@ -51,9 +60,11 @@ function renderSettings() {
     defaultOptions: { queries: { retry: false, gcTime: Infinity } },
   });
   return render(
-    <QueryClientProvider client={queryClient}>
-      <Settings />
-    </QueryClientProvider>,
+    <SafeAreaProvider initialMetrics={metrics}>
+      <QueryClientProvider client={queryClient}>
+        <Settings />
+      </QueryClientProvider>
+    </SafeAreaProvider>,
   );
 }
 
@@ -187,5 +198,18 @@ describe('Settings preferences', () => {
     await renderSettings();
 
     expect(screen.getByTestId('settings-save-error')).toBeOnTheScreen();
+  });
+});
+
+describe('Settings layout', () => {
+  // A SafeAreaView with the bottom edge clipped the scroll view above the home indicator, so the
+  // last card was cut off with a hard edge. Content scrolls to the screen edge; the inset is padding.
+  it('scrolls to the bottom edge and pads its content past the home indicator', async () => {
+    await renderSettings();
+
+    const scroll = screen.getByTestId('settings-scroll');
+    expect(StyleSheet.flatten(scroll.props.contentContainerStyle)).toMatchObject({
+      paddingBottom: metrics.insets.bottom + Spacing.five,
+    });
   });
 });
