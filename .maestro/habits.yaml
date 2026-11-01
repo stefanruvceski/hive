@@ -1,6 +1,6 @@
 # Habits (#6, #7): empty state → add a habit → it is listed under its part of the day → mark it
-# done today and back → its streak follows → both survive a restart. Opened from Home: the Body & mind
-# card, then its row in the group sheet (#30).
+# done today and back → its streak follows → both survive a restart. Opened from its tile on the
+# Body & mind card (#30).
 # Run locally: pnpm test:e2e   (needs a dev build installed on the simulator/emulator)
 appId: com.ruvceski.hive.dev
 tags:
@@ -8,11 +8,8 @@ tags:
 ---
 - launchApp:
     clearState: true
-- runFlow:
-    file: subflows/open-from-home.yaml
-    env:
-      GROUP: body-mind
-      APP: habits
+- tapOn:
+    id: 'home-open-habits'
 - assertVisible:
     id: 'habits-empty'
 - tapOn:
@@ -55,11 +52,8 @@ tags:
 # Stored on the phone: still listed after the app is killed and reopened.
 - stopApp
 - launchApp
-- runFlow:
-    file: subflows/open-from-home.yaml
-    env:
-      GROUP: body-mind
-      APP: habits
+- tapOn:
+    id: 'home-open-habits'
 - assertVisible:
     id: 'habits-section-evening'
 - assertVisible: 'Read 10 pages'
