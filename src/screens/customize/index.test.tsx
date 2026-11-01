@@ -88,7 +88,10 @@ describe('Customize', () => {
     expect(screen.getByRole('heading', { name: 'Customize Home' })).toBeOnTheScreen();
     expect(screen.getByTestId('customize-dock-count')).toHaveTextContent('1 of 4 pinned');
     expect(screen.getByRole('button', { name: 'Habits, in the Dock' })).toBeOnTheScreen();
-    expect(screen.getAllByTestId(/^customize-dock-empty-/)).toHaveLength(3);
+    // Free Dock slots are drawn but hidden from screen readers (decorative).
+    expect(
+      screen.getAllByTestId(/^customize-dock-empty-/, { includeHiddenElements: true }),
+    ).toHaveLength(3);
 
     expect(screen.getByTestId('customize-group-money-name')).toHaveDisplayValue('Money');
     const body = within(screen.getByTestId('customize-group-body-mind'));
@@ -103,7 +106,7 @@ describe('Customize', () => {
 
     expect(screen.getByRole('button', { name: 'Music, hidden' })).toBeOnTheScreen();
     expect(screen.queryByTestId('customize-hidden-empty')).not.toBeOnTheScreen();
-    expect(screen.queryByRole('toolbar')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('customize-actions')).not.toBeOnTheScreen();
   });
 
   it('says nothing is hidden, and starts from the default groups before any edit', async () => {
@@ -125,7 +128,11 @@ describe('Customize', () => {
     await user.press(screen.getByRole('button', { name: 'Wallet' }));
 
     expect(screen.getByRole('button', { name: 'Wallet' })).toBeSelected();
-    const bar = within(screen.getByRole('toolbar', { name: 'Wallet actions' }));
+    // The toolbar is a container, not one accessible element (its buttons stay separate for
+    // VoiceOver/TalkBack, like the Dock), so it is found by testID and checked by its name.
+    const toolbar = screen.getByTestId('customize-actions');
+    expect(toolbar).toHaveAccessibleName('Wallet actions');
+    const bar = within(toolbar);
     expect(bar.getByRole('button', { name: 'Pin' })).toBeEnabled();
     expect(bar.getByRole('button', { name: 'Hide' })).toBeEnabled();
     expect(screen.getByTestId('customize-group-body-mind-move-here')).toHaveTextContent(
@@ -141,7 +148,7 @@ describe('Customize', () => {
       moduleId: 'wallet',
       groupId: 'creative',
     });
-    expect(screen.queryByRole('toolbar')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('customize-actions')).not.toBeOnTheScreen();
   });
 
   it('pins and hides the selected app, and Cancel clears the selection', async () => {
@@ -158,7 +165,7 @@ describe('Customize', () => {
 
     await user.press(screen.getByRole('button', { name: 'Habits' }));
     await user.press(screen.getByRole('button', { name: 'Cancel selection' }));
-    expect(screen.queryByRole('toolbar')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('customize-actions')).not.toBeOnTheScreen();
     expect(edit.mutate).toHaveBeenCalledTimes(2);
   });
 
