@@ -10,6 +10,8 @@ minimumReleaseAgeExclude:
   - expo
   - 'expo-*'
   - '@expo/*'
+  # Expo-owned, versioned with the SDK; `expo` pins it to the matching patch (~58.0.x).
+  - babel-preset-expo
   # Type declarations only (never executed); already locked transitively via Jest.
   - '@types/node'
 
