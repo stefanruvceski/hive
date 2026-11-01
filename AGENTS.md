@@ -80,8 +80,8 @@ New modules start from `pnpm new:module`, new screens from `pnpm new:screen`, ne
 ## Exemplars — copy these shapes
 
 - Thin route: `src/app/settings.tsx`. Launcher screen (four states, fixed header, Dock): `src/screens/home/`.
-- SQLite data hook (key factory, `queryOptions`): `src/screens/home/use-home-layout.ts`; with an optimistic mutation: `src/hooks/use-app-settings.ts`.
-- Pure logic + test: `src/screens/home/home-groups.ts`. Remote hook: `src/screens/settings/use-health.ts`.
+- SQLite data hook (key factory, `queryOptions`): `src/hooks/use-home-layout.ts`; with an optimistic mutation: `src/hooks/use-app-settings.ts`.
+- Pure logic + test: `src/utils/home-groups.ts`. Remote hook: `src/screens/settings/use-health.ts`.
 - Loading / error / empty states: `src/components/ui/{loading,error,empty}-state.tsx`.
 - Tests: `src/components/ui/error-state.test.tsx` (component), `src/screens/home/index.test.tsx`
   (data hooks mocked), `src/screens/settings/index.test.tsx` (fresh QueryClient, `@/lib/api` mocked).

@@ -67,7 +67,7 @@ Enforced by TypeScript (`experiments.typedRoutes`). `expo-env.d.ts` is generated
 </Link>
 ```
 
-- Home opens a module with `<Link href={module.href}>` (`testID="home-open-<id>"`); `href` comes from `src/modules/registry.ts`. Inside a module, link with absolute paths (`/habits/month`).
+- Home opens a module from its group: the group card opens the group sheet (`/group/[id]`), whose row (`testID="home-open-<id>"`) closes the sheet, then navigates to the module's `href` from `src/modules/registry.ts` (`router.dismiss()` + `router.navigate(href)`, so Back returns to Home). Pinned apps open from the Dock (`home-dock-<id>`). Inside a module, link with absolute paths (`/habits/month`).
 
 - Imperative `router` / `useRouter()` only from event handlers. `router.navigate` is the default (pushes or unwinds); `push` always adds an entry; `replace` after login/delete; `setParams` updates params without navigating; `dismiss`/`dismissAll` close modals.
 - `<Redirect href>` for render-time redirects. `Link prefetch` only for expensive targets (a prefetched screen can't use the imperative router or `setOptions` until focused).
@@ -107,7 +107,8 @@ router.push({ pathname: '/users/[id]', params: { user: JSON.stringify(user) } })
 
 ## 6. Modals
 
-- A modal is a normal route whose `presentation` (`modal`, `formSheet`, `transparentModal`, `fullScreenModal`) is set in the parent Stack layout. `formSheet` on Android: max 3 `sheetAllowedDetents`, no header.
+- A modal is a normal route whose `presentation` (`modal`, `formSheet`, `transparentModal`, `fullScreenModal`) is set in the parent Stack layout. `formSheet` on Android: max 3 `sheetAllowedDetents`, no header, no native grabber (`sheetGrabberVisible` is iOS-only). Exemplar: the group sheet — options in [src/screens/group-sheet/sheet-options.ts](../../src/screens/group-sheet/sheet-options.ts), registered in `src/app/_layout.tsx`.
+- To open a regular screen from a sheet, dismiss the sheet first (`router.dismiss()`, then `router.navigate(href)`); a screen pushed on top of a sheet is presented inside it on iOS.
 - Deep-linked modals need an anchor so a screen exists behind them: `export const unstable_settings = { anchor: 'index' };` in the stack's `_layout.tsx`.
 - RN `Modal` only for self-contained confirmations that should not be part of the URL.
 
