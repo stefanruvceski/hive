@@ -223,7 +223,6 @@ const done = (count: number, total: number): HomeSummaryResult => ({
     kind: 'progress',
     done: count,
     total,
-    caption: 'done today',
     label: `${count} of ${total} done today`,
   },
 });
@@ -246,7 +245,9 @@ describe('Home, Today', () => {
 
     expect(screen.getByRole('heading', { name: 'Today' })).toBeOnTheScreen();
     const widget = screen.getByRole('button', { name: 'Habits: 1 of 2 done today' });
-    expect(screen.getByText('done today', { includeHiddenElements: true })).toBeOnTheScreen();
+    // The number sits inside the ring; no caption (#33 review: 1/2 says it all).
+    expect(screen.getByText('/2', { includeHiddenElements: true })).toBeOnTheScreen();
+    expect(screen.queryByText('done today', { includeHiddenElements: true })).not.toBeOnTheScreen();
     // Only modules with a summary get a widget; one widget fits, so there are no page dots.
     expect(screen.queryByTestId('home-today-books')).not.toBeOnTheScreen();
     expect(screen.queryByTestId('home-today-dots')).not.toBeOnTheScreen();
