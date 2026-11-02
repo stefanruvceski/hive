@@ -12,11 +12,10 @@ type Props = {
   canUp: boolean;
   canDown: boolean;
   onMove: (direction: Direction) => void;
-  onEdit: () => void;
 };
 
-/** Edit mode of a habit row: move up, move down (within the part of the day) and edit. */
-export function EditControls({ habit, canUp, canDown, onMove, onEdit }: Props) {
+/** Reorder mode of a habit row: move up or down within the part of the day. */
+export function ReorderControls({ habit, canUp, canDown, onMove }: Props) {
   return (
     <View style={styles.controls}>
       <IconButton
@@ -32,12 +31,6 @@ export function EditControls({ habit, canUp, canDown, onMove, onEdit }: Props) {
         disabled={!canDown}
         onPress={() => onMove('down')}
         testID={`habits-down-${habit.id}`}
-      />
-      <IconButton
-        icon={{ ios: 'pencil', android: 'edit', web: 'edit' }}
-        label={`Edit ${habit.name}`}
-        onPress={onEdit}
-        testID={`habits-item-edit-${habit.id}`}
       />
     </View>
   );

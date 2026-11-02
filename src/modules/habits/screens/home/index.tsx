@@ -18,6 +18,7 @@ import { TextButton } from './components/text-button';
 import {
   type CompletionChange,
   useArchivedHabits,
+  useArchiveHabit,
   useCompletions,
   useHabits,
   useMoveHabit,
@@ -26,6 +27,7 @@ import {
 import { groupByTimeOfDay } from '../../domain/habits';
 import type { Direction } from '../../domain/order';
 import { doneDatesByHabit } from '../../domain/streak';
+import type { SwipeSide } from '../../domain/swipe';
 
 const addHabit = () => router.push('/habits/new');
 const editHabit = (id: string) => router.push({ pathname: '/habits/[id]', params: { id } });
@@ -33,7 +35,7 @@ const openArchived = () => router.push('/habits/archived');
 
 /** Habits' entry screen: the habits grouped by part of the day. Header as in Settings. */
 export function HabitsHome() {
-  const [editing, setEditing] = useState(false);
+  const [reordering, setReordering] = useState(false);
   const habits = useHabits();
   const hasHabits = (habits.data?.length ?? 0) > 0;
 
@@ -50,21 +52,21 @@ export function HabitsHome() {
             testID="habits-back"
           />
           <View style={styles.actions}>
-            {editing ? (
+            {reordering ? (
               <PrimaryButton
                 label="Done"
                 size="compact"
-                onPress={() => setEditing(false)}
-                testID="habits-edit-done"
+                onPress={() => setReordering(false)}
+                testID="habits-reorder-done"
               />
             ) : (
               <>
                 {hasHabits && (
                   <GlassButton
-                    icon={{ ios: 'pencil', android: 'edit', web: 'edit' }}
-                    label="Edit habits"
-                    onPress={() => setEditing(true)}
-                    testID="habits-edit-toggle"
+                    icon={{ ios: 'arrow.up.arrow.down', android: 'swap_vert', web: 'swap_vert' }}
+                    label="Reorder habits"
+                    onPress={() => setReordering(true)}
+                    testID="habits-reorder-toggle"
                   />
                 )}
                 <GlassButton
@@ -77,7 +79,7 @@ export function HabitsHome() {
             )}
           </View>
         </View>
-        <HabitsContent editing={editing} />
+        <HabitsContent reordering={reordering} />
       </SafeAreaView>
     </Wallpaper>
   );
@@ -93,13 +95,16 @@ function Title() {
 
 // Four states, data first: cached data stays visible if a refetch fails (07 §1, 14 §3). The list
 // needs both the habits and the days they were done.
-function HabitsContent({ editing }: { editing: boolean }) {
+function HabitsContent({ reordering }: { reordering: boolean }) {
   const insets = useSafeAreaInsets();
   const today = useToday();
   const habits = useHabits();
   const completions = useCompletions();
   const setCompletion = useSetCompletion();
   const move = useMoveHabit();
+  const archive = useArchiveHabit();
+  // One row shows its swipe buttons at a time.
+  const [open, setOpen] = useState<{ habitId: string; side: SwipeSide } | null>(null);
   const archived = useArchivedHabits();
   const hasArchived = (archived.data?.length ?? 0) > 0;
 
@@ -124,6 +129,15 @@ function HabitsContent({ editing }: { editing: boolean }) {
           ]),
       },
     );
+
+  const archiveHabit = (id: string) =>
+    archive.mutate(id, {
+      onError: () =>
+        Alert.alert("Couldn't archive", 'The habit was not archived. Please try again.', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Try again', onPress: () => archiveHabit(id) },
+        ]),
+    });
 
   const archivedLink = hasArchived && (
     <TextButton label="Archived habits" onPress={openArchived} testID="habits-archived-link" />
@@ -155,8 +169,11 @@ function HabitsContent({ editing }: { editing: boolean }) {
             doneDates={doneDates}
             today={today}
             onToggle={(habitId, done) => save({ habitId, date: today, done })}
-            onMove={editing ? moveHabit : undefined}
-            onEdit={editing ? editHabit : undefined}
+            onMove={reordering ? moveHabit : undefined}
+            onEdit={editHabit}
+            onArchive={archiveHabit}
+            open={open}
+            onOpenChange={(habitId, side) => setOpen(side ? { habitId, side } : null)}
           />
         ))}
         {archivedLink}

@@ -1,5 +1,6 @@
-# Habits (#8): edit a habit → archive it → restore it → delete it permanently. Starts from an
-# added habit; the habit's id is random, so its controls are matched by pattern.
+# Habits (#8): swipe a habit for Edit and Archive → restore it → delete it permanently. The
+# habit's id is random, so its controls are matched by pattern. A full swipe (runs Archive without
+# the buttons) is covered by domain/swipe.test.ts: Maestro cannot control the swipe distance.
 # Run locally: pnpm test:e2e   (needs a dev build installed on the simulator/emulator)
 appId: com.ruvceski.hive.dev
 tags:
@@ -18,11 +19,13 @@ tags:
 - tapOn:
     id: 'habits-new-save'
 - assertVisible: 'Read'
-# Edit: rename and move to the evening.
+# Swipe towards the start of the row: Edit and Archive appear. Tap Edit, rename, move to evening.
+- swipe:
+    from:
+      id: 'habits-streak-.*'
+    direction: LEFT
 - tapOn:
-    id: 'habits-edit-toggle'
-- tapOn:
-    id: 'habits-item-edit-.*'
+    id: 'habits-swipe-.*-edit'
 - tapOn:
     id: 'habits-edit-name'
 - inputText: ' 10 pages'
@@ -34,12 +37,13 @@ tags:
 - assertVisible:
     id: 'habits-section-evening'
 - assertVisible: 'Read 10 pages'
-# Archive (confirm), then it is gone from the list.
+# Swipe and tap Archive: it is gone from the list.
+- swipe:
+    from:
+      id: 'habits-streak-.*'
+    direction: LEFT
 - tapOn:
-    id: 'habits-item-edit-.*'
-- tapOn:
-    id: 'habits-edit-archive'
-- tapOn: 'Archive'
+    id: 'habits-swipe-.*-archive'
 - assertVisible:
     id: 'habits-empty'
 # Restore from Archived habits.
@@ -54,13 +58,12 @@ tags:
     id: 'habits-archived-back'
 - assertVisible: 'Read 10 pages'
 # Archive again and delete permanently (the confirm warns about the history).
+- swipe:
+    from:
+      id: 'habits-streak-.*'
+    direction: LEFT
 - tapOn:
-    id: 'habits-edit-toggle'
-- tapOn:
-    id: 'habits-item-edit-.*'
-- tapOn:
-    id: 'habits-edit-archive'
-- tapOn: 'Archive'
+    id: 'habits-swipe-.*-archive'
 - tapOn:
     id: 'habits-archived-link'
 - tapOn:
