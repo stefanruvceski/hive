@@ -81,6 +81,14 @@ describe('HabitsHome', () => {
     expect(screen.queryByTestId('habits-section-afternoon')).not.toBeOnTheScreen();
   });
 
+  it('opens the month grid from the header', async () => {
+    mockedHabits.mockReturnValue(result({ data: [habit('run', 'Run', 'morning', 0)] }));
+    await renderHabits();
+
+    await userEvent.setup().press(screen.getByRole('button', { name: 'Month' }));
+    expect(router.push).toHaveBeenCalledWith('/habits/month');
+  });
+
   it('opens the Add habit form from the header', async () => {
     mockedHabits.mockReturnValue(result({ data: [habit('run', 'Run', 'morning', 0)] }));
     await renderHabits();
