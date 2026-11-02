@@ -58,7 +58,6 @@ describe('useHabitsHomeSummary', () => {
         kind: 'progress',
         done: 1,
         total: 2,
-        caption: 'done today',
         label: '1 of 2 done today',
       },
     });

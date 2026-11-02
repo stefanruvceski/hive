@@ -50,11 +50,11 @@ describe('habitsHomeSummary', () => {
     ],
     [
       { done: 1, total: 2 },
-      { kind: 'progress', done: 1, total: 2, caption: 'done today', label: '1 of 2 done today' },
+      { kind: 'progress', done: 1, total: 2, label: '1 of 2 done today' },
     ],
     [
       { done: 0, total: 1 },
-      { kind: 'progress', done: 0, total: 1, caption: 'done today', label: '0 of 1 done today' },
+      { kind: 'progress', done: 0, total: 1, label: '0 of 1 done today' },
     ],
   ])('%o', (count, expected) => {
     expect(habitsHomeSummary(count)).toEqual(expected);

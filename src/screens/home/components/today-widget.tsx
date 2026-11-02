@@ -92,17 +92,16 @@ function SummaryBody({ summary, module }: { summary: HomeSummary; module: TodayM
   }
   return (
     <View style={styles.progress}>
-      <ProgressRing done={summary.done} total={summary.total} tint={module.tint} />
-      <View style={styles.count}>
-        <ThemedText type="number">
-          {summary.done}
-          <ThemedText type="body" themeColor="textTertiary">
-            /{summary.total}
+      <View style={styles.ring}>
+        <ProgressRing done={summary.done} total={summary.total} tint={module.tint} />
+        <View style={styles.count}>
+          <ThemedText type="number">
+            {summary.done}
+            <ThemedText type="body" themeColor="textTertiary">
+              /{summary.total}
+            </ThemedText>
           </ThemedText>
-        </ThemedText>
-        <ThemedText type="body" themeColor="textSecondary">
-          {summary.caption}
-        </ThemedText>
+        </View>
       </View>
     </View>
   );
@@ -123,13 +122,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Layout.today.labelGap,
   },
+  // The ring is centered in the space under the label row.
   progress: {
-    flexDirection: 'row',
+    flexGrow: 1,
     alignItems: 'center',
-    gap: Layout.today.ringGap,
+    justifyContent: 'center',
   },
+  ring: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // The number sits in the middle of the ring.
   count: {
-    flex: 1,
+    ...StyleSheet.absoluteFill,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   message: {
     gap: Layout.today.messageGap,

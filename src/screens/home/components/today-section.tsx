@@ -45,7 +45,7 @@ export function TodaySection({ modules, onOpen }: Props) {
       aria-label="Today"
       style={[styles.section, { width: Math.min(width, MaxContentWidth) }]}
       testID="home-today">
-      <View style={styles.heading}>
+      <View style={{ paddingHorizontal: layout.inset + Layout.today.headingInset }}>
         <SectionLabel testID="home-today-title">Today</SectionLabel>
       </View>
       <ScrollView
@@ -60,7 +60,13 @@ export function TodaySection({ modules, onOpen }: Props) {
           const next = pageAt(event.nativeEvent.contentOffset.x, layout);
           if (next !== current) setPage(next);
         }}
-        contentContainerStyle={styles.strip}
+        contentContainerStyle={[
+          styles.strip,
+          {
+            paddingStart: layout.inset,
+            paddingEnd: Layout.gridGapAcross + Layout.today.endSpacer + layout.inset,
+          },
+        ]}
         testID="home-today-scroll">
         {modules.map((module) => (
           <TodayWidget key={module.id} module={module} width={layout.widgetWidth} onOpen={onOpen} />
@@ -98,14 +104,9 @@ const styles = StyleSheet.create({
   section: {
     gap: Layout.today.gap,
   },
-  heading: {
-    paddingHorizontal: Layout.screenMargin + Layout.today.headingInset,
-  },
-  // Padding at both ends; after the last widget also the design's spacer (gap + 8).
+  // Starts where the group grid starts; after the last widget also the design's spacer (gap + 8).
   strip: {
     columnGap: Layout.gridGapAcross,
-    paddingStart: Layout.screenMargin,
-    paddingEnd: Layout.gridGapAcross + Layout.today.endSpacer + Layout.screenMargin,
   },
   dots: {
     flexDirection: 'row',

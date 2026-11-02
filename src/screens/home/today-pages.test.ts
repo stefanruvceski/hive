@@ -11,13 +11,25 @@ describe('todayLayout', () => {
     // Largest text sizes: full width, one per page (LargeText.dc.html).
     ['largest text (design)', { width: 390, fontScale: 1.3, count: 3 }, 350, 3, [0, 362, 724]],
     ['largest text, one widget', { width: 390, fontScale: 2, count: 1 }, 350, 1, [0]],
-    // Wide windows are capped at MaxContentWidth (800): four widgets in view.
-    // The strip can only scroll 5 × 181 + 48 − 800 = 153: the last snap point is the strip's end.
-    ['wide window', { width: 1200, fontScale: 1, count: 5 }, 169, 2, [0, 153]],
-    ['wide window, largest text', { width: 1200, fontScale: 2, count: 2 }, 760, 2, [0, 772]],
+    // Wide windows are capped at MaxContentWidth (800): four group columns (712), 44 in from the edge.
+    ['wide window', { width: 1200, fontScale: 1, count: 5 }, 169, 2, [0, 181]],
+    ['wide window, largest text', { width: 1200, fontScale: 2, count: 2 }, 712, 2, [0, 724]],
   ])('%s', (_name, input, widgetWidth, positions, snapOffsets) => {
     const layout = todayLayout(input);
-    expect(layout).toEqual({ widgetWidth, step: widgetWidth + 12, positions, snapOffsets });
+    expect(layout).toMatchObject({ widgetWidth, step: widgetWidth + 12, positions, snapOffsets });
+  });
+
+  // The strip starts where the group grid starts, so Today and the cards line up (#33 review).
+  it.each([
+    ['390 pt phone', 390, 20],
+    ['412 dp Android phone', 412, 31],
+    ['wide window', 1200, 44],
+  ])('lines up with the group grid on a %s', (_name, width, inset) => {
+    expect(todayLayout({ width, fontScale: 1, count: 1 }).inset).toBe(inset);
+  });
+
+  it('makes full-width widgets as wide as the group grid', () => {
+    expect(todayLayout({ width: 412, fontScale: 2, count: 1 }).widgetWidth).toBe(350);
   });
 });
 

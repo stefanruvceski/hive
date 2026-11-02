@@ -21,7 +21,7 @@ export function countDoneToday(
   return { done: done.size, total: ids.size };
 }
 
-/** "1 of 2 done today", or an invitation to add one when there are no habits yet. */
+/** 1 of 2 (read out as "1 of 2 done today"), or an invitation to add one when there are no habits yet. */
 export function habitsHomeSummary({ done, total }: DoneCount): HomeSummary {
   if (total === 0) {
     return {
@@ -31,11 +31,5 @@ export function habitsHomeSummary({ done, total }: DoneCount): HomeSummary {
       label: 'no habits yet',
     };
   }
-  return {
-    kind: 'progress',
-    done,
-    total,
-    caption: 'done today',
-    label: `${done} of ${total} done today`,
-  };
+  return { kind: 'progress', done, total, label: `${done} of ${total} done today` };
 }

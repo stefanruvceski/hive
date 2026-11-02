@@ -8,8 +8,8 @@ import type { HomeRows } from './home-groups';
  * ("Habits: 1 of 2 done today").
  */
 export type HomeSummary =
-  /** A progress ring and a big number: `done` of `total`, `caption` under it. */
-  | { kind: 'progress'; done: number; total: number; caption: string; label: string }
+  /** A progress ring with `done`/`total` inside it. */
+  | { kind: 'progress'; done: number; total: number; label: string }
   /** A headline and a line under it. */
   | { kind: 'message'; headline: string; body: string; label: string };
 

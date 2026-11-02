@@ -4,7 +4,9 @@
 import { Layout, MaxContentWidth } from '@/constants/theme';
 
 export type TodayLayout = {
-  /** 169, or the strip's width minus its margins at the largest text sizes (one per page). */
+  /** Space before the first widget: where the group grid starts, so the two line up. */
+  inset: number;
+  /** 169, or as wide as the group grid at the largest text sizes (one per page). */
   widgetWidth: number;
   /** One widget and the gap after it: swiping snaps per card. */
   step: number;
@@ -14,10 +16,17 @@ export type TodayLayout = {
   snapOffsets: number[];
 };
 
-/** Padding at both ends of the strip, the gap between widgets, and the design's spacer after the last. */
-const margin = Layout.screenMargin;
 const gap = Layout.gridGapAcross;
-const trailing = gap + Layout.today.endSpacer + margin;
+
+/**
+ * Width of Home's group grid: two 169 pt columns on a phone, more where the window (capped at
+ * MaxContentWidth) has room. Centered, so on a phone wider than 390 it starts past the 20 pt margin.
+ */
+export function homeGridWidth(width: number): number {
+  const room = Math.min(width, MaxContentWidth) - 2 * Layout.screenMargin + gap;
+  const columns = Math.max(2, Math.floor(room / (Layout.card + gap)));
+  return columns * Layout.card + (columns - 1) * gap;
+}
 
 /** `width` is the window's; the strip is capped at MaxContentWidth like the rest of Home. */
 export function todayLayout({
@@ -30,14 +39,18 @@ export function todayLayout({
   count: number;
 }): TodayLayout {
   const strip = Math.min(width, MaxContentWidth);
+  const grid = homeGridWidth(width);
+  const inset = (strip - grid) / 2;
   const fullWidth = fontScale >= Layout.today.fullWidthAtFontScale;
-  const widgetWidth = fullWidth ? strip - 2 * margin : Layout.card;
+  const widgetWidth = fullWidth ? grid : Layout.card;
   const step = widgetWidth + gap;
-  const inView = Math.max(1, Math.floor((strip - 2 * margin + gap) / step));
+  const inView = Math.max(1, Math.floor((grid + gap) / step));
   const positions = Math.max(1, count - inView + 1);
-  const maxScroll = Math.max(0, margin + count * step - gap + trailing - strip);
+  // After the last widget: the gap, the design's 8 pt spacer and the inset.
+  const trailing = gap + Layout.today.endSpacer + inset;
+  const maxScroll = Math.max(0, inset + count * step - gap + trailing - strip);
   const snapOffsets = Array.from({ length: positions }, (_, i) => Math.min(i * step, maxScroll));
-  return { widgetWidth, step, positions, snapOffsets };
+  return { inset, widgetWidth, step, positions, snapOffsets };
 }
 
 /** The page shown at a scroll offset, kept within the dots. */
