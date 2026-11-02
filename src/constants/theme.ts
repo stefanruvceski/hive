@@ -306,6 +306,20 @@ export const Layout = {
       /** Text this much larger than default stacks the name above the buttons. */
       stackAtFontScale: 1.5,
     },
+    /** Drag and drop (#48, tokens.md): long press, lifted copy, drop bar, edge auto-scroll. */
+    drag: {
+      longPressMs: 350,
+      liftScale: 1.06,
+      liftOpacity: 0.92,
+      sourceOpacity: 0.35,
+      indicator: 3,
+      indicatorGap: 6,
+      outlineRadius: 12,
+      edge: 80,
+      scrollStep: 12,
+      settleMs: 150,
+      labelGap: 22,
+    },
     /** Room under the last section so the action bar never covers it. */
     bottomRoom: 140,
   },
