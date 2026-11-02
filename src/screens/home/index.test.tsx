@@ -217,13 +217,14 @@ jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
   default: jest.fn(() => ({ width: 390, height: 844, scale: 3, fontScale: 1 })),
 }));
 
-const done = (count: number, total: number): HomeSummaryResult => ({
+const done = (count: number, total: number, upNext: string[] = []): HomeSummaryResult => ({
   status: 'success',
   summary: {
     kind: 'progress',
     done: count,
     total,
     label: `${count} of ${total} done today`,
+    upNext: upNext.map((name) => ({ id: name, icon: '🎯', name })),
   },
 });
 const provider = (id: string, result: HomeSummaryResult): HiveModule => ({
@@ -240,14 +241,13 @@ const hiddenRow = (moduleId: string) => ({
 
 describe('Home, Today', () => {
   it('shows a widget per module with a summary, which opens the module and counts the open', async () => {
-    mockModules.push(provider('habits', done(1, 2)), module('books', 'creative', 'books'));
+    mockModules.push(provider('habits', done(2, 2)), module('books', 'creative', 'books'));
     await render(home);
 
     expect(screen.getByRole('heading', { name: 'Today' })).toBeOnTheScreen();
-    const widget = screen.getByRole('button', { name: 'Habits: 1 of 2 done today' });
-    // The number sits inside the ring; no caption (#33 review: 1/2 says it all).
-    expect(screen.getByText('/2', { includeHiddenElements: true })).toBeOnTheScreen();
-    expect(screen.queryByText('done today', { includeHiddenElements: true })).not.toBeOnTheScreen();
+    const widget = screen.getByRole('button', { name: 'Habits: 2 of 2 done today' });
+    expect(screen.getByText('2/2', { includeHiddenElements: true })).toBeOnTheScreen();
+    expect(screen.getByText('All done today', { includeHiddenElements: true })).toBeOnTheScreen();
     // Only modules with a summary get a widget; one widget fits, so there are no page dots.
     expect(screen.queryByTestId('home-today-books')).not.toBeOnTheScreen();
     expect(screen.queryByTestId('home-today-dots')).not.toBeOnTheScreen();
@@ -257,6 +257,22 @@ describe('Home, Today', () => {
       today: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
     });
     expect(router.push).toHaveBeenCalledWith('/');
+  });
+
+  it('lists the habits still to do: three at most, else two and how many more', async () => {
+    mockModules.push(
+      provider('habits', done(1, 5, ['Drink water', 'Read', 'Walk', 'Stretch'])),
+      provider('health', done(0, 3, ['Run', 'Sleep', 'Eat'])),
+    );
+    await render(home);
+
+    const hidden = { includeHiddenElements: true };
+    expect(screen.getByText('Drink water', hidden)).toBeOnTheScreen();
+    expect(screen.getByText('Read', hidden)).toBeOnTheScreen();
+    expect(screen.queryByText('Walk', hidden)).not.toBeOnTheScreen();
+    expect(screen.getByText('+2 more', hidden)).toBeOnTheScreen();
+    expect(screen.getByText('Eat', hidden)).toBeOnTheScreen();
+    expect(screen.queryByText('All done today', hidden)).not.toBeOnTheScreen();
   });
 
   it.each([

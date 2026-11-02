@@ -2,9 +2,11 @@
 
 import type { HomeSummary } from '@/utils/home-summary';
 
+import { groupByTimeOfDay } from './habits';
 import type { Completion } from './streak';
+import type { TimeOfDay } from '../data/schema';
 
-export type DoneCount = { done: number; total: number };
+type DoneCount = { done: number; total: number };
 
 /** How many of the habits are done on `today` (`YYYY-MM-DD`). Completions of deleted habits don't count. */
 export function countDoneToday(
@@ -21,9 +23,14 @@ export function countDoneToday(
   return { done: done.size, total: ids.size };
 }
 
-/** 1 of 2 (read out as "1 of 2 done today"), or an invitation to add one when there are no habits yet. */
-export function habitsHomeSummary({ done, total }: DoneCount): HomeSummary {
-  if (total === 0) {
+/**
+ * Habits' Today widget: how many are done today and the ones still to do, by part of the day (then
+ * list order), or an invitation to add one when there are no habits yet.
+ */
+export function habitsHomeSummary<
+  H extends { id: string; name: string; emoji: string; timeOfDay: TimeOfDay; position: number },
+>(habits: readonly H[], completions: readonly Completion[], today: string): HomeSummary {
+  if (habits.length === 0) {
     return {
       kind: 'message',
       headline: 'No habits yet',
@@ -31,5 +38,13 @@ export function habitsHomeSummary({ done, total }: DoneCount): HomeSummary {
       label: 'no habits yet',
     };
   }
-  return { kind: 'progress', done, total, label: `${done} of ${total} done today` };
+  const { done, total } = countDoneToday(habits, completions, today);
+  const doneIds = new Set(
+    completions.filter((completion) => completion.date === today).map((c) => c.habitId),
+  );
+  const upNext = groupByTimeOfDay(habits)
+    .flatMap((group) => group.habits)
+    .filter((habit) => !doneIds.has(habit.id))
+    .map((habit) => ({ id: habit.id, icon: habit.emoji, name: habit.name }));
+  return { kind: 'progress', done, total, label: `${done} of ${total} done today`, upNext };
 }

@@ -1,4 +1,5 @@
 import { countDoneToday, habitsHomeSummary } from './today';
+import type { TimeOfDay } from '../data/schema';
 
 const today = '2026-11-02';
 const habits = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
@@ -37,26 +38,65 @@ describe('countDoneToday', () => {
   });
 });
 
+// Habits as stored: list order is `position`; Today lists them by part of the day (#33 review).
+const habit = (id: string, timeOfDay: TimeOfDay, position: number) => ({
+  id,
+  name: `Habit ${id}`,
+  emoji: '🎯',
+  timeOfDay,
+  position,
+});
+const evening = habit('read', 'evening', 0);
+const morning = habit('water', 'morning', 1);
+const anytime = habit('walk', 'anytime', 2);
+const afternoon = habit('stretch', 'afternoon', 3);
+const item = (h: { id: string; name: string; emoji: string }) => ({
+  id: h.id,
+  icon: h.emoji,
+  name: h.name,
+});
+
 describe('habitsHomeSummary', () => {
+  it('invites you to add a habit when there are none', () => {
+    expect(habitsHomeSummary([], [], today)).toEqual({
+      kind: 'message',
+      headline: 'No habits yet',
+      body: 'Tap to add one',
+      label: 'no habits yet',
+    });
+  });
+
   it.each([
     [
-      { done: 0, total: 0 },
-      {
-        kind: 'message',
-        headline: 'No habits yet',
-        body: 'Tap to add one',
-        label: 'no habits yet',
-      },
+      'nothing done: every habit, by part of the day',
+      [],
+      { done: 0, upNext: [morning, afternoon, evening, anytime].map(item) },
     ],
     [
-      { done: 1, total: 2 },
-      { kind: 'progress', done: 1, total: 2, label: '1 of 2 done today' },
+      'done habits leave the list',
+      [
+        { habitId: 'water', date: today },
+        { habitId: 'read', date: today },
+      ],
+      { done: 2, upNext: [afternoon, anytime].map(item) },
     ],
     [
-      { done: 0, total: 1 },
-      { kind: 'progress', done: 0, total: 1, label: '0 of 1 done today' },
+      "yesterday's completions don't count",
+      [{ habitId: 'water', date: '2026-11-01' }],
+      { done: 0, upNext: [morning, afternoon, evening, anytime].map(item) },
     ],
-  ])('%o', (count, expected) => {
-    expect(habitsHomeSummary(count)).toEqual(expected);
+    [
+      'all done: nothing left',
+      [evening, morning, anytime, afternoon].map((h) => ({ habitId: h.id, date: today })),
+      { done: 4, upNext: [] },
+    ],
+  ])('%s', (_name, completions, { done, upNext }) => {
+    expect(habitsHomeSummary([evening, morning, anytime, afternoon], completions, today)).toEqual({
+      kind: 'progress',
+      done,
+      total: 4,
+      label: `${done} of 4 done today`,
+      upNext,
+    });
   });
 });

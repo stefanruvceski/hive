@@ -1,5 +1,5 @@
 import type { HomeAppRow } from './home-groups';
-import { type HomeSummaryResult, todayModules } from './home-summary';
+import { type HomeSummaryResult, todayModules, visibleUpNext } from './home-summary';
 
 const summary = (): HomeSummaryResult => ({ status: 'pending' });
 const modules = [
@@ -28,5 +28,19 @@ describe('todayModules', () => {
 
   it('is empty without providers', () => {
     expect(todayModules([{ id: 'books' }], { groups: [], apps: [] })).toEqual([]);
+  });
+});
+
+// A widget lists at most three; with more, two and "+N more" (#33 review).
+describe('visibleUpNext', () => {
+  const items = ['a', 'b', 'c', 'd', 'e'];
+  it.each([
+    [0, [], 0],
+    [1, ['a'], 0],
+    [3, ['a', 'b', 'c'], 0],
+    [4, ['a', 'b'], 2],
+    [5, ['a', 'b'], 3],
+  ])('%d to do → shows %o and %d more', (count, shown, more) => {
+    expect(visibleUpNext(items.slice(0, count))).toEqual({ shown, more });
   });
 });

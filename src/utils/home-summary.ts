@@ -8,10 +8,13 @@ import type { HomeRows } from './home-groups';
  * ("Habits: 1 of 2 done today").
  */
 export type HomeSummary =
-  /** A progress ring with `done`/`total` inside it. */
-  | { kind: 'progress'; done: number; total: number; label: string }
+  /** A small progress ring with `done`/`total`, and what is still to do today, in order. */
+  | { kind: 'progress'; done: number; total: number; label: string; upNext: UpNextItem[] }
   /** A headline and a line under it. */
   | { kind: 'message'; headline: string; body: string; label: string };
+
+/** One thing still to do today: `icon` is an emoji or a short symbol shown before its name. */
+export type UpNextItem = { id: string; icon: string; name: string };
 
 /** What a module's `useHomeSummary` returns while its data loads, fails or is ready. */
 export type HomeSummaryResult =
@@ -31,4 +34,14 @@ export function todayModules<M extends { id: string; useHomeSummary?: unknown }>
     (module): module is WithSummary<M> =>
       module.useHomeSummary !== undefined && !hidden.has(module.id),
   );
+}
+
+/** A widget lists at most this many things still to do. */
+export const UP_NEXT_MAX = 3;
+
+/** What a widget lists: everything if it fits, else one row fewer and how many more there are. */
+export function visibleUpNext<T>(items: readonly T[]): { shown: T[]; more: number } {
+  if (items.length <= UP_NEXT_MAX) return { shown: [...items], more: 0 };
+  const shown = items.slice(0, UP_NEXT_MAX - 1);
+  return { shown, more: items.length - shown.length };
 }

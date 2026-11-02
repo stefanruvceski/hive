@@ -243,8 +243,12 @@ export const Layout = {
     widgetGap: 10,
     labelGap: 6,
     labelGlyph: 14,
-    /** The progress ring fills the card under the label row, the number inside it. */
-    ring: { size: 108, stroke: 10 },
+    /** The progress ring at the end of the label row, `done/total` beside it. */
+    ring: { size: 20, stroke: 4 },
+    /** Between the ring and its count, and between an item's emoji and name. */
+    inlineGap: 6,
+    /** Between the rows of things still to do. */
+    listGap: 4,
     /** A message widget's headline and the line under it. */
     messageGap: 2,
     endSpacer: 8,

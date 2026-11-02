@@ -59,6 +59,7 @@ describe('useHabitsHomeSummary', () => {
         done: 1,
         total: 2,
         label: '1 of 2 done today',
+        upNext: [{ id: 'b', icon: '🎯', name: 'b' }],
       },
     });
   });
