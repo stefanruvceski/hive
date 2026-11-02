@@ -20,6 +20,7 @@ import { DockSlots } from './components/dock-slots';
 import { GroupSection } from './components/group-section';
 import { HiddenSection } from './components/hidden-section';
 import { SaveError } from './components/save-error';
+import { DragLayer, DragProvider, type HostView, useDragController } from './drag-context';
 
 type Props = {
   /** A group to scroll to on open ("Edit group" in a folder). Unknown ids are ignored. */
@@ -68,6 +69,7 @@ function CustomizeContent({ rows, focusGroup, onDone }: ContentProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const scrolled = useRef(false);
+  const contentRef = useRef<HostView>(null);
 
   const view = customizeView(hiveModules, rows, defaultHomeGroups);
   // The selection is gone once its app is (e.g. a module removed while Customize was open).
@@ -85,12 +87,22 @@ function CustomizeContent({ rows, focusGroup, onDone }: ContentProps) {
   const addGroup = () =>
     send({ kind: 'add-group', groupId: `group-${Date.now().toString(36)}`, name: NEW_GROUP_NAME });
 
+  const drag = useDragController({
+    scrollRef: scroll,
+    contentRef,
+    pinnedCount: view.pinned.length,
+    onDrop: send,
+  });
+
   const bottom = Math.max(insets.bottom, Layout.dock.bottom);
 
   return (
-    <>
+    <DragProvider value={drag}>
       <ScrollView
         ref={scroll}
+        scrollEnabled={drag.scrollEnabled}
+        onScroll={drag.onScroll}
+        scrollEventThrottle={16}
         contentContainerStyle={[
           styles.page,
           {
@@ -100,7 +112,7 @@ function CustomizeContent({ rows, focusGroup, onDone }: ContentProps) {
         ]}
         keyboardShouldPersistTaps="handled"
         testID="customize-scroll">
-        <View style={[styles.content, styles.padded]}>
+        <View ref={contentRef} collapsable={false} style={[styles.content, styles.padded]}>
           <CustomizeHeader onDone={onDone} />
           <ThemedText type="hint" style={styles.hint}>
             {
@@ -146,6 +158,7 @@ function CustomizeContent({ rows, focusGroup, onDone }: ContentProps) {
             </ThemedText>
           </Pressable>
           <HiddenSection hidden={view.hidden} selectedId={selectedId} onSelect={select} />
+          <DragLayer />
         </View>
       </ScrollView>
       <View pointerEvents="box-none" style={[styles.bottom, { bottom }]}>
@@ -168,7 +181,7 @@ function CustomizeContent({ rows, focusGroup, onDone }: ContentProps) {
           />
         )}
       </View>
-    </>
+    </DragProvider>
   );
 }
 

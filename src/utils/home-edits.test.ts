@@ -326,3 +326,115 @@ describe('appActions', () => {
     });
   });
 });
+
+describe('applyHomeEdit — insert at a position (drag and drop, #48)', () => {
+  const pinAll = (...moduleIds: string[]) =>
+    moduleIds.reduce((rows, moduleId) => ok(rows, { kind: 'pin', moduleId }), base());
+
+  it.each([
+    ['habits', 'creative', 0, ['habits', 'books', 'music']],
+    ['habits', 'creative', 1, ['books', 'habits', 'music']],
+    ['habits', 'creative', 2, ['books', 'music', 'habits']],
+    ['habits', 'creative', 99, ['books', 'music', 'habits']],
+    ['habits', 'creative', -3, ['habits', 'books', 'music']],
+  ] as const)('moves %s into %s at index %i', (moduleId, groupId, index, order) => {
+    const rows = ok(base(), { kind: 'move-app', moduleId, groupId, index });
+
+    expect(groupApps(rows)[groupId]).toEqual(order);
+    expect(groupApps(rows)['body-mind']).toEqual(['health']);
+  });
+
+  it.each([
+    ['money', 1, ['wallet', 'money']],
+    ['wallet', 0, ['wallet', 'money']],
+    ['money', 0, ['money', 'wallet']],
+  ] as const)('reorders %s inside its group to index %i', (moduleId, index, order) => {
+    const rows = ok(base(), { kind: 'move-app', moduleId, groupId: 'money', index });
+
+    expect(groupApps(rows).money).toEqual(order);
+  });
+
+  it('puts a hidden app back on Home at the dropped place', () => {
+    let rows = ok(base(), { kind: 'hide', moduleId: 'habits' });
+    rows = ok(rows, { kind: 'move-app', moduleId: 'habits', groupId: 'creative', index: 1 });
+
+    expect(groupApps(rows).creative).toEqual(['books', 'habits', 'music']);
+    expect(row(rows, 'habits')?.hidden).toBe(false);
+  });
+
+  it('counts only apps shown on Home when it picks the place', () => {
+    let rows = ok(base(), { kind: 'hide', moduleId: 'books' });
+    rows = ok(rows, { kind: 'move-app', moduleId: 'habits', groupId: 'creative', index: 1 });
+
+    expect(groupApps(rows).creative).toEqual(['music', 'habits']);
+  });
+
+  it('refuses an unknown group even with an index', () => {
+    const result = applyHomeEdit(base(), {
+      kind: 'move-app',
+      moduleId: 'habits',
+      groupId: 'nope',
+      index: 0,
+    });
+
+    expect(result).toEqual({ ok: false, reason: 'unknown-group' });
+  });
+
+  it.each([
+    ['books', 0, ['books', 'money', 'wallet']],
+    ['books', 1, ['money', 'books', 'wallet']],
+    ['books', 2, ['money', 'wallet', 'books']],
+    ['books', 99, ['money', 'wallet', 'books']],
+  ] as const)('pins %s at Dock slot %i', (moduleId, slot, order) => {
+    const rows = ok(pinAll('money', 'wallet'), { kind: 'pin', moduleId, slot });
+
+    expect(pinned(rows)).toEqual(order);
+  });
+
+  it('refuses a fifth app at a chosen slot', () => {
+    const rows = pinAll('money', 'wallet', 'health', 'habits');
+    const result = applyHomeEdit(rows, { kind: 'pin', moduleId: 'books', slot: 1 });
+
+    expect(result).toEqual({ ok: false, reason: 'dock-full' });
+    expect(pinned(rows)).toHaveLength(MAX_PINNED);
+  });
+
+  it('moves an app already in the full Dock to another slot', () => {
+    const rows = ok(pinAll('money', 'wallet', 'health', 'habits'), {
+      kind: 'pin',
+      moduleId: 'habits',
+      slot: 0,
+    });
+
+    expect(pinned(rows)).toEqual(['habits', 'money', 'wallet', 'health']);
+  });
+
+  it('refuses to pin a hidden app at a slot', () => {
+    const rows = ok(base(), { kind: 'hide', moduleId: 'books' });
+
+    expect(applyHomeEdit(rows, { kind: 'pin', moduleId: 'books', slot: 0 })).toEqual({
+      ok: false,
+      reason: 'hidden',
+    });
+  });
+
+  it.each([
+    ['money', 2, ['body-mind', 'creative', 'money']],
+    ['creative', 0, ['creative', 'money', 'body-mind']],
+    ['body-mind', 0, ['body-mind', 'money', 'creative']],
+    ['money', 99, ['body-mind', 'creative', 'money']],
+    ['creative', -5, ['creative', 'money', 'body-mind']],
+  ] as const)('moves group %s to index %i', (groupId, to, order) => {
+    const rows = ok(base(), { kind: 'move-group', groupId, to });
+
+    expect(ids(rows.groups)).toEqual(order);
+    expect(rows.groups.map((g) => g.position)).toEqual([0, 1, 2]);
+  });
+
+  it('refuses to move an unknown group to an index', () => {
+    expect(applyHomeEdit(base(), { kind: 'move-group', groupId: 'nope', to: 0 })).toEqual({
+      ok: false,
+      reason: 'unknown-group',
+    });
+  });
+});

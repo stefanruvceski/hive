@@ -2,12 +2,14 @@ import { SymbolView } from 'expo-symbols';
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { AppIcon } from '@/components/ui/app-icon';
 import { GlassCard } from '@/components/ui/glass-card';
 import { Layout, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { HiveModule } from '@/modules/registry';
 import { MAX_PINNED } from '@/utils/home-groups';
 
+import { Draggable, DropZone } from './draggable';
 import { SelectableApp } from './selectable-app';
 import { TileGrid } from './tile-grid';
 
@@ -40,23 +42,36 @@ export function DockSlots({ pinned, selectedId, onSelect }: Props) {
         </ThemedText>
       </View>
       <TileGrid>
-        {pinned.map((app) => (
-          <SelectableApp
+        {pinned.map((app, slot) => (
+          <Draggable
             key={app.id}
-            app={app}
-            label={`${app.title}, in the Dock`}
-            selected={selectedId === app.id}
-            onPress={() => onSelect(app.id)}
-            testID={`customize-dock-${app.id}`}
-          />
+            item={{ kind: 'app', moduleId: app.id, pinned: true, fromDock: true }}
+            zone={{ type: 'dock', slot }}
+            ghost={
+              <AppIcon
+                tint={app.tint}
+                icon={app.icon}
+                label={app.title}
+                testID={`customize-dock-${app.id}-ghost`}
+              />
+            }>
+            <SelectableApp
+              app={app}
+              label={`${app.title}, in the Dock`}
+              selected={selectedId === app.id}
+              onPress={() => onSelect(app.id)}
+              testID={`customize-dock-${app.id}`}
+            />
+          </Draggable>
         ))}
         {free.map((index) => (
-          <View
-            key={index}
-            aria-hidden
-            style={[styles.slot, { borderColor: theme.dashedSlot }]}
-            testID={`customize-dock-empty-${index}`}
-          />
+          <DropZone key={index} zone={{ type: 'dock', slot: pinned.length + index }}>
+            <View
+              aria-hidden
+              style={[styles.slot, { borderColor: theme.dashedSlot }]}
+              testID={`customize-dock-empty-${index}`}
+            />
+          </DropZone>
         ))}
       </TileGrid>
     </GlassCard>

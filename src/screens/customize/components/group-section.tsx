@@ -1,14 +1,17 @@
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { type LayoutChangeEvent, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { AppIcon } from '@/components/ui/app-icon';
 import { GlassCard } from '@/components/ui/glass-card';
 import { Fonts, Layout } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { HiveModule } from '@/modules/registry';
 import { type CustomizeGroup, type HomeEdit, MAX_GROUP_NAME } from '@/utils/home-edits';
 
+import { type HostView } from '../drag-context';
+import { Draggable, DropZone } from './draggable';
 import { SelectableApp } from './selectable-app';
 import { TileGrid } from './tile-grid';
 
@@ -40,77 +43,115 @@ export function GroupSection({
 }: Props) {
   const theme = useTheme();
   const testID = `customize-group-${group.id}`;
+  const headerRef = useRef<HostView>(null);
 
   return (
-    <GlassCard
-      edgeColor={moveHereName !== null ? theme.accentTarget : undefined}
-      style={styles.section}
-      onLayout={onLayout}
-      testID={testID}>
-      <View style={styles.header}>
-        <NameField group={group} onEdit={onEdit} testID={`${testID}-name`} />
-        <IconButton
-          icon={{ ios: 'chevron.up', android: 'keyboard_arrow_up', web: 'keyboard_arrow_up' }}
-          label={`Move group ${group.name} up`}
-          disabled={!canMoveUp}
-          onPress={() => onEdit({ kind: 'move-group', groupId: group.id, by: -1 })}
-          testID={`${testID}-up`}
-        />
-        <IconButton
-          icon={{ ios: 'chevron.down', android: 'keyboard_arrow_down', web: 'keyboard_arrow_down' }}
-          label={`Move group ${group.name} down`}
-          disabled={!canMoveDown}
-          onPress={() => onEdit({ kind: 'move-group', groupId: group.id, by: 1 })}
-          testID={`${testID}-down`}
-        />
-        {canDelete && (
+    <DropZone zone={{ type: 'group', groupId: group.id }}>
+      <GlassCard
+        edgeColor={moveHereName !== null ? theme.accentTarget : undefined}
+        style={styles.section}
+        onLayout={onLayout}
+        testID={testID}>
+        <View ref={headerRef} collapsable={false} style={styles.header}>
+          <Draggable
+            item={{ kind: 'group', groupId: group.id }}
+            liftRef={headerRef}
+            ghost={
+              <GlassCard style={styles.ghost} testID={`${testID}-ghost`}>
+                <ThemedText type="section" numberOfLines={1}>
+                  {group.name}
+                </ThemedText>
+              </GlassCard>
+            }>
+            {/* Long-press and drag only; the up / down buttons are the accessible way (#48). */}
+            <View aria-hidden style={styles.handle} testID={`${testID}-drag-handle`}>
+              <SymbolView
+                name={{ ios: 'line.3.horizontal', android: 'drag_handle', web: 'drag_handle' }}
+                size={Layout.customize.controlGlyph}
+                tintColor={theme.textSecondary}
+              />
+            </View>
+          </Draggable>
+          <NameField group={group} onEdit={onEdit} testID={`${testID}-name`} />
           <IconButton
-            icon={{ ios: 'trash', android: 'delete', web: 'delete' }}
-            label={`Delete group ${group.name}`}
-            danger
-            onPress={() => onEdit({ kind: 'delete-group', groupId: group.id })}
-            testID={`${testID}-delete`}
+            icon={{ ios: 'chevron.up', android: 'keyboard_arrow_up', web: 'keyboard_arrow_up' }}
+            label={`Move group ${group.name} up`}
+            disabled={!canMoveUp}
+            onPress={() => onEdit({ kind: 'move-group', groupId: group.id, by: -1 })}
+            testID={`${testID}-up`}
           />
-        )}
-      </View>
-      {group.apps.length > 0 && (
-        <TileGrid>
-          {group.apps.map(({ app, pinned }) => (
-            <SelectableApp
-              key={app.id}
-              app={app}
-              label={pinned ? `${app.title}, pinned` : app.title}
-              pinned={pinned}
-              selected={selectedId === app.id}
-              onPress={() => onSelect(app.id)}
-              testID={`customize-app-${app.id}`}
+          <IconButton
+            icon={{
+              ios: 'chevron.down',
+              android: 'keyboard_arrow_down',
+              web: 'keyboard_arrow_down',
+            }}
+            label={`Move group ${group.name} down`}
+            disabled={!canMoveDown}
+            onPress={() => onEdit({ kind: 'move-group', groupId: group.id, by: 1 })}
+            testID={`${testID}-down`}
+          />
+          {canDelete && (
+            <IconButton
+              icon={{ ios: 'trash', android: 'delete', web: 'delete' }}
+              label={`Delete group ${group.name}`}
+              danger
+              onPress={() => onEdit({ kind: 'delete-group', groupId: group.id })}
+              testID={`${testID}-delete`}
             />
-          ))}
-        </TileGrid>
-      )}
-      {group.apps.length === 0 && (
-        <ThemedText type="footnote" style={styles.note} testID={`${testID}-empty`}>
-          No apps in this group
-        </ThemedText>
-      )}
-      {moveHereName !== null && (
-        <Pressable
-          role="button"
-          onPress={() => {
-            if (selectedId) onEdit({ kind: 'move-app', moduleId: selectedId, groupId: group.id });
-          }}
-          style={({ pressed }) => [
-            styles.moveHere,
-            { borderColor: theme.accentText },
-            pressed && styles.pressed,
-          ]}
-          testID={`${testID}-move-here`}>
-          <ThemedText type="action" themeColor="accentText" style={styles.center}>
-            {`Move ${moveHereName} here`}
+          )}
+        </View>
+        {group.apps.length > 0 && (
+          <TileGrid>
+            {group.apps.map(({ app, pinned }) => (
+              <Draggable
+                key={app.id}
+                item={{ kind: 'app', moduleId: app.id, pinned }}
+                zone={{ type: 'app', groupId: group.id, moduleId: app.id }}
+                ghost={
+                  <AppIcon
+                    tint={app.tint}
+                    icon={app.icon}
+                    label={app.title}
+                    testID={`customize-app-${app.id}-ghost`}
+                  />
+                }>
+                <SelectableApp
+                  app={app}
+                  label={pinned ? `${app.title}, pinned` : app.title}
+                  pinned={pinned}
+                  selected={selectedId === app.id}
+                  onPress={() => onSelect(app.id)}
+                  testID={`customize-app-${app.id}`}
+                />
+              </Draggable>
+            ))}
+          </TileGrid>
+        )}
+        {group.apps.length === 0 && (
+          <ThemedText type="footnote" style={styles.note} testID={`${testID}-empty`}>
+            No apps in this group
           </ThemedText>
-        </Pressable>
-      )}
-    </GlassCard>
+        )}
+        {moveHereName !== null && (
+          <Pressable
+            role="button"
+            onPress={() => {
+              if (selectedId) onEdit({ kind: 'move-app', moduleId: selectedId, groupId: group.id });
+            }}
+            style={({ pressed }) => [
+              styles.moveHere,
+              { borderColor: theme.accentText },
+              pressed && styles.pressed,
+            ]}
+            testID={`${testID}-move-here`}>
+            <ThemedText type="action" themeColor="accentText" style={styles.center}>
+              {`Move ${moveHereName} here`}
+            </ThemedText>
+          </Pressable>
+        )}
+      </GlassCard>
+    </DropZone>
   );
 }
 
@@ -200,6 +241,11 @@ function IconButton({
 }
 
 const styles = StyleSheet.create({
+  ghost: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: Layout.customize.field.paddingHorizontal,
+  },
   section: {
     gap: Layout.customize.section.gap,
     paddingTop: Layout.customize.section.paddingTop,
@@ -222,6 +268,12 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sans,
     fontSize: 16,
     fontWeight: 600,
+  },
+  handle: {
+    width: Layout.minTouchAndroid,
+    height: Layout.minTouchAndroid,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   control: {
     width: Layout.minTouchAndroid,

@@ -64,6 +64,15 @@ radius 32, padding 8 · 8 · 8 · 18, gap 8, buttons 42 high (radius 21, padding
 targets: the group row's up / down / delete and the name field are 48 (the design draws 40 × 42),
 Move here at least 48 (#31).
 
+**Customize drag and drop** (#48; proposed here, not yet in the canvas — the maintainer approved
+this look at plan review): a long press of 350 ms lifts an app tile or a group header. The lifted
+copy follows the finger at scale 1.06 and 92 % opacity; the place it came from stays at 35 %
+opacity. The drop place is shown by a 3 pt `accent` bar between two apps (or before / after a
+group), or an `accent` outline on the Dock slot / Hidden section; a full Dock outlines its slots in
+`danger` with "Dock full" above them. Within 80 pt of the top or bottom edge the page scrolls 12 pt
+per frame. A group is lifted by a 48 pt grip (three lines, `textSecondary`, 18) at the start of its header, since the name field takes touches; the grip is hidden from screen readers, whose way is the up / down buttons. A drop outside any place settles back in 150 ms. Reduce Motion: no lift scale, instant
+settle.
+
 **Today** ([canvas/Main.dc.html](canvas/Main.dc.html), [canvas/LargeText.dc.html](canvas/LargeText.dc.html)), as implemented in `theme.ts` (#33):
 
 | Token    | Dark                     | Light                | Use                                   |

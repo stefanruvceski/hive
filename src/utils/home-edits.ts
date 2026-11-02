@@ -12,13 +12,14 @@ export const NEW_GROUP_NAME = 'New group';
 
 export type HomeEdit =
   /** Puts an app at the end of a group; a hidden app comes back to Home. */
-  | { kind: 'move-app'; moduleId: string; groupId: string }
-  | { kind: 'pin'; moduleId: string }
+  | { kind: 'move-app'; moduleId: string; groupId: string; index?: number }
+  | { kind: 'pin'; moduleId: string; slot?: number }
   | { kind: 'unpin'; moduleId: string }
   /** Takes an app off Home and out of the Dock; its data stays. */
   | { kind: 'hide'; moduleId: string }
   | { kind: 'rename-group'; groupId: string; name: string }
   | { kind: 'move-group'; groupId: string; by: -1 | 1 }
+  | { kind: 'move-group'; groupId: string; to: number }
   /** The caller makes the id, so this stays pure. */
   | { kind: 'add-group'; groupId: string; name: string }
   /** Only a group that shows no apps, and never the last one. */
@@ -122,21 +123,34 @@ export function applyHomeEdit(rows: HomeRows, edit: HomeEdit): HomeEditResult {
       const app = apps.find((row) => row.moduleId === edit.moduleId);
       if (!app) return refuse('unknown-app');
       if (!hasGroup(edit.groupId)) return refuse('unknown-group');
-      if (app.groupId === edit.groupId && !app.hidden) return done({ groups, apps });
+      if (edit.index === undefined && app.groupId === edit.groupId && !app.hidden) {
+        return done({ groups, apps });
+      }
       app.groupId = edit.groupId;
       app.hidden = false;
-      // After every app already in the group; normalize renumbers.
+      // Without an index: after every app already in the group. normalize renumbers.
       app.position = Number.MAX_SAFE_INTEGER;
+      if (edit.index !== undefined) {
+        // The index counts the apps Home shows in the group, without the moved one.
+        const shown = apps
+          .filter((row) => row.groupId === edit.groupId && !row.hidden && row !== app)
+          .sort((a, b) => a.position - b.position);
+        const before = shown[clamp(edit.index, 0, shown.length)];
+        if (before) app.position = before.position - 0.5;
+      }
       return done({ groups, apps });
     }
     case 'pin': {
       const app = apps.find((row) => row.moduleId === edit.moduleId);
       if (!app) return refuse('unknown-app');
       if (app.hidden) return refuse('hidden');
-      if (app.pinnedPosition !== null) return done({ groups, apps });
-      const pinnedCount = apps.filter((row) => row.pinnedPosition !== null).length;
-      if (pinnedCount >= MAX_PINNED) return refuse('dock-full');
-      app.pinnedPosition = pinnedCount;
+      const dock = apps
+        .filter((row) => row !== app && !row.hidden && row.pinnedPosition !== null)
+        .sort((a, b) => (a.pinnedPosition ?? 0) - (b.pinnedPosition ?? 0));
+      if (app.pinnedPosition !== null && edit.slot === undefined) return done({ groups, apps });
+      if (app.pinnedPosition === null && dock.length >= MAX_PINNED) return refuse('dock-full');
+      dock.splice(clamp(edit.slot ?? dock.length, 0, dock.length), 0, app);
+      dock.forEach((row, slot) => (row.pinnedPosition = slot));
       return done({ groups, apps });
     }
     case 'unpin': {
@@ -164,10 +178,15 @@ export function applyHomeEdit(rows: HomeRows, edit: HomeEdit): HomeEditResult {
     case 'move-group': {
       const from = groups.findIndex((group) => group.id === edit.groupId);
       if (from === -1) return refuse('unknown-group');
-      const to = from + edit.by;
       const moved = [...groups];
-      if (to >= 0 && to < moved.length) {
-        [moved[from], moved[to]] = [moved[to]!, moved[from]!];
+      if ('to' in edit) {
+        const [group] = moved.splice(from, 1);
+        moved.splice(clamp(edit.to, 0, moved.length), 0, group!);
+      } else {
+        const to = from + edit.by;
+        if (to >= 0 && to < moved.length) {
+          [moved[from], moved[to]] = [moved[to]!, moved[from]!];
+        }
       }
       return done({ groups: moved.map((group, position) => ({ ...group, position })), apps });
     }
@@ -281,6 +300,10 @@ function indexOrNull(list: readonly string[], id: string): number | null {
  * Canonical rows: groups numbered 0…n-1, apps numbered 0…n-1 within their group (keeping their
  * order), Dock slots 0…k-1 (keeping their order), hidden apps never pinned.
  */
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
 function normalize(rows: { groups: HomeGroupRow[]; apps: HomeAppRow[] }): HomeRows {
   const groups = [...rows.groups]
     .sort((a, b) => a.position - b.position)
