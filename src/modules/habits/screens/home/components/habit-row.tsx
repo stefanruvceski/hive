@@ -3,18 +3,27 @@ import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { Layout, Spacing } from '@/constants/theme';
 
+import { EditControls } from './edit-controls';
 import { HabitCheck } from './habit-check';
 import type { Habit } from '../../../data/queries';
+import type { Direction } from '../../../domain/order';
 
 type Props = {
   habit: Habit;
   doneToday: boolean;
   streak: number;
   onToggle: (done: boolean) => void;
+  /** Edit mode: the check gives way to move and edit controls. */
+  editing?: {
+    canUp: boolean;
+    canDown: boolean;
+    onMove: (direction: Direction) => void;
+    onEdit: () => void;
+  };
 };
 
 /** One habit in its part of the day: emoji, name and streak, and its "done today" check. */
-export function HabitRow({ habit, doneToday, streak, onToggle }: Props) {
+export function HabitRow({ habit, doneToday, streak, onToggle, editing }: Props) {
   return (
     <View style={styles.row} testID={`habits-item-${habit.id}`}>
       <ThemedText aria-hidden>{habit.emoji}</ThemedText>
@@ -25,12 +34,16 @@ export function HabitRow({ habit, doneToday, streak, onToggle }: Props) {
           {`Streak: ${streak} ${streak === 1 ? 'day' : 'days'}`}
         </ThemedText>
       </View>
-      <HabitCheck
-        checked={doneToday}
-        label={`Done today: ${habit.name}`}
-        onPress={() => onToggle(!doneToday)}
-        testID={`habits-check-${habit.id}`}
-      />
+      {editing ? (
+        <EditControls habit={habit} {...editing} />
+      ) : (
+        <HabitCheck
+          checked={doneToday}
+          label={`Done today: ${habit.name}`}
+          onPress={() => onToggle(!doneToday)}
+          testID={`habits-check-${habit.id}`}
+        />
+      )}
     </View>
   );
 }

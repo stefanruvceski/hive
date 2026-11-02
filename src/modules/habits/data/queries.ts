@@ -1,11 +1,12 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { and, asc, eq, max } from 'drizzle-orm';
+import { and, asc, eq, isNotNull, isNull, max } from 'drizzle-orm';
 
 import { getDb } from '@/lib/db/client';
 import { toIsoDate } from '@/utils/format-date';
 
 import { habitsCompletions, habitsHabits } from './schema';
 import { type NewHabit, newHabitId, normalizeName } from '../domain/habits';
+import { type Direction, endPosition, moveWithinPart } from '../domain/order';
 import { type Completion, setCompletion } from '../domain/streak';
 
 export type Habit = typeof habitsHabits.$inferSelect;
@@ -14,16 +15,39 @@ export type Habit = typeof habitsHabits.$inferSelect;
 export const habitsKeys = {
   all: ['habits'] as const,
   lists: () => [...habitsKeys.all, 'list'] as const,
+  archived: () => [...habitsKeys.all, 'archived'] as const,
   completions: () => [...habitsKeys.all, 'completions'] as const,
 };
 
-/** Every habit, in the order it was added. */
+/** Every active (not archived) habit, in list order. */
 export const habitsListQuery = () =>
   queryOptions({
     queryKey: habitsKeys.lists(),
     queryFn: async (): Promise<Habit[]> =>
-      getDb().select().from(habitsHabits).orderBy(asc(habitsHabits.position)).all(),
+      getDb()
+        .select()
+        .from(habitsHabits)
+        .where(isNull(habitsHabits.archivedAt))
+        .orderBy(asc(habitsHabits.position))
+        .all(),
   });
+
+/** Archived habits, in list order. */
+export const archivedHabitsQuery = () =>
+  queryOptions({
+    queryKey: habitsKeys.archived(),
+    queryFn: async (): Promise<Habit[]> =>
+      getDb()
+        .select()
+        .from(habitsHabits)
+        .where(isNotNull(habitsHabits.archivedAt))
+        .orderBy(asc(habitsHabits.position))
+        .all(),
+  });
+
+export function useArchivedHabits() {
+  return useQuery(archivedHabitsQuery());
+}
 
 export function useHabits() {
   return useQuery(habitsListQuery());
@@ -100,4 +124,163 @@ export function useSetCompletion() {
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: habitsKeys.completions() }),
   });
+}
+
+export type HabitEdit = NewHabit & { id: string };
+
+/** Saves the edit form. A habit that changes part of the day goes to the end of the new part. */
+export function useUpdateHabit() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: HabitEdit) => {
+      const name = normalizeName(input.name);
+      if (!name) throw new Error('A habit needs a name.');
+      getDb().transaction((tx) => {
+        const current = tx.select().from(habitsHabits).where(eq(habitsHabits.id, input.id)).get();
+        if (!current) throw new Error('Habit not found.');
+        const last = tx
+          .select({ position: max(habitsHabits.position) })
+          .from(habitsHabits)
+          .get();
+        tx.update(habitsHabits)
+          .set({
+            name,
+            emoji: input.emoji,
+            timeOfDay: input.timeOfDay,
+            ...(current.timeOfDay === input.timeOfDay
+              ? {}
+              : { position: (last?.position ?? -1) + 1 }),
+          })
+          .where(eq(habitsHabits.id, input.id))
+          .run();
+      });
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: habitsKeys.all }),
+  });
+}
+
+/** Optimistic list change shared by reorder, archive, restore and delete; rolls back on error. */
+function useOptimisticHabits<V>(
+  write: (variables: V) => void,
+  apply: (
+    variables: V,
+    lists: { active: Habit[]; archived: Habit[] },
+  ) => { active: Habit[]; archived: Habit[] },
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (variables: V) => write(variables),
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({ queryKey: habitsKeys.all });
+      const previous = {
+        active: queryClient.getQueryData<Habit[]>(habitsKeys.lists()),
+        archived: queryClient.getQueryData<Habit[]>(habitsKeys.archived()),
+      };
+      const next = apply(variables, {
+        active: previous.active ?? [],
+        archived: previous.archived ?? [],
+      });
+      if (previous.active) queryClient.setQueryData(habitsKeys.lists(), next.active);
+      if (previous.archived) queryClient.setQueryData(habitsKeys.archived(), next.archived);
+      return { previous };
+    },
+    onError: (_error, _variables, context) => {
+      queryClient.setQueryData(habitsKeys.lists(), context?.previous.active);
+      queryClient.setQueryData(habitsKeys.archived(), context?.previous.archived);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: habitsKeys.all }),
+  });
+}
+
+const byPosition = (a: Habit, b: Habit) => a.position - b.position;
+
+/** Moves a habit up or down within its part of the day and rewrites the positions. */
+export function useMoveHabit() {
+  return useOptimisticHabits<{ id: string; direction: Direction }>(
+    ({ id, direction }) => {
+      getDb().transaction((tx) => {
+        const active = tx.select().from(habitsHabits).where(isNull(habitsHabits.archivedAt)).all();
+        const before = new Map(active.map((habit) => [habit.id, habit.position]));
+        for (const habit of moveWithinPart(active, id, direction)) {
+          if (habit.position !== before.get(habit.id)) {
+            tx.update(habitsHabits)
+              .set({ position: habit.position })
+              .where(eq(habitsHabits.id, habit.id))
+              .run();
+          }
+        }
+      });
+    },
+    ({ id, direction }, lists) => ({
+      ...lists,
+      active: moveWithinPart(lists.active, id, direction).sort(byPosition),
+    }),
+  );
+}
+
+/** Archives a habit: it leaves the list, streaks and Today; its completions are kept. */
+export function useArchiveHabit() {
+  return useOptimisticHabits<string>(
+    (id) => {
+      getDb()
+        .update(habitsHabits)
+        .set({ archivedAt: toIsoDate(new Date()) })
+        .where(eq(habitsHabits.id, id))
+        .run();
+    },
+    (id, { active, archived }) => {
+      const habit = active.find((item) => item.id === id);
+      return {
+        active: active.filter((item) => item.id !== id),
+        archived: habit
+          ? [...archived, { ...habit, archivedAt: toIsoDate(new Date()) }].sort(byPosition)
+          : archived,
+      };
+    },
+  );
+}
+
+/** Restores an archived habit to the end of its part of the day. */
+export function useRestoreHabit() {
+  return useOptimisticHabits<string>(
+    (id) => {
+      getDb().transaction((tx) => {
+        const last = tx
+          .select({ position: max(habitsHabits.position) })
+          .from(habitsHabits)
+          .get();
+        tx.update(habitsHabits)
+          .set({ archivedAt: null, position: (last?.position ?? -1) + 1 })
+          .where(eq(habitsHabits.id, id))
+          .run();
+      });
+    },
+    (id, { active, archived }) => {
+      const habit = archived.find((item) => item.id === id);
+      return {
+        active: habit
+          ? [...active, { ...habit, archivedAt: null, position: endPosition(active) }].sort(
+              byPosition,
+            )
+          : active,
+        archived: archived.filter((item) => item.id !== id),
+      };
+    },
+  );
+}
+
+/** Deletes an archived habit and its completions in one transaction. */
+export function useDeleteHabit() {
+  return useOptimisticHabits<string>(
+    (id) => {
+      getDb().transaction((tx) => {
+        tx.delete(habitsCompletions).where(eq(habitsCompletions.habitId, id)).run();
+        tx.delete(habitsHabits).where(eq(habitsHabits.id, id)).run();
+      });
+    },
+    (id, { active, archived }) => ({
+      active,
+      archived: archived.filter((item) => item.id !== id),
+    }),
+  );
 }

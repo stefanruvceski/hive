@@ -6,7 +6,14 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ApiError } from '@/lib/api';
 
 import { HabitsHome } from './index';
-import { type Habit, useCompletions, useHabits, useSetCompletion } from '../../data/queries';
+import {
+  type Habit,
+  useArchivedHabits,
+  useCompletions,
+  useHabits,
+  useMoveHabit,
+  useSetCompletion,
+} from '../../data/queries';
 
 // The database boundary: the module's query hooks (09 §5). Domain logic is tested without mocks.
 jest.mock('../../data/queries');
@@ -23,6 +30,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockedCompletions.mockReturnValue(completions({ data: [], refetch: jest.fn() }));
   mockedSetCompletion.mockReturnValue({ mutate } as unknown as ReturnType<typeof useSetCompletion>);
+  jest.mocked(useMoveHabit).mockReturnValue({ mutate: jest.fn() } as never);
+  jest.mocked(useArchivedHabits).mockReturnValue({ data: [] } as never);
 });
 
 const habit = (id: string, name: string, timeOfDay: Habit['timeOfDay'], position: number) => ({

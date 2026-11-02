@@ -9,6 +9,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { HabitRow } from './habit-row';
 import type { Habit } from '../../../data/queries';
 import type { TimeOfDay } from '../../../data/schema';
+import { canMove, type Direction } from '../../../domain/order';
 import { currentStreak } from '../../../domain/streak';
 
 type Props = {
@@ -19,12 +20,24 @@ type Props = {
   doneDates: ReadonlyMap<string, ReadonlySet<string>>;
   today: string;
   onToggle: (habitId: string, done: boolean) => void;
+  /** Set in edit mode. */
+  onMove?: (habitId: string, direction: Direction) => void;
+  onEdit?: (habitId: string) => void;
 };
 
 const none: ReadonlySet<string> = new Set();
 
 /** A part of the day and its habits: a header over a glass list, as the Settings list groups. */
-export function HabitSection({ timeOfDay, label, habits, doneDates, today, onToggle }: Props) {
+export function HabitSection({
+  timeOfDay,
+  label,
+  habits,
+  doneDates,
+  today,
+  onToggle,
+  onMove,
+  onEdit,
+}: Props) {
   const theme = useTheme();
 
   return (
@@ -41,6 +54,16 @@ export function HabitSection({ timeOfDay, label, habits, doneDates, today, onTog
               doneToday={(doneDates.get(habit.id) ?? none).has(today)}
               streak={currentStreak(doneDates.get(habit.id) ?? none, today)}
               onToggle={(done) => onToggle(habit.id, done)}
+              editing={
+                onMove && onEdit
+                  ? {
+                      canUp: canMove(habits, habit.id, 'up'),
+                      canDown: canMove(habits, habit.id, 'down'),
+                      onMove: (direction) => onMove(habit.id, direction),
+                      onEdit: () => onEdit(habit.id),
+                    }
+                  : undefined
+              }
             />
           </Fragment>
         ))}

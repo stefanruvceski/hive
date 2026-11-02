@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -13,19 +14,29 @@ import { Layout, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useToday } from '@/hooks/use-today';
 
 import { HabitSection } from './components/habit-section';
+import { TextButton } from './components/text-button';
 import {
   type CompletionChange,
+  useArchivedHabits,
   useCompletions,
   useHabits,
+  useMoveHabit,
   useSetCompletion,
 } from '../../data/queries';
 import { groupByTimeOfDay } from '../../domain/habits';
+import type { Direction } from '../../domain/order';
 import { doneDatesByHabit } from '../../domain/streak';
 
 const addHabit = () => router.push('/habits/new');
+const editHabit = (id: string) => router.push({ pathname: '/habits/[id]', params: { id } });
+const openArchived = () => router.push('/habits/archived');
 
 /** Habits' entry screen: the habits grouped by part of the day. Header as in Settings. */
 export function HabitsHome() {
+  const [editing, setEditing] = useState(false);
+  const habits = useHabits();
+  const hasHabits = (habits.data?.length ?? 0) > 0;
+
   return (
     <Wallpaper style={styles.container} testID="habits-screen">
       {/* No bottom edge: the list scrolls to the screen edge and clears the home indicator with
@@ -38,14 +49,35 @@ export function HabitsHome() {
             onPress={() => router.back()}
             testID="habits-back"
           />
-          <GlassButton
-            icon={{ ios: 'plus', android: 'add', web: 'add' }}
-            label="Add habit"
-            onPress={addHabit}
-            testID="habits-add"
-          />
+          <View style={styles.actions}>
+            {editing ? (
+              <PrimaryButton
+                label="Done"
+                size="compact"
+                onPress={() => setEditing(false)}
+                testID="habits-edit-done"
+              />
+            ) : (
+              <>
+                {hasHabits && (
+                  <GlassButton
+                    icon={{ ios: 'pencil', android: 'edit', web: 'edit' }}
+                    label="Edit habits"
+                    onPress={() => setEditing(true)}
+                    testID="habits-edit-toggle"
+                  />
+                )}
+                <GlassButton
+                  icon={{ ios: 'plus', android: 'add', web: 'add' }}
+                  label="Add habit"
+                  onPress={addHabit}
+                  testID="habits-add"
+                />
+              </>
+            )}
+          </View>
         </View>
-        <HabitsContent />
+        <HabitsContent editing={editing} />
       </SafeAreaView>
     </Wallpaper>
   );
@@ -61,12 +93,15 @@ function Title() {
 
 // Four states, data first: cached data stays visible if a refetch fails (07 §1, 14 §3). The list
 // needs both the habits and the days they were done.
-function HabitsContent() {
+function HabitsContent({ editing }: { editing: boolean }) {
   const insets = useSafeAreaInsets();
   const today = useToday();
   const habits = useHabits();
   const completions = useCompletions();
   const setCompletion = useSetCompletion();
+  const move = useMoveHabit();
+  const archived = useArchivedHabits();
+  const hasArchived = (archived.data?.length ?? 0) > 0;
 
   // Optimistic: the check flips at once and rolls back on failure, then offers a retry (07 §2).
   const save = (change: CompletionChange) =>
@@ -77,6 +112,22 @@ function HabitsContent() {
           { text: 'Try again', onPress: () => save(change) },
         ]),
     });
+
+  const moveHabit = (id: string, direction: Direction) =>
+    move.mutate(
+      { id, direction },
+      {
+        onError: () =>
+          Alert.alert("Couldn't save", 'Your change was not saved. Please try again.', [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Try again', onPress: () => moveHabit(id, direction) },
+          ]),
+      },
+    );
+
+  const archivedLink = hasArchived && (
+    <TextButton label="Archived habits" onPress={openArchived} testID="habits-archived-link" />
+  );
 
   const data = habits.data && completions.data ? habits.data : undefined;
   const error = habits.error ?? completions.error;
@@ -104,8 +155,11 @@ function HabitsContent() {
             doneDates={doneDates}
             today={today}
             onToggle={(habitId, done) => save({ habitId, date: today, done })}
+            onMove={editing ? moveHabit : undefined}
+            onEdit={editing ? editHabit : undefined}
           />
         ))}
+        {archivedLink}
       </ScrollView>
     );
   }
@@ -114,12 +168,17 @@ function HabitsContent() {
     <View style={[styles.container, styles.width, { paddingBottom: insets.bottom }]}>
       <Title />
       {data ? (
-        <EmptyState
-          title="No habits yet"
-          description="Add the first thing you want to do every day."
-          action={<PrimaryButton label="Add habit" onPress={addHabit} testID="habits-empty-add" />}
-          testID="habits-empty"
-        />
+        <>
+          <EmptyState
+            title="No habits yet"
+            description="Add the first thing you want to do every day."
+            action={
+              <PrimaryButton label="Add habit" onPress={addHabit} testID="habits-empty-add" />
+            }
+            testID="habits-empty"
+          />
+          {archivedLink}
+        </>
       ) : isError ? (
         <ErrorState error={error} onRetry={refetch} testID="habits-error" />
       ) : (
@@ -143,6 +202,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingTop: Spacing.two,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: Spacing.two,
   },
   list: {
     gap: Spacing.two,
