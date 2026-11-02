@@ -2,6 +2,9 @@ import type { Href } from 'expo-router';
 import type { SymbolViewProps } from 'expo-symbols';
 
 import type { AppTint } from '@/constants/theme';
+import type { HomeSummaryResult } from '@/utils/home-summary';
+
+import { useHabitsHomeSummary } from './habits/data/home-summary';
 
 /** The groups Home starts with (docs/design/canvas/Main.dc.html). Users rename and reorder them (#31). */
 export const defaultHomeGroups = [
@@ -26,6 +29,11 @@ export type HiveModule = {
   /** The Home group a new install puts it in. */
   group: DefaultHomeGroupId;
   href: Href;
+  /**
+   * Optional: the module's widget in Home's Today section (#33). A hook, called once per render by
+   * that module's widget; keep it light (its own queries + pure counting in `domain/`).
+   */
+  useHomeSummary?: () => HomeSummaryResult;
 };
 
 /**
@@ -41,5 +49,6 @@ export const hiveModules: readonly HiveModule[] = [
     tint: 'habits',
     group: 'body-mind',
     href: '/habits',
+    useHomeSummary: useHabitsHomeSummary,
   },
 ];
