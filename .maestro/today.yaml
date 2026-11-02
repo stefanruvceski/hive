@@ -1,0 +1,58 @@
+# Today on Home (#33): Habits' widget counts today's done habits and opens Habits; Settings →
+# Show Today off removes the section.
+# Run locally: pnpm test:e2e   (needs a dev build installed on the simulator/emulator)
+appId: com.ruvceski.hive.dev
+tags:
+  - home
+  - today
+---
+- launchApp:
+    clearState: true
+# No habits yet: the widget invites you to add one.
+- assertVisible:
+    id: 'home-today-title'
+- assertVisible:
+    id: 'home-today-habits'
+    text: 'Habits: no habits yet'
+# Two habits, one done today.
+- tapOn:
+    id: 'home-today-habits'
+- tapOn:
+    id: 'habits-empty-add'
+- tapOn:
+    id: 'habits-new-name'
+- inputText: 'Read 10 pages'
+- hideKeyboard
+- tapOn:
+    id: 'habits-new-save'
+- assertVisible: 'Read 10 pages'
+- tapOn:
+    id: 'habits-add'
+- tapOn:
+    id: 'habits-new-name'
+- inputText: 'Drink water'
+- hideKeyboard
+- tapOn:
+    id: 'habits-new-save'
+- assertVisible: 'Drink water'
+# Habit ids are random, so the first check is picked by index.
+- tapOn:
+    id: 'habits-check-.*'
+    index: 0
+- tapOn:
+    id: 'habits-back'
+# The widget's accessible name is its summary.
+- assertVisible:
+    id: 'home-today-habits'
+    text: 'Habits: 1 of 2 done today'
+# Show Today off → the section is gone; Home still shows the groups.
+- tapOn:
+    id: 'home-settings'
+- tapOn:
+    id: 'settings-show-today'
+- tapOn:
+    id: 'settings-back'
+- assertVisible:
+    id: 'home-groups'
+- assertNotVisible:
+    id: 'home-today'
