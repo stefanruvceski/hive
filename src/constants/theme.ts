@@ -243,8 +243,8 @@ export const Layout = {
     widgetGap: 10,
     labelGap: 6,
     labelGlyph: 14,
-    ring: { size: 64, stroke: 8 },
-    ringGap: 12,
+    /** The progress ring fills the card under the label row, the number inside it. */
+    ring: { size: 108, stroke: 10 },
     /** A message widget's headline and the line under it. */
     messageGap: 2,
     endSpacer: 8,

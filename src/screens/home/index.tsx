@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ErrorState } from '@/components/ui/error-state';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Wallpaper } from '@/components/ui/wallpaper';
-import { Layout, MaxContentWidth } from '@/constants/theme';
+import { Layout } from '@/constants/theme';
 import { useAppSettings } from '@/hooks/use-app-settings';
 import { useAppUsage, useRecordAppOpen } from '@/hooks/use-app-usage';
 import { useHomeLayout } from '@/hooks/use-home-layout';
@@ -25,6 +25,7 @@ import { HomeEmpty } from './components/home-empty';
 import { HomeHeader } from './components/home-header';
 import { TodaySection } from './components/today-section';
 import type { TodayModule } from './components/today-widget';
+import { homeGridWidth } from './today-pages';
 
 /**
  * Hive's launcher (docs/design/canvas/Main.dc.html): a fixed header, Today (a summary from each
@@ -114,11 +115,8 @@ function AppsLayout({ groups, pinned, today: todayApps, headerHeight, dockBottom
     recordOpen.mutate({ moduleId: app.id, today });
     router.push(app.href);
   };
-  const { width } = useWindowDimensions();
-  // Two 169 pt columns on a phone; more where the window (capped at MaxContentWidth) has room.
-  const room = Math.min(width, MaxContentWidth) - 2 * Layout.screenMargin + Layout.gridGapAcross;
-  const columns = Math.max(2, Math.floor(room / (Layout.card + Layout.gridGapAcross)));
-  const gridWidth = columns * Layout.card + (columns - 1) * Layout.gridGapAcross;
+  // Two 169 pt columns on a phone; more where the window has room. Today lines up with it.
+  const gridWidth = homeGridWidth(useWindowDimensions().width);
 
   return (
     <>

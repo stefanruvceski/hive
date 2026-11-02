@@ -70,17 +70,19 @@ Move here at least 48 (#31).
 | -------- | ------------------------ | -------------------- | ------------------------------------- |
 | `dotOff` | `rgba(255,255,255,0.25)` | `rgba(15,23,42,0.2)` | Page dot that is not the current page |
 
-Section: heading 24 from the screen edge, then the widget strip and the dots, 10 apart. Widgets are
-square cards (169, padding 13, radius 30) 12 apart, padding 20 at both ends of the strip plus an 8 pt
-spacer after the last; they grow taller when their text needs it. Each widget: a label row (app glyph
-14 and app name 13 semibold, both in the app tint, 6 apart) and its content, 10 apart, spread over the
-card. Habits: a progress ring (64, stroke 8, round caps; track = tint at `2E` alpha, the same in both
-themes) 12 from the number (`number` style) with `/total` (body, `textTertiary`) and "done today"
-(body, `textSecondary`) under it. A message widget: headline (`headline` style) with a body line
-(`textSecondary`) 2 under it. Dots: one per scroll position (none when everything fits), 6 high,
-radius 3, 6 wide or 16 wide in `accent` for the current page, each in a 28 × 20 button 2 apart, with
-14 extra touch area above and below (28 × 48, #33). Swiping snaps per card. At text sizes from 1.3×
-(iOS accessibility sizes, Android Largest) widgets are full width, one per page.
+Section: the heading 4 in from the first widget, then the widget strip and the dots, 10 apart. The strip
+starts where the group grid starts (20 on a 390 pt phone, more on wider screens, so Today and the cards
+line up; #33 review). Widgets are square cards (169, padding 13, radius 30) 12 apart, with an 8 pt
+spacer after the last; they grow taller when their text needs it. Each widget: a label row (app glyph 14
+and app name 13 semibold, both in the app tint, 6 apart) and its content, 10 apart. Habits (changed in
+the #33 review from the canvas's 64 pt ring with "done today" beside it): a progress ring (108, stroke 10,
+round caps; track = tint at `2E` alpha, the same in both themes) centered under the label row, with the
+number (`number` style) and `/total` (body, `textTertiary`) in its middle; no caption. A message widget:
+headline (`headline` style) with a body line (`textSecondary`) 2 under it. Dots: one per scroll position
+(none when everything fits), 6 high, radius 3, 6 wide or 16 wide in `accent` for the current page, each
+in a 28 × 20 button 2 apart, with 14 extra touch area above and below (28 × 48, #33). Swiping snaps per
+card. At text sizes from 1.3× (iOS accessibility sizes, Android Largest) widgets are as wide as the group
+grid, one per page.
 
 **Scrims** (Home): content fades under the fixed header (`scrimTop`, header height + 10) and under the
 Dock (`scrimBottom`, 150 high). Exact gradients: `c.scrimTop` / `c.scrimBottom` in
