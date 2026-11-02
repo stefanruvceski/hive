@@ -6,24 +6,31 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ErrorState } from '@/components/ui/error-state';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Wallpaper } from '@/components/ui/wallpaper';
-import { Layout, MaxContentWidth } from '@/constants/theme';
+import { Layout } from '@/constants/theme';
+import { useAppSettings } from '@/hooks/use-app-settings';
 import { useAppUsage, useRecordAppOpen } from '@/hooks/use-app-usage';
 import { useHomeLayout } from '@/hooks/use-home-layout';
 import { useNow } from '@/hooks/use-now';
 import { useThemeEffects } from '@/hooks/use-theme';
 import { useToday } from '@/hooks/use-today';
 import { defaultHomeGroups, type HiveModule, hiveModules } from '@/modules/registry';
+import { defaultAppSettings } from '@/utils/app-settings';
 import { rankByUsage } from '@/utils/app-usage';
 import { arrangeHome, type HomeGroup } from '@/utils/home-groups';
+import { todayModules } from '@/utils/home-summary';
 
 import { Dock } from './components/dock';
 import { GroupCard } from './components/group-card';
 import { HomeEmpty } from './components/home-empty';
 import { HomeHeader } from './components/home-header';
+import { TodaySection } from './components/today-section';
+import type { TodayModule } from './components/today-widget';
+import { homeGridWidth } from './today-pages';
 
 /**
- * Hive's launcher (docs/design/canvas/Main.dc.html): a fixed header, the user's app groups as
- * cards that scroll under it, and the Dock with pinned apps.
+ * Hive's launcher (docs/design/canvas/Main.dc.html): a fixed header, Today (a summary from each
+ * module that has one) and the user's app groups as cards, which scroll under it, and the Dock
+ * with pinned apps.
  */
 export function Home() {
   const insets = useSafeAreaInsets();
@@ -64,6 +71,7 @@ function HomeContent({ headerHeight, dockBottom }: ContentProps) {
       <AppsLayout
         groups={view.groups}
         pinned={view.pinned}
+        today={todayModules(hiveModules, data)}
         headerHeight={headerHeight}
         dockBottom={dockBottom}
       />
@@ -87,11 +95,18 @@ function HomeContent({ headerHeight, dockBottom }: ContentProps) {
 type AppsProps = ContentProps & {
   groups: HomeGroup<HiveModule>[];
   pinned: HiveModule[];
+  /** Modules with a Today widget, hidden ones left out. */
+  today: TodayModule[];
 };
 
-/** Group cards scroll under the header and the Dock, fading out under both. */
-function AppsLayout({ groups, pinned, headerHeight, dockBottom }: AppsProps) {
+/** Today and the group cards scroll under the header and the Dock, fading out under both. */
+function AppsLayout({ groups, pinned, today: todayApps, headerHeight, dockBottom }: AppsProps) {
   const effects = useThemeEffects();
+  // Today waits for settings (no flash when it is off); if they can't be read, the default applies.
+  const settings = useAppSettings();
+  const showToday = settings.data
+    ? settings.data.showToday
+    : settings.isError && defaultAppSettings.showToday;
   const today = useToday();
   // Ranking is a nicety: until usage loads (or if it can't be read) cards keep group order.
   const usage = useAppUsage().data ?? [];
@@ -100,11 +115,8 @@ function AppsLayout({ groups, pinned, headerHeight, dockBottom }: AppsProps) {
     recordOpen.mutate({ moduleId: app.id, today });
     router.push(app.href);
   };
-  const { width } = useWindowDimensions();
-  // Two 169 pt columns on a phone; more where the window (capped at MaxContentWidth) has room.
-  const room = Math.min(width, MaxContentWidth) - 2 * Layout.screenMargin + Layout.gridGapAcross;
-  const columns = Math.max(2, Math.floor(room / (Layout.card + Layout.gridGapAcross)));
-  const gridWidth = columns * Layout.card + (columns - 1) * Layout.gridGapAcross;
+  // Two 169 pt columns on a phone; more where the window has room. Today lines up with it.
+  const gridWidth = homeGridWidth(useWindowDimensions().width);
 
   return (
     <>
@@ -117,6 +129,7 @@ function AppsLayout({ groups, pinned, headerHeight, dockBottom }: AppsProps) {
           },
         ]}
         testID="home-scroll">
+        {showToday && todayApps.length > 0 && <TodaySection modules={todayApps} onOpen={openApp} />}
         <View aria-label="Apps" style={[styles.grid, { width: gridWidth }]} testID="home-groups">
           {groups.map((group) => (
             <GroupCard
@@ -150,6 +163,7 @@ const styles = StyleSheet.create({
   },
   content: {
     alignItems: 'center',
+    rowGap: Layout.home.sectionGap,
   },
   grid: {
     flexDirection: 'row',
