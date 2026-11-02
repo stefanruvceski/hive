@@ -56,6 +56,8 @@ export const Colors = {
     bar: 'rgba(255,255,255,0.78)',
     /** Border of a group that offers "Move <app> here". */
     accentTarget: 'rgba(45,212,191,0.53)',
+    /** Today: a page dot that is not the current page (the current one is `accent`). */
+    dotOff: 'rgba(15,23,42,0.2)',
   },
   dark: {
     background: '#0A0F1C',
@@ -91,6 +93,7 @@ export const Colors = {
     iconMuted: '#94A3B8',
     bar: 'rgba(19,27,46,0.72)',
     accentTarget: 'rgba(45,212,191,0.53)',
+    dotOff: 'rgba(255,255,255,0.25)',
   },
 } as const;
 
@@ -114,6 +117,8 @@ export const Effects = {
     tileShadow: 'inset 0 1px 0 #FFFFFF, 0 3px 10px rgba(15,23,42,0.10)',
     /** Hex alpha appended to an app tint for the tile's 1 px border. */
     tileBorderAlpha: '33',
+    /** Hex alpha appended to an app tint for a Today progress ring's track. */
+    ringTrackAlpha: '2E',
     switchKnobShadow: '0 2px 6px rgba(0,0,0,0.3)',
     dockHighlight: 'inset 0 1px 0 rgba(255,255,255,0.9)',
     dockShadow: '0 10px 30px rgba(15,23,42,0.15)',
@@ -137,6 +142,7 @@ export const Effects = {
     tile: 'linear-gradient(180deg, #1D2A47 0%, #111A2E 100%)',
     tileShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 3px 10px rgba(0,0,0,0.45)',
     tileBorderAlpha: '45',
+    ringTrackAlpha: '2E',
     switchKnobShadow: '0 2px 6px rgba(0,0,0,0.3)',
     dockHighlight: 'inset 0 1px 0 rgba(255,255,255,0.28)',
     dockShadow: '0 10px 30px rgba(0,0,0,0.5)',
@@ -225,6 +231,25 @@ export const Layout = {
     emptyTextMaxWidth: 300,
     emptyBottom: 80,
     slotBorder: 1.5,
+  },
+  /**
+   * Today (Main.dc.html, #33): gaps in the section, the heading's extra inset, widgets (label row,
+   * progress ring, the spacer after the last), page dots (bar, current bar, touch area) and the
+   * text size from which widgets go full width (LargeText.dc.html).
+   */
+  today: {
+    gap: 10,
+    headingInset: 4,
+    widgetGap: 10,
+    labelGap: 6,
+    labelGlyph: 14,
+    ring: { size: 64, stroke: 8 },
+    ringGap: 12,
+    /** A message widget's headline and the line under it. */
+    messageGap: 2,
+    endSpacer: 8,
+    dot: { size: 6, activeWidth: 16, target: { width: 28, height: 20 }, gap: 2, slop: 14 },
+    fullWidthAtFontScale: 1.3,
   },
   dock: {
     bottom: 28,
