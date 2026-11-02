@@ -1,7 +1,7 @@
 import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
 
-import { Fonts, ThemeColor } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { AppTints, type AppTint, Fonts, ThemeColor } from '@/constants/theme';
+import { useTheme, useThemeName } from '@/hooks/use-theme';
 
 // Type scale from docs/design/tokens.md on the system font. Sizes scale with the system text size;
 // never cap them (agent-rules/12 §3).
@@ -27,11 +27,14 @@ type TextType =
   | 'hint'
   | 'action'
   | 'pill'
-  | 'pillRegular';
+  | 'pillRegular'
+  | 'label';
 
 export type ThemedTextProps = TextProps & {
   type?: TextType;
   themeColor?: ThemeColor;
+  /** An app's color instead of a theme color (a Today widget's label). Wins over `themeColor`. */
+  tint?: AppTint;
 };
 
 const defaultColor: Partial<Record<TextType, ThemeColor>> = {
@@ -44,9 +47,10 @@ const defaultColor: Partial<Record<TextType, ThemeColor>> = {
   hint: 'textTertiary',
 };
 
-export function ThemedText({ style, type = 'row', themeColor, ...rest }: ThemedTextProps) {
+export function ThemedText({ style, type = 'row', themeColor, tint, ...rest }: ThemedTextProps) {
   const theme = useTheme();
-  const color = theme[themeColor ?? defaultColor[type] ?? 'text'];
+  const scheme = useThemeName();
+  const color = tint ? AppTints[tint][scheme] : theme[themeColor ?? defaultColor[type] ?? 'text'];
 
   return <Text style={[styles.base, { color }, styles[type], style]} {...rest} />;
 }
@@ -170,5 +174,10 @@ const styles = StyleSheet.create({
   },
   pillRegular: {
     fontSize: 14,
+  },
+  /** A Today widget's app name, over its content. */
+  label: {
+    fontSize: 13,
+    fontWeight: 600,
   },
 });
