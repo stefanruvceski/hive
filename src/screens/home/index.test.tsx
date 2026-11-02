@@ -1,10 +1,14 @@
 import { render, screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
+import { useWindowDimensions } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { useAppSettings } from '@/hooks/use-app-settings';
 import { useAppUsage, useRecordAppOpen } from '@/hooks/use-app-usage';
 import { useHomeLayout } from '@/hooks/use-home-layout';
 import type { HiveModule } from '@/modules/registry';
+import { defaultAppSettings } from '@/utils/app-settings';
+import type { HomeSummaryResult } from '@/utils/home-summary';
 
 import { Home } from './index';
 
@@ -23,6 +27,7 @@ jest.mock('@/modules/registry', () => ({
 // The database boundary: Home's data hooks (docs/agent-rules/09 §5).
 jest.mock('@/hooks/use-home-layout');
 jest.mock('@/hooks/use-app-usage');
+jest.mock('@/hooks/use-app-settings');
 const recordOpen = { mutate: jest.fn() };
 
 // Link needs a navigation container; here we only check what Home renders and where it goes.
@@ -64,6 +69,7 @@ beforeEach(() => {
   mockLayout({ data: noRows });
   jest.mocked(useAppUsage).mockReturnValue({ data: [] } as never);
   jest.mocked(useRecordAppOpen).mockReturnValue(recordOpen as never);
+  jest.mocked(useAppSettings).mockReturnValue({ data: defaultAppSettings } as never);
 });
 
 describe('Home', () => {
@@ -202,5 +208,136 @@ describe('Home', () => {
 
     await userEvent.setup().press(screen.getByTestId('home-error-retry'));
     expect(refetch).toHaveBeenCalled();
+  });
+});
+
+// Window size and text size, for the Today strip's layout (fontScale 2 = the largest text sizes).
+jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({ width: 390, height: 844, scale: 3, fontScale: 1 })),
+}));
+
+const done = (count: number, total: number): HomeSummaryResult => ({
+  status: 'success',
+  summary: {
+    kind: 'progress',
+    done: count,
+    total,
+    caption: 'done today',
+    label: `${count} of ${total} done today`,
+  },
+});
+const provider = (id: string, result: HomeSummaryResult): HiveModule => ({
+  ...module(id, 'body-mind', 'habits'),
+  useHomeSummary: () => result,
+});
+const hiddenRow = (moduleId: string) => ({
+  moduleId,
+  groupId: 'body-mind',
+  position: 0,
+  pinnedPosition: null,
+  hidden: true,
+});
+
+describe('Home, Today', () => {
+  it('shows a widget per module with a summary, which opens the module and counts the open', async () => {
+    mockModules.push(provider('habits', done(1, 2)), module('books', 'creative', 'books'));
+    await render(home);
+
+    expect(screen.getByRole('heading', { name: 'Today' })).toBeOnTheScreen();
+    const widget = screen.getByRole('button', { name: 'Habits: 1 of 2 done today' });
+    expect(screen.getByText('done today', { includeHiddenElements: true })).toBeOnTheScreen();
+    // Only modules with a summary get a widget; one widget fits, so there are no page dots.
+    expect(screen.queryByTestId('home-today-books')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('home-today-dots')).not.toBeOnTheScreen();
+    await userEvent.setup().press(widget);
+    expect(recordOpen.mutate).toHaveBeenCalledWith({
+      moduleId: 'habits',
+      today: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+    });
+    expect(router.push).toHaveBeenCalledWith('/');
+  });
+
+  it.each([
+    ['no module provides a summary', [module('books', 'creative', 'books')], { showToday: true }],
+    ['Show Today is off', [provider('habits', done(0, 1))], { showToday: false }],
+  ])('is not shown when %s', async (_name, modules, settings) => {
+    mockModules.push(...modules);
+    jest
+      .mocked(useAppSettings)
+      .mockReturnValue({ data: { ...defaultAppSettings, ...settings } } as never);
+    await render(home);
+
+    expect(screen.getByTestId('home-groups')).toBeOnTheScreen();
+    expect(screen.queryByTestId('home-today')).not.toBeOnTheScreen();
+  });
+
+  it('waits for settings before showing Today, and shows it if settings cannot be read', async () => {
+    mockModules.push(provider('habits', done(0, 1)));
+    jest.mocked(useAppSettings).mockReturnValue({ data: undefined, isError: false } as never);
+    await render(home);
+    expect(screen.queryByTestId('home-today')).not.toBeOnTheScreen();
+
+    jest.mocked(useAppSettings).mockReturnValue({ data: undefined, isError: true } as never);
+    await render(home);
+    expect(screen.getByTestId('home-today')).toBeOnTheScreen();
+  });
+
+  it("leaves out a hidden module's widget", async () => {
+    mockModules.push(provider('habits', done(0, 1)), provider('health', done(0, 1)));
+    mockLayout({ data: { groups: [], apps: [hiddenRow('health')] } });
+    await render(home);
+
+    expect(screen.getByTestId('home-today-habits')).toBeOnTheScreen();
+    expect(screen.queryByTestId('home-today-health')).not.toBeOnTheScreen();
+  });
+
+  it('shows a loading or failed summary inside its widget without blocking the groups', async () => {
+    mockModules.push(
+      provider('habits', { status: 'pending' }),
+      provider('health', { status: 'error' }),
+    );
+    await render(home);
+
+    expect(screen.getByRole('button', { name: 'Habits: loading' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Health: summary unavailable' })).toBeOnTheScreen();
+    expect(
+      screen.getByText("Can't show today's summary", { includeHiddenElements: true }),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Open Habits' })).toBeOnTheScreen();
+  });
+
+  it('has a page dot per scroll position; tapping one makes it the current page', async () => {
+    mockModules.push(
+      provider('habits', done(0, 1)),
+      provider('health', done(0, 1)),
+      provider('money', done(0, 1)),
+    );
+    await render(home);
+
+    // 390 pt phone: two widgets in view, so three widgets have two scroll positions.
+    const dots = screen.getAllByRole('button', { name: /^Today, page / });
+    expect(dots).toHaveLength(2);
+    expect(dots[0]).toHaveAccessibleName('Today, page 1 of 2');
+    expect(dots[1]).toHaveAccessibleName('Today, page 2 of 2');
+    expect(dots[0]).toBeSelected();
+    await userEvent.setup().press(dots[1]!);
+    expect(screen.getByRole('button', { name: 'Today, page 2 of 2' })).toBeSelected();
+    expect(screen.getByRole('button', { name: 'Today, page 1 of 2' })).not.toBeSelected();
+  });
+
+  it('shows one full-width widget per page at the largest text sizes', async () => {
+    jest
+      .mocked(useWindowDimensions)
+      .mockReturnValue({ width: 390, height: 844, scale: 3, fontScale: 2 });
+    mockModules.push(
+      provider('habits', done(0, 1)),
+      provider('health', done(0, 1)),
+      provider('money', done(0, 1)),
+    );
+    await render(home);
+
+    expect(screen.getAllByRole('button', { name: /^Today, page / })).toHaveLength(3);
+    expect(screen.getByTestId('home-today-habits')).toHaveStyle({ width: 350 });
   });
 });
