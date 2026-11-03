@@ -6,6 +6,7 @@ import {
   countingCompletions,
   doneDatesFor,
   formatAmount,
+  isAmountDone,
   isMeasurable,
   isValidGoal,
   periodAmount,
@@ -181,6 +182,49 @@ describe('amountFractions', () => {
       ['2026-11-03', 1],
       ['2026-11-04', 1],
       ['2026-11-05', 1],
+    ]);
+  });
+});
+
+describe('quit habits', () => {
+  const coffee = { id: 'coffee', target: 2, quit: true };
+
+  it.each([
+    [{ target: 8 }, 8, true],
+    [{ target: 8 }, 7, false],
+    [coffee, 0, true],
+    [coffee, 2, true],
+    [coffee, 3, false],
+  ])('%j with %d is done: %s', (habit, amount, expected) => {
+    expect(isAmountDone(habit, amount)).toBe(expected);
+  });
+
+  it('counts a day when the amount is at or under the limit', () => {
+    const rows = [
+      { habitId: 'coffee', date: '2026-11-01', amount: 1 },
+      { habitId: 'coffee', date: '2026-11-02', amount: 2 },
+      { habitId: 'coffee', date: '2026-11-03', amount: 3 },
+      { habitId: 'coffee', date: '2026-11-04', amount: null },
+    ];
+    expect(countingCompletions([coffee], rows).map((row) => row.date)).toEqual([
+      '2026-11-01',
+      '2026-11-02',
+      '2026-11-04',
+    ]);
+  });
+
+  it('maps a day under the limit to 1 and one over it to 0', () => {
+    const fractions = amountFractions(
+      2,
+      [
+        { habitId: 'coffee', date: '2026-11-01', amount: 1 },
+        { habitId: 'coffee', date: '2026-11-03', amount: 3 },
+      ],
+      true,
+    );
+    expect([...fractions]).toEqual([
+      ['2026-11-01', 1],
+      ['2026-11-03', 0],
     ]);
   });
 });

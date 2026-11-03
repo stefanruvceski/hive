@@ -134,6 +134,24 @@ describe('HabitsMonth', () => {
     expect(within(cell('2026-11-06')).queryByText(/\d/)).not.toBeOnTheScreen();
   });
 
+  it('shows the amount of a quit habit over its limit, not done, and under it as done', async () => {
+    mockedHabits.mockReturnValue({
+      data: [{ ...habit('coffee', 'Coffee'), unit: 'cups', target: 2, quit: true }],
+    } as unknown as ReturnType<typeof useHabits>);
+    mockedCompletions.mockReturnValue({
+      data: [
+        { habitId: 'coffee', date: '2026-11-03', amount: 3 },
+        { habitId: 'coffee', date: '2026-11-04', amount: 1 },
+      ],
+    } as ReturnType<typeof useMonthCompletions>);
+    await renderMonth();
+    const coffeeCell = (date: string) => screen.getByTestId(`habits-month-cell-coffee-${date}`);
+
+    expect(coffeeCell('2026-11-03')).not.toBeChecked();
+    expect(within(coffeeCell('2026-11-03')).getByText('3')).toBeOnTheScreen();
+    expect(coffeeCell('2026-11-04')).toBeChecked();
+  });
+
   it('counts a measurable day as done once it reaches the target', async () => {
     mockedHabits.mockReturnValue({
       data: [{ ...habit('read', 'Read'), unit: 'pages', target: 10 }],

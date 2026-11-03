@@ -19,11 +19,11 @@ tags:
 - tapOn:
     id: 'habits-new-save'
 - assertVisible: 'Read'
-# Swipe towards the start of the row: Edit and Archive appear. Tap Edit, rename, move to evening.
+# Swipe towards the end of the row: Edit appears. Tap Edit, rename, move to evening.
 - swipe:
     from:
       id: 'habits-streak-.*'
-    direction: LEFT
+    direction: RIGHT
 - tapOn:
     id: 'habits-swipe-.*-edit'
 - tapOn:

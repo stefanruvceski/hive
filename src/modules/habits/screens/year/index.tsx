@@ -181,6 +181,7 @@ function Dashboard({
       ? amountFractions(
           selected.target ?? 0,
           data.completions.filter(({ habitId }) => habitId === selected.id),
+          selected.quit ?? false,
         )
       : undefined;
   // One habit alone needs no filter.

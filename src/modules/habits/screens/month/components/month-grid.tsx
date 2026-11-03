@@ -135,7 +135,7 @@ export function MonthGrid({
                             (state === 'future' || off) && styles.future,
                             pressed && styles.pressed,
                           ]}>
-                          {partial && (
+                          {partial && !habit.quit && (
                             <View
                               style={[
                                 styles.fill,
@@ -147,7 +147,10 @@ export function MonthGrid({
                             />
                           )}
                           {partial && (
-                            <ThemedText type="footnote" numberOfLines={1}>
+                            <ThemedText
+                              type="footnote"
+                              themeColor={habit.quit ? 'danger' : 'text'}
+                              numberOfLines={1}>
                               {shortAmount(amount)}
                             </ThemedText>
                           )}

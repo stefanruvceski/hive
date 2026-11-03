@@ -94,6 +94,7 @@ export function useCreateHabit() {
             color: input.color ?? null,
             ...scheduleColumns(input.schedule),
             ...goalColumns(input.goal),
+            quit: input.quit ?? false,
             position: (last?.position ?? -1) + 1,
             createdAt: toIsoDate(new Date()),
           })
@@ -215,6 +216,7 @@ export function useUpdateHabit() {
             color: input.color ?? null,
             ...scheduleColumns(input.schedule),
             ...goalColumns(input.goal),
+            quit: input.quit ?? false,
             ...(current.timeOfDay === input.timeOfDay
               ? {}
               : { position: (last?.position ?? -1) + 1 }),

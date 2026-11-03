@@ -13,6 +13,8 @@ export type NewHabit = {
   color?: string;
   schedule?: Schedule;
   goal?: Goal;
+  /** A habit to quit: done when held out, or when the amount stays at or under the limit. */
+  quit?: boolean;
 };
 
 /** The parts of the day in list order, with their labels. */

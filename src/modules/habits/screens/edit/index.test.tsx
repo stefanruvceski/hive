@@ -113,6 +113,18 @@ describe('HabitsEdit', () => {
     );
   });
 
+  it('opens a quit habit with its switch on and keeps it when saving', async () => {
+    jest.mocked(useHabits).mockReturnValue({ data: [{ ...run, quit: true }] } as never);
+    await renderEdit();
+
+    expect(screen.getByRole('switch', { name: 'Quit habit' })).toBeChecked();
+    await userEvent.setup().press(screen.getByTestId('habits-edit-save'));
+    expect(update).toHaveBeenCalledWith(
+      { id: 'run', name: 'Run', emoji: '🏃', timeOfDay: 'morning', quit: true },
+      expect.anything(),
+    );
+  });
+
   it('archives only after the user confirms', async () => {
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     await renderEdit();

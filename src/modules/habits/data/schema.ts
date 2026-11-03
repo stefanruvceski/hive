@@ -42,6 +42,8 @@ export const habitsHabits = sqliteTable('habits_habits', {
   /** The daily target of a measurable habit; a habit with a target is measurable. */
   target: real('target'),
   aggregation: text('aggregation', { enum: aggregations }).notNull().default('sum'),
+  /** A habit to quit: done when held out (yes/no) or when the amount stays at or under `target`. */
+  quit: integer('quit', { mode: 'boolean' }).notNull().default(false),
 });
 
 /** The days a habit was done: one row per habit and local date. No row = not done that day. */
@@ -68,4 +70,21 @@ export const habitsMood = sqliteTable('habits_mood', {
   note: text('note'),
   /** ISO timestamp of the last save. */
   updatedAt: text('updated_at').notNull(),
+});
+
+/** One-off tasks for a day, shown with the habits in the part of the day they are placed in. */
+export const habitsTodos = sqliteTable('habits_todos', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  /** Local ISO date (`YYYY-MM-DD`) the task is for. */
+  date: text('date').notNull(),
+  timeOfDay: text('time_of_day', { enum: timesOfDay }).notNull().default('anytime'),
+  done: integer('done', { mode: 'boolean' }).notNull().default(false),
+  /** ISO timestamp it was done at. */
+  doneAt: text('done_at'),
+  /** Unused: the star was dropped before release. Kept so the column stays in migration 0012. */
+  priority: integer('priority', { mode: 'boolean' }).notNull().default(false),
+  position: integer('position').notNull(),
+  /** Local ISO date the task was added. */
+  createdAt: text('created_at').notNull(),
 });

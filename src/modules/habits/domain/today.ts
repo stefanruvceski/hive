@@ -6,6 +6,7 @@ import { countingCompletions } from './goal';
 import { groupByTimeOfDay } from './habits';
 import { isScheduled, scheduleOf, type ScheduleType } from './schedule';
 import type { Completion } from './streak';
+import { todoCounts, type Todo } from './todos';
 import type { TimeOfDay } from '../data/schema';
 
 type DoneCount = { done: number; total: number };
@@ -16,6 +17,7 @@ type ScheduledHabit = {
   scheduleDays?: string | null;
   scheduleTimes?: number | null;
   target?: number | null;
+  quit?: boolean | null;
 };
 
 /** The habits that are due on `today`: a weekday habit only on its days. */
@@ -53,8 +55,14 @@ export function habitsHomeSummary<
     timeOfDay: TimeOfDay;
     position: number;
   },
->(habits: readonly H[], completions: readonly Completion[], today: string): HomeSummary {
-  if (habits.length === 0) {
+>(
+  habits: readonly H[],
+  completions: readonly Completion[],
+  today: string,
+  todos: readonly Todo[] = [],
+): HomeSummary {
+  const tasks = todoCounts(todos, today);
+  if (habits.length === 0 && tasks.total === 0) {
     return {
       kind: 'message',
       headline: 'No habits yet',
@@ -63,7 +71,7 @@ export function habitsHomeSummary<
     };
   }
   const due = dueToday(habits, today);
-  if (due.length === 0) {
+  if (due.length === 0 && tasks.total === 0) {
     return {
       kind: 'message',
       headline: 'Nothing today',
@@ -71,7 +79,9 @@ export function habitsHomeSummary<
       label: 'no habits scheduled today',
     };
   }
-  const { done, total } = countDoneToday(habits, completions, today);
+  const counted = countDoneToday(habits, completions, today);
+  const done = counted.done + tasks.done;
+  const total = counted.total + tasks.total;
   const doneIds = new Set(
     countingCompletions(habits, completions)
       .filter((completion) => completion.date === today)
@@ -81,5 +91,14 @@ export function habitsHomeSummary<
     .flatMap((group) => group.habits)
     .filter((habit) => !doneIds.has(habit.id))
     .map((habit) => ({ id: habit.id, icon: habit.emoji, name: habit.name }));
-  return { kind: 'progress', done, total, label: `${done} of ${total} done today`, upNext };
+  const openTasks = todos
+    .filter((todo) => todo.date === today && !todo.done)
+    .map((todo) => ({ id: `todo-${todo.id}`, icon: '📝', name: todo.title }));
+  return {
+    kind: 'progress',
+    done,
+    total,
+    label: `${done} of ${total} done today`,
+    upNext: [...upNext, ...openTasks],
+  };
 }

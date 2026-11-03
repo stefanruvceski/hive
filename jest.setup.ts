@@ -17,6 +17,9 @@ jest.mock('react-native-worklets', () => ({
   runOnJS: (fn: unknown) => fn,
 }));
 jest.mock('react-native-reanimated', () => {
+  const layoutAnimation: Record<string, unknown> = {};
+  for (const method of ['duration', 'withInitialValues', 'reduceMotion'])
+    layoutAnimation[method] = () => layoutAnimation;
   const { View, ScrollView } = jest.requireActual('react-native');
   const { createElement, forwardRef } = jest.requireActual('react');
   const animated = (Component: unknown) =>
@@ -55,6 +58,11 @@ jest.mock('react-native-reanimated', () => {
     scrollTo: () => undefined,
     runOnJS: (fn: unknown) => fn,
     Easing: { out: (f: unknown) => f, quad: (t: number) => t, ease: (t: number) => t },
+    // Layout animations (to-do drop-in): chainable builders that do nothing in Jest.
+    FadeInDown: layoutAnimation,
+    FadeOut: layoutAnimation,
+    LinearTransition: layoutAnimation,
+    ReduceMotion: { System: 'system' },
   };
 });
 

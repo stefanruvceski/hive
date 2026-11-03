@@ -14,9 +14,17 @@ import {
   useMoveHabit,
   useSetCompletion,
 } from '../../data/queries';
+import {
+  useAddTodo,
+  useDeleteTodo,
+  useMoveTodo,
+  useToggleTodo,
+  useTodos,
+} from '../../data/todo-queries';
 
 // The database boundary: the module's query hooks (09 §5). Domain logic is tested without mocks.
 jest.mock('../../data/queries');
+jest.mock('../../data/todo-queries');
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
 
 const mockedHabits = jest.mocked(useHabits);
@@ -28,6 +36,10 @@ const mutate = jest.fn();
 
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.mocked(useTodos).mockReturnValue({ data: [] } as never);
+  for (const hook of [useAddTodo, useToggleTodo, useDeleteTodo, useMoveTodo]) {
+    jest.mocked(hook).mockReturnValue({ mutate: jest.fn() } as never);
+  }
   mockedCompletions.mockReturnValue(completions({ data: [], refetch: jest.fn() }));
   mockedSetCompletion.mockReturnValue({ mutate } as unknown as ReturnType<typeof useSetCompletion>);
   jest.mocked(useMoveHabit).mockReturnValue({ mutate: jest.fn() } as never);

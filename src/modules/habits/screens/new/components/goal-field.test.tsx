@@ -44,3 +44,42 @@ describe('GoalField', () => {
     expect(screen.getByTestId('f-goal-target').props.value).toBe('2.');
   });
 });
+
+describe('GoalField quit switch', () => {
+  it('has a Quit habit switch when it is given a handler, and reports it', async () => {
+    const onQuitChange = jest.fn();
+    await render(
+      <GoalField
+        value={undefined}
+        onChange={jest.fn()}
+        quit={false}
+        onQuitChange={onQuitChange}
+        testID="f-goal"
+      />,
+    );
+
+    expect(screen.getByRole('switch', { name: 'Quit habit' })).not.toBeChecked();
+    await userEvent.setup().press(screen.getByRole('switch', { name: 'Quit habit' }));
+    expect(onQuitChange).toHaveBeenCalledWith(true);
+  });
+
+  it('calls the target a limit for a quit habit', async () => {
+    await render(
+      <GoalField
+        value={{ unit: 'cups', target: 2, aggregation: 'sum' }}
+        onChange={jest.fn()}
+        quit
+        onQuitChange={jest.fn()}
+        testID="f-goal"
+      />,
+    );
+
+    expect(screen.getByRole('switch', { name: 'Quit habit' })).toBeChecked();
+    expect(screen.getByLabelText('Daily limit')).toBeOnTheScreen();
+  });
+
+  it('has no quit switch without a handler', async () => {
+    await renderField(undefined);
+    expect(screen.queryByRole('switch', { name: 'Quit habit' })).not.toBeOnTheScreen();
+  });
+});

@@ -1,0 +1,37 @@
+# Habits to-dos (#12): add a to-do for today from the list, put it in a part of the day, tick it off,
+# delete it from its swipe button.
+# Run locally: pnpm test:e2e   (needs a dev build installed on the simulator/emulator)
+appId: com.ruvceski.hive.dev
+tags:
+  - habits
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: 'home-open-habits'
+- tapOn:
+    id: 'habits-empty-add'
+- tapOn:
+    id: 'habits-new-name'
+- inputText: 'Read'
+- hideKeyboard
+- tapOn:
+    id: 'habits-new-save'
+- tapOn:
+    id: 'habits-todo-add-input'
+- inputText: 'Call the dentist'
+- tapOn:
+    id: 'habits-todo-add-time-morning'
+- tapOn:
+    id: 'habits-todo-add-submit'
+- assertVisible: 'Call the dentist'
+# Tick it off, then swipe it open and delete it.
+- tapOn:
+    id: 'habits-todo-.*-check'
+- swipe:
+    from:
+      id: 'habits-todo-.*'
+    direction: LEFT
+- tapOn:
+    id: 'habits-swipe-todo-.*-archive'
+- assertNotVisible: 'Call the dentist'

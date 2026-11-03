@@ -71,6 +71,7 @@ export function HabitsEdit({ id }: { id: string }) {
         emoji: habit.emoji,
         timeOfDay: habit.timeOfDay,
         color: habit.color ?? undefined,
+        quit: habit.quit ? true : undefined,
         schedule: schedule.type === 'daily' ? undefined : schedule,
         goal: isMeasurable(habit)
           ? {
