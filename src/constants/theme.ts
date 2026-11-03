@@ -58,6 +58,10 @@ export const Colors = {
     accentTarget: 'rgba(45,212,191,0.53)',
     /** Today: a page dot that is not the current page (the current one is `accent`). */
     dotOff: 'rgba(15,23,42,0.2)',
+    heat1: 'rgba(45,212,191,0.30)',
+    heat2: 'rgba(45,212,191,0.55)',
+    heat3: 'rgba(20,184,166,0.80)',
+    heat4: '#0F766E',
   },
   dark: {
     background: '#0A0F1C',
@@ -94,6 +98,11 @@ export const Colors = {
     bar: 'rgba(19,27,46,0.72)',
     accentTarget: 'rgba(45,212,191,0.53)',
     dotOff: 'rgba(255,255,255,0.25)',
+    /** Habits year heatmap: four steps of teal, from a few habits done to all of them. */
+    heat1: 'rgba(45,212,191,0.28)',
+    heat2: 'rgba(45,212,191,0.50)',
+    heat3: 'rgba(45,212,191,0.75)',
+    heat4: '#2DD4BF',
   },
 } as const;
 
