@@ -6,9 +6,7 @@ import { useThemeName } from '@/hooks/use-theme';
 
 import { HabitAmount } from './habit-amount';
 import { HabitCheck } from './habit-check';
-import { ReorderControls } from './reorder-controls';
 import type { Habit } from '../../../data/queries';
-import type { Direction } from '../../../domain/order';
 import { habitColor } from '../../../habit-color';
 
 type Props = {
@@ -27,11 +25,11 @@ type Props = {
   /** A habit to quit: "Avoid" in front of the streak; an amount over the limit is flagged. */
   quit?: boolean;
   onToggle: (done: boolean) => void;
-  /** Reorder mode: the check gives way to move controls. */
-  reorder?: { canUp: boolean; canDown: boolean; onMove: (direction: Direction) => void };
-  /** Screen-reader alternatives to the swipe buttons. */
+  /** Screen-reader alternatives to the swipe buttons and the drag. */
   onEdit?: () => void;
   onArchive?: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 };
 
 /** One habit in its part of the day: emoji, name and streak, and its "done today" check. */
@@ -46,22 +44,25 @@ export function HabitRow({
   dimmed = false,
   quit = false,
   onToggle,
-  reorder,
   onEdit,
   onArchive,
+  onMoveUp,
+  onMoveDown,
 }: Props) {
   const scheme = useThemeName();
   const actions = [
     ...(onEdit ? [{ name: 'edit', label: 'Edit' }] : []),
     ...(onArchive ? [{ name: 'archive', label: 'Archive' }] : []),
+    ...(onMoveUp ? [{ name: 'moveUp', label: 'Move up' }] : []),
+    ...(onMoveDown ? [{ name: 'moveDown', label: 'Move down' }] : []),
   ];
   return (
     <View style={[styles.row, dimmed && styles.dimmed]} testID={`habits-item-${habit.id}`}>
       <View style={styles.leading} aria-hidden>
         <ThemedText>{habit.emoji}</ThemedText>
       </View>
-      {/* Grows and wraps instead of running past the card (agent-rules/03 §2). Swiping is not
-          available to a screen reader, so Edit and Archive are custom actions on the name. */}
+      {/* Grows and wraps instead of running past the card (agent-rules/03 §2). Swiping and dragging are not
+          available to a screen reader, so Edit, Archive and Move are custom actions on the name. */}
       <View
         style={styles.text}
         accessible={actions.length > 0}
@@ -69,6 +70,8 @@ export function HabitRow({
         onAccessibilityAction={(event) => {
           if (event.nativeEvent.actionName === 'edit') onEdit?.();
           else if (event.nativeEvent.actionName === 'archive') onArchive?.();
+          else if (event.nativeEvent.actionName === 'moveUp') onMoveUp?.();
+          else if (event.nativeEvent.actionName === 'moveDown') onMoveDown?.();
         }}
         testID={`habits-item-text-${habit.id}`}>
         <ThemedText>{habit.name}</ThemedText>
@@ -81,9 +84,7 @@ export function HabitRow({
           </ThemedText>
         ) : null}
       </View>
-      {reorder ? (
-        <ReorderControls habit={habit} {...reorder} />
-      ) : goal ? (
+      {goal ? (
         <HabitAmount
           color={habitColor(habit, scheme)}
           amount={goal.amount}

@@ -11,9 +11,9 @@ import {
   useArchivedHabits,
   useCompletions,
   useHabits,
-  useMoveHabit,
   useSetCompletion,
 } from '../../data/queries';
+import { useReorder } from '../../data/reorder-queries';
 import {
   useAddTodo,
   useDeleteTodo,
@@ -24,6 +24,7 @@ import {
 
 // The database boundary: the module's query hooks (09 §5). Domain logic is tested without mocks.
 jest.mock('../../data/queries');
+jest.mock('../../data/reorder-queries');
 jest.mock('../../data/todo-queries');
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
 
@@ -42,7 +43,7 @@ beforeEach(() => {
   }
   mockedCompletions.mockReturnValue(completions({ data: [], refetch: jest.fn() }));
   mockedSetCompletion.mockReturnValue({ mutate } as unknown as ReturnType<typeof useSetCompletion>);
-  jest.mocked(useMoveHabit).mockReturnValue({ mutate: jest.fn() } as never);
+  jest.mocked(useReorder).mockReturnValue({ mutate: jest.fn() } as never);
   jest.mocked(useArchivedHabits).mockReturnValue({ data: [] } as never);
 });
 

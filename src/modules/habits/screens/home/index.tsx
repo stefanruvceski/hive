@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { type ComponentRef, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -14,21 +14,27 @@ import { Layout, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useToday } from '@/hooks/use-today';
 
 import { AmountSheet } from './components/amount-sheet';
-import { HabitSection } from './components/habit-section';
+import { HabitSection, type SectionItem } from './components/habit-section';
 import { OverdueCard } from './components/overdue-card';
 import { TextButton } from './components/text-button';
 import { TodoAdd } from './components/todo-add';
 import { TodoEditSheet } from './components/todo-edit-sheet';
+import {
+  DragLayer,
+  type HostView,
+  ListDragProvider,
+  useListDragController,
+} from './drag/list-drag';
 import {
   type CompletionChange,
   useArchivedHabits,
   useArchiveHabit,
   useCompletions,
   useHabits,
-  useMoveHabit,
   useSetAmount,
   useSetCompletion,
 } from '../../data/queries';
+import { useReorder } from '../../data/reorder-queries';
 import type { TimeOfDay } from '../../data/schema';
 import {
   useAddTodo,
@@ -39,11 +45,18 @@ import {
   useUpdateTodo,
 } from '../../data/todo-queries';
 import { doneDatesFor } from '../../domain/goal';
-import { groupByTimeOfDay, newHabitId, timeOfDayOptions } from '../../domain/habits';
-import type { Direction } from '../../domain/order';
+import { newHabitId, timeOfDayOptions } from '../../domain/habits';
+import {
+  applyDrop,
+  type Change,
+  type DropTarget,
+  moveBy,
+  orderRows,
+  type Row,
+} from '../../domain/reorder';
 import { isScheduled, scheduleOf } from '../../domain/schedule';
 import type { SwipeSide } from '../../domain/swipe';
-import { overdue, todosByTimeOfDay, todosFor } from '../../domain/todos';
+import { overdue, todosFor } from '../../domain/todos';
 
 const addHabit = () => router.push('/habits/new');
 const openMood = () => router.push('/habits/mood');
@@ -54,10 +67,6 @@ const openYear = () => router.push('/habits/year');
 
 /** Habits' entry screen: the habits grouped by part of the day. Header as in Settings. */
 export function HabitsHome() {
-  const [reordering, setReordering] = useState(false);
-  const habits = useHabits();
-  const hasHabits = (habits.data?.length ?? 0) > 0;
-
   return (
     <Wallpaper style={styles.container} testID="habits-screen">
       {/* No bottom edge: the list scrolls to the screen edge and clears the home indicator with
@@ -71,52 +80,33 @@ export function HabitsHome() {
             testID="habits-back"
           />
           <View style={styles.actions}>
-            {reordering ? (
-              <PrimaryButton
-                label="Done"
-                size="compact"
-                onPress={() => setReordering(false)}
-                testID="habits-reorder-done"
-              />
-            ) : (
-              <>
-                {hasHabits && (
-                  <GlassButton
-                    icon={{ ios: 'arrow.up.arrow.down', android: 'swap_vert', web: 'swap_vert' }}
-                    label="Reorder habits"
-                    onPress={() => setReordering(true)}
-                    testID="habits-reorder-toggle"
-                  />
-                )}
-                <GlassButton
-                  icon={{ ios: 'face.smiling', android: 'mood', web: 'mood' }}
-                  label="Mood"
-                  onPress={openMood}
-                  testID="habits-mood-open"
-                />
-                <GlassButton
-                  icon={{ ios: 'square.grid.3x3', android: 'grid_view', web: 'grid_view' }}
-                  label="Month"
-                  onPress={openMonth}
-                  testID="habits-month"
-                />
-                <GlassButton
-                  icon={{ ios: 'calendar', android: 'calendar_month', web: 'calendar_month' }}
-                  label="Year"
-                  onPress={openYear}
-                  testID="habits-year"
-                />
-                <GlassButton
-                  icon={{ ios: 'plus', android: 'add', web: 'add' }}
-                  label="Add habit"
-                  onPress={addHabit}
-                  testID="habits-add"
-                />
-              </>
-            )}
+            <GlassButton
+              icon={{ ios: 'face.smiling', android: 'mood', web: 'mood' }}
+              label="Mood"
+              onPress={openMood}
+              testID="habits-mood-open"
+            />
+            <GlassButton
+              icon={{ ios: 'square.grid.3x3', android: 'grid_view', web: 'grid_view' }}
+              label="Month"
+              onPress={openMonth}
+              testID="habits-month"
+            />
+            <GlassButton
+              icon={{ ios: 'calendar', android: 'calendar_month', web: 'calendar_month' }}
+              label="Year"
+              onPress={openYear}
+              testID="habits-year"
+            />
+            <GlassButton
+              icon={{ ios: 'plus', android: 'add', web: 'add' }}
+              label="Add habit"
+              onPress={addHabit}
+              testID="habits-add"
+            />
           </View>
         </View>
-        <HabitsContent reordering={reordering} />
+        <HabitsContent />
       </SafeAreaView>
     </Wallpaper>
   );
@@ -132,7 +122,7 @@ function Title() {
 
 // Four states, data first: cached data stays visible if a refetch fails (07 §1, 14 §3). The list
 // needs both the habits and the days they were done.
-function HabitsContent({ reordering }: { reordering: boolean }) {
+function HabitsContent() {
   const insets = useSafeAreaInsets();
   const today = useToday();
   const habits = useHabits();
@@ -149,7 +139,9 @@ function HabitsContent({ reordering }: { reordering: boolean }) {
   const [editingTodo, setEditingTodo] = useState<string | null>(null);
   // The measurable habit whose amount sheet is open.
   const [amountFor, setAmountFor] = useState<string | null>(null);
-  const move = useMoveHabit();
+  const reorder = useReorder();
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
+  const contentRef = useRef<HostView>(null);
   const archive = useArchiveHabit();
   // One row shows its swipe buttons at a time.
   const [open, setOpen] = useState<{ habitId: string; side: SwipeSide } | null>(null);
@@ -219,17 +211,15 @@ function HabitsContent({ reordering }: { reordering: boolean }) {
     );
   };
 
-  const moveHabit = (id: string, direction: Direction) =>
-    move.mutate(
-      { id, direction },
-      {
-        onError: () =>
-          Alert.alert("Couldn't save", 'Your change was not saved. Please try again.', [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Try again', onPress: () => moveHabit(id, direction) },
-          ]),
-      },
-    );
+  // Optimistic like the checks; a failed write rolls back and offers a retry.
+  const saveOrder = (changes: Change[]) =>
+    reorder.mutate(changes, {
+      onError: () =>
+        Alert.alert("Couldn't save", 'Your change was not saved. Please try again.', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Try again', onPress: () => saveOrder(changes) },
+        ]),
+    });
 
   const archiveHabit = (id: string) =>
     archive.mutate(id, {
@@ -254,6 +244,41 @@ function HabitsContent({ reordering }: { reordering: boolean }) {
 
   const todayTodos = todosFor(todos.data ?? [], today);
   const overdueTodos = overdue(todos.data ?? [], today);
+  // Habits and to-dos are one list: every habit and to-do has a place in it, the ones on screen
+  // today are the visible rows. Habits not due today go to a faint section at the end.
+  const dueIds = new Set(
+    (data ?? []).filter((habit) => isScheduled(scheduleOf(habit), today)).map((habit) => habit.id),
+  );
+  const todayIds = new Set(todayTodos.map((todo) => todo.id));
+  const rows: Row[] = [
+    ...(data ?? []).map((habit) => ({
+      kind: 'habit' as const,
+      id: habit.id,
+      timeOfDay: habit.timeOfDay,
+      position: habit.position,
+      visible: dueIds.has(habit.id),
+    })),
+    ...(todos.data ?? []).map((todo) => ({
+      kind: 'todo' as const,
+      id: todo.id,
+      timeOfDay: todo.timeOfDay,
+      position: todo.position,
+      visible: todayIds.has(todo.id),
+    })),
+  ];
+  const drop = (key: string, target: DropTarget) => {
+    const changes = applyDrop(rows, key, target);
+    if (changes.length > 0) saveOrder(changes);
+  };
+  const drag = useListDragController({ scrollRef, contentRef, onDrop: drop });
+  const moves = {
+    can: (key: string, delta: -1 | 1) => moveBy(rows, key, delta) !== null,
+    by: (key: string, delta: -1 | 1) => {
+      const target = moveBy(rows, key, delta);
+      if (target) drop(key, target);
+    },
+  };
+
   if (data && (data.length > 0 || todayTodos.length > 0 || overdueTodos.length > 0)) {
     const doneDates = doneDatesFor(data, completions.data ?? []);
     const amounts = new Map(
@@ -261,29 +286,32 @@ function HabitsContent({ reordering }: { reordering: boolean }) {
         .filter((row) => row.date === today && row.amount != null)
         .map((row) => [row.habitId, row.amount ?? 0]),
     );
-    // Habits not due today go to a faint section at the end; reordering shows them all in place.
-    const due = reordering ? data : data.filter((habit) => isScheduled(scheduleOf(habit), today));
-    const notToday = reordering ? [] : data.filter((habit) => !due.includes(habit));
+    const notToday = data.filter((habit) => !dueIds.has(habit.id));
     const hour = new Date().getHours();
     const sheetTodo = todayTodos.find((item) => item.id === editingTodo);
     const sheetHabit = data.find((habit) => habit.id === amountFor);
-    // Each part of the day: its habits due today and its to-dos for today.
-    const dueByPart = new Map(groupByTimeOfDay(due).map((group) => [group.timeOfDay, group]));
-    const todosByPart = todosByTimeOfDay(reordering ? [] : todayTodos);
+    // Each part of the day: its habits due today and its to-dos for today, in list order. While a
+    // row is lifted the empty parts show too, as places to drop it.
+    const habitsById = new Map(data.map((habit) => [habit.id, habit]));
+    const todosById = new Map(todayTodos.map((todo) => [todo.id, todo]));
+    const visibleRows = orderRows(rows).filter((row) => row.visible);
     const parts = timeOfDayOptions
       .map(({ value, label }) => ({
         timeOfDay: value,
         label,
-        habits: dueByPart.get(value)?.habits ?? [],
-        todos: todosByPart.get(value) ?? [],
+        items: visibleRows.flatMap((row): SectionItem[] => {
+          if (row.timeOfDay !== value) return [];
+          const habit = row.kind === 'habit' ? habitsById.get(row.id) : undefined;
+          const todo = row.kind === 'todo' ? todosById.get(row.id) : undefined;
+          return habit ? [{ kind: 'habit', habit }] : todo ? [{ kind: 'todo', todo }] : [];
+        }),
       }))
-      .filter((part) => part.habits.length + part.todos.length > 0);
+      .filter((part) => part.items.length > 0 || drag.active !== null);
     const section = {
       doneDates,
       today,
       amounts,
       onToggle: (habitId: string, done: boolean) => save({ habitId, date: today, done }),
-      onMove: reordering ? moveHabit : undefined,
       onEdit: editHabit,
       onArchive: archiveHabit,
       onOpenAmount: setAmountFor,
@@ -292,71 +320,75 @@ function HabitsContent({ reordering }: { reordering: boolean }) {
         setOpen(side ? { habitId, side } : null),
     };
     return (
-      <ScrollView
-        // Add (and the part-of-day picker) work with the first tap while the keyboard is open.
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[
-          styles.width,
-          styles.list,
-          { paddingBottom: insets.bottom + Spacing.five },
-        ]}
-        testID="habits-list">
-        <Title />
-        {!reordering && <TodoAdd onAdd={addNewTodo} />}
-        {!reordering && (
-          <OverdueCard
-            todos={overdueTodos}
-            onMoveToToday={moveTodoToToday}
-            onDone={(id) => saveTodoDone(id, true)}
-            onDelete={removeTodoItem}
-          />
-        )}
-        {parts.map((part) => (
-          <HabitSection
-            key={part.timeOfDay}
-            {...part}
-            {...section}
-            onToggleTodo={saveTodoDone}
-            onEditTodo={setEditingTodo}
-            onDeleteTodo={removeTodoItem}
-            hour={hour}
-          />
-        ))}
-        {notToday.length > 0 && (
-          <HabitSection
-            timeOfDay="anytime"
-            id="not-today"
-            label="Not today"
-            habits={notToday}
-            dimmed
-            {...section}
-          />
-        )}
-        {sheetHabit && (
-          <AmountSheet
-            key={sheetHabit.id}
-            visible
-            title={sheetHabit.name}
-            unit={sheetHabit.unit}
-            target={sheetHabit.target ?? 0}
-            amount={amounts.get(sheetHabit.id)}
-            onSave={(amount) => saveAmount(sheetHabit.id, amount)}
-            onClear={() => saveAmount(sheetHabit.id, null)}
-            onClose={() => setAmountFor(null)}
-          />
-        )}
-        {sheetTodo && (
-          <TodoEditSheet
-            key={sheetTodo.id}
-            visible
-            title={sheetTodo.title}
-            timeOfDay={sheetTodo.timeOfDay}
-            onSave={(edit) => saveTodoEdit(sheetTodo.id, edit)}
-            onClose={() => setEditingTodo(null)}
-          />
-        )}
-        {archivedLink}
-      </ScrollView>
+      <ListDragProvider value={drag}>
+        <ScrollView
+          ref={scrollRef}
+          scrollEnabled={drag.scrollEnabled}
+          onScroll={drag.onScroll}
+          scrollEventThrottle={16}
+          // Add (and the part-of-day picker) work with the first tap while the keyboard is open.
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={[styles.width, { paddingBottom: insets.bottom + Spacing.five }]}
+          testID="habits-list">
+          <View ref={contentRef} collapsable={false} style={styles.list}>
+            <Title />
+            <TodoAdd onAdd={addNewTodo} />
+            <OverdueCard
+              todos={overdueTodos}
+              onMoveToToday={moveTodoToToday}
+              onDone={(id) => saveTodoDone(id, true)}
+              onDelete={removeTodoItem}
+            />
+            {parts.map((part) => (
+              <HabitSection
+                key={part.timeOfDay}
+                {...part}
+                {...section}
+                moves={moves}
+                onToggleTodo={saveTodoDone}
+                onEditTodo={setEditingTodo}
+                onDeleteTodo={removeTodoItem}
+                hour={hour}
+              />
+            ))}
+            {notToday.length > 0 && (
+              <HabitSection
+                timeOfDay="anytime"
+                id="not-today"
+                label="Not today"
+                items={notToday.map((habit) => ({ kind: 'habit', habit }))}
+                dimmed
+                {...section}
+              />
+            )}
+            <DragLayer />
+          </View>
+          {sheetHabit && (
+            <AmountSheet
+              key={sheetHabit.id}
+              visible
+              title={sheetHabit.name}
+              unit={sheetHabit.unit}
+              target={sheetHabit.target ?? 0}
+              amount={amounts.get(sheetHabit.id)}
+              onSave={(amount) => saveAmount(sheetHabit.id, amount)}
+              onClear={() => saveAmount(sheetHabit.id, null)}
+              onClose={() => setAmountFor(null)}
+            />
+          )}
+          {sheetTodo && (
+            <TodoEditSheet
+              key={sheetTodo.id}
+              visible
+              title={sheetTodo.title}
+              timeOfDay={sheetTodo.timeOfDay}
+              onSave={(edit) => saveTodoEdit(sheetTodo.id, edit)}
+              onClose={() => setEditingTodo(null)}
+            />
+          )}
+          {archivedLink}
+        </ScrollView>
+      </ListDragProvider>
     );
   }
 

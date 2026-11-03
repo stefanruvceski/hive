@@ -248,6 +248,18 @@ export const Layout = {
     /** Width of the slot before a Habits row's title: an emoji or a to-do's check, so titles line up. */
     leading: 28,
   },
+  /** Dragging a Habits row (#60): long press, lifted copy, insertion line, edge auto-scroll. */
+  listDrag: {
+    longPressMs: 350,
+    liftScale: 1.03,
+    liftOpacity: 0.95,
+    sourceOpacity: 0.35,
+    indicator: 3,
+    edge: 80,
+    scrollStep: 12,
+    /** An empty part of the day shown as a drop place while a row is lifted. */
+    emptyHeight: 54,
+  },
   /** Segmented control (Settings): segment height and radius, track padding and radius. */
   segmented: { height: 38, radius: 19, trackPadding: 3, trackRadius: 22 },
   /** Switch (Settings): track, inner padding, knob. */

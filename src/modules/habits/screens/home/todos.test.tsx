@@ -8,10 +8,10 @@ import {
   useArchivedHabits,
   useCompletions,
   useHabits,
-  useMoveHabit,
   useSetAmount,
   useSetCompletion,
 } from '../../data/queries';
+import { useReorder } from '../../data/reorder-queries';
 import {
   useAddTodo,
   useDeleteTodo,
@@ -23,6 +23,7 @@ import {
 import type { Todo } from '../../domain/todos';
 
 jest.mock('../../data/queries');
+jest.mock('../../data/reorder-queries');
 jest.mock('../../data/todo-queries');
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
 // Tuesday 3 November 2026.
@@ -74,7 +75,7 @@ beforeEach(() => {
   jest.mocked(useCompletions).mockReturnValue({ data: [], refetch: jest.fn() } as never);
   jest.mocked(useSetCompletion).mockReturnValue({ mutate: jest.fn() } as never);
   jest.mocked(useSetAmount).mockReturnValue({ mutate: jest.fn() } as never);
-  jest.mocked(useMoveHabit).mockReturnValue({ mutate: jest.fn() } as never);
+  jest.mocked(useReorder).mockReturnValue({ mutate: jest.fn() } as never);
   jest.mocked(useArchivedHabits).mockReturnValue({ data: [] } as never);
   jest.mocked(useAddTodo).mockReturnValue({ mutate: mutate.add } as never);
   jest.mocked(useToggleTodo).mockReturnValue({ mutate: mutate.toggle } as never);
