@@ -20,13 +20,22 @@ export function isMeasurable(habit: { target?: number | null }): boolean {
   return habit.target != null && habit.target > 0;
 }
 
+/** A goal is met when a plain habit reaches the target, or a quit habit stays at or under its limit. */
+export function isAmountDone(
+  habit: { target?: number | null; quit?: boolean | null },
+  amount: number,
+): boolean {
+  const target = habit.target ?? 0;
+  return habit.quit ? amount <= target : amount >= target;
+}
+
 /**
  * The completions that make a day done: every day of a plain habit, and for a measurable one the
  * days that reached the target (a day without an amount is a plain "done", kept from before the
  * habit was measurable).
  */
 export function countingCompletions(
-  habits: readonly { id: string; target?: number | null }[],
+  habits: readonly { id: string; target?: number | null; quit?: boolean | null }[],
   completions: readonly Completion[],
 ): Completion[] {
   const byId = new Map(habits.map((habit) => [habit.id, habit]));
@@ -34,13 +43,13 @@ export function countingCompletions(
     const habit = byId.get(completion.habitId);
     if (!habit) return false;
     if (!isMeasurable(habit) || completion.amount == null) return true;
-    return completion.amount >= (habit.target ?? 0);
+    return isAmountDone(habit, completion.amount);
   });
 }
 
 /** Each habit's done dates, with the target honoured; the set every screen reads. */
 export function doneDatesFor(
-  habits: readonly { id: string; target?: number | null }[],
+  habits: readonly { id: string; target?: number | null; quit?: boolean | null }[],
   completions: readonly Completion[],
 ): Map<string, Set<string>> {
   const byHabit = new Map<string, Set<string>>();
@@ -122,12 +131,14 @@ export function shortAmount(amount: number): string {
 export function amountFractions(
   target: number,
   completions: readonly Completion[],
+  quit = false,
 ): Map<string, number> {
   return new Map(
-    completions.map((row) => [
-      row.date,
-      row.amount == null ? 1 : amountProgress(row.amount, target),
-    ]),
+    completions.map((row) => {
+      if (row.amount == null) return [row.date, 1];
+      if (quit) return [row.date, row.amount <= target ? 1 : 0];
+      return [row.date, amountProgress(row.amount, target)];
+    }),
   );
 }
 

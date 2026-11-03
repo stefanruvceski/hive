@@ -14,8 +14,9 @@ type Props = {
   testID: string;
 };
 
-// The circle is 44; the slop brings the touch target to 48 (agent-rules/12, review-lessons L-007).
-const hitSlop = { top: 2, bottom: 2, left: 2, right: 2 };
+// The circle is 34; the slop brings the touch target to 48 (agent-rules/12, review-lessons L-007).
+const SIZE = 34;
+const hitSlop = { top: 7, bottom: 7, left: 7, right: 7 };
 
 /**
  * Round "done today" check (decided at checkpoint A of #7): a circle filled with the habit's color
@@ -54,9 +55,9 @@ export function HabitCheck({ checked, label, color, onPress, testID }: Props) {
 
 const styles = StyleSheet.create({
   circle: {
-    width: Layout.control.size,
-    height: Layout.control.size,
-    borderRadius: Layout.control.size / 2,
+    width: SIZE,
+    height: SIZE,
+    borderRadius: SIZE / 2,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',

@@ -55,6 +55,7 @@ export function HabitForm({ testID, title, initial, onSave, isPending, isError, 
   const [color, setColor] = useState<string | undefined>(initial?.color);
   const [schedule, setSchedule] = useState<Schedule>(initial?.schedule ?? dailySchedule);
   const [goal, setGoal] = useState<Goal | undefined>(initial?.goal);
+  const [quit, setQuit] = useState(initial?.quit ?? false);
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>(initial?.timeOfDay ?? 'anytime');
   // `isPending` disables Save only after a re-render; this stops a second quick tap before it.
   // Cleared only on error: after a save the form is on its way out and stays locked.
@@ -77,6 +78,7 @@ export function HabitForm({ testID, title, initial, onSave, isPending, isError, 
         color,
         schedule: schedule.type === 'daily' ? undefined : schedule,
         goal,
+        quit: quit ? true : undefined,
       },
       {
         onSuccess: close,
@@ -161,7 +163,13 @@ export function HabitForm({ testID, title, initial, onSave, isPending, isError, 
           </FormGroup>
 
           <FormGroup padded testID={`${testID}-goal-group`}>
-            <GoalField value={goal} onChange={setGoal} testID={`${testID}-goal`} />
+            <GoalField
+              value={goal}
+              onChange={setGoal}
+              quit={quit}
+              onQuitChange={setQuit}
+              testID={`${testID}-goal`}
+            />
           </FormGroup>
 
           {isError && (

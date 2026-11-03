@@ -13,6 +13,9 @@ type Props = {
   /** The goal, or undefined for a plain yes/no habit. */
   value: Goal | undefined;
   onChange: (goal: Goal | undefined) => void;
+  /** A habit to quit: its target is a limit. The switch shows only with a handler. */
+  quit?: boolean;
+  onQuitChange?: (quit: boolean) => void;
   /** On the field; its parts are `${testID}-unit`, `-target` and `-aggregation`. */
   testID: string;
 };
@@ -20,7 +23,7 @@ type Props = {
 const emptyGoal: Goal = { unit: '', target: 0, aggregation: 'sum' };
 
 /** Measure a habit by an amount: what it counts, a daily target, and how amounts roll up. */
-export function GoalField({ value, onChange, testID }: Props) {
+export function GoalField({ value, onChange, quit = false, onQuitChange, testID }: Props) {
   const theme = useTheme();
   // What was typed, kept as text so "2." or "" survive until the number is complete.
   const [targetText, setTargetText] = useState(
@@ -30,6 +33,17 @@ export function GoalField({ value, onChange, testID }: Props) {
 
   return (
     <View style={styles.field}>
+      {onQuitChange && (
+        <View style={styles.switchRow}>
+          <ThemedText>Quit habit</ThemedText>
+          <ToggleSwitch
+            value={quit}
+            onValueChange={onQuitChange}
+            label="Quit habit"
+            testID={`${testID}-quit`}
+          />
+        </View>
+      )}
       <View style={styles.switchRow}>
         <ThemedText>Measure an amount</ThemedText>
         <ToggleSwitch
@@ -61,11 +75,11 @@ export function GoalField({ value, onChange, testID }: Props) {
                 const target = Number(text.replace(',', '.'));
                 onChange({ ...value, target: Number.isFinite(target) ? target : 0 });
               }}
-              placeholder="Daily target"
+              placeholder={quit ? 'Daily limit' : 'Daily target'}
               placeholderTextColor={theme.textQuaternary}
               selectionColor={theme.accent}
               cursorColor={theme.accent}
-              aria-label="Daily target"
+              aria-label={quit ? 'Daily limit' : 'Daily target'}
               keyboardType="decimal-pad"
               style={[...inputStyle, styles.target]}
               testID={`${testID}-target`}

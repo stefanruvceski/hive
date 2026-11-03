@@ -15,7 +15,10 @@ import { useToday } from '@/hooks/use-today';
 
 import { AmountSheet } from './components/amount-sheet';
 import { HabitSection } from './components/habit-section';
+import { OverdueCard } from './components/overdue-card';
 import { TextButton } from './components/text-button';
+import { TodoAdd } from './components/todo-add';
+import { TodoEditSheet } from './components/todo-edit-sheet';
 import {
   type CompletionChange,
   useArchivedHabits,
@@ -26,11 +29,21 @@ import {
   useSetAmount,
   useSetCompletion,
 } from '../../data/queries';
+import type { TimeOfDay } from '../../data/schema';
+import {
+  useAddTodo,
+  useDeleteTodo,
+  useMoveTodo,
+  useToggleTodo,
+  useTodos,
+  useUpdateTodo,
+} from '../../data/todo-queries';
 import { doneDatesFor } from '../../domain/goal';
-import { groupByTimeOfDay } from '../../domain/habits';
+import { groupByTimeOfDay, newHabitId, timeOfDayOptions } from '../../domain/habits';
 import type { Direction } from '../../domain/order';
 import { isScheduled, scheduleOf } from '../../domain/schedule';
 import type { SwipeSide } from '../../domain/swipe';
+import { overdue, todosByTimeOfDay, todosFor } from '../../domain/todos';
 
 const addHabit = () => router.push('/habits/new');
 const openMood = () => router.push('/habits/mood');
@@ -126,6 +139,14 @@ function HabitsContent({ reordering }: { reordering: boolean }) {
   const completions = useCompletions();
   const setCompletion = useSetCompletion();
   const logAmount = useSetAmount();
+  const todos = useTodos(today);
+  const addTodo = useAddTodo();
+  const toggleTodo = useToggleTodo();
+  const deleteTodo = useDeleteTodo();
+  const moveTodo = useMoveTodo();
+  const updateTodo = useUpdateTodo();
+  // The to-do whose edit sheet is open.
+  const [editingTodo, setEditingTodo] = useState<string | null>(null);
   // The measurable habit whose amount sheet is open.
   const [amountFor, setAmountFor] = useState<string | null>(null);
   const move = useMoveHabit();
@@ -157,6 +178,44 @@ function HabitsContent({ reordering }: { reordering: boolean }) {
             { text: 'Try again', onPress: () => saveAmount(habitId, amount) },
           ]),
       },
+    );
+  };
+
+  // To-do changes are optimistic like the checks: a failure rolls back and offers a retry.
+  const retryTodo = (again: () => void) => ({
+    onError: () =>
+      Alert.alert("Couldn't save", 'Your change was not saved. Please try again.', [
+        { text: 'Cancel', style: 'cancel' as const },
+        { text: 'Try again', onPress: again },
+      ]),
+  });
+  const saveTodoDone = (id: string, done: boolean) =>
+    toggleTodo.mutate(
+      { id, done },
+      retryTodo(() => saveTodoDone(id, done)),
+    );
+  const removeTodoItem = (id: string) =>
+    deleteTodo.mutate(
+      id,
+      retryTodo(() => removeTodoItem(id)),
+    );
+  const moveTodoToToday = (id: string) =>
+    moveTodo.mutate(
+      { id, date: today },
+      retryTodo(() => moveTodoToToday(id)),
+    );
+  const saveTodoEdit = (id: string, edit: { title: string; timeOfDay: TimeOfDay }) => {
+    setEditingTodo(null);
+    updateTodo.mutate(
+      { id, ...edit },
+      retryTodo(() => saveTodoEdit(id, edit)),
+    );
+  };
+  const addNewTodo = (draft: { title: string; timeOfDay: TimeOfDay }) => {
+    const todo = { id: newHabitId(), date: today, ...draft };
+    addTodo.mutate(
+      todo,
+      retryTodo(() => addNewTodo(draft)),
     );
   };
 
@@ -193,7 +252,9 @@ function HabitsContent({ reordering }: { reordering: boolean }) {
     void completions.refetch();
   };
 
-  if (data && data.length > 0) {
+  const todayTodos = todosFor(todos.data ?? [], today);
+  const overdueTodos = overdue(todos.data ?? [], today);
+  if (data && (data.length > 0 || todayTodos.length > 0 || overdueTodos.length > 0)) {
     const doneDates = doneDatesFor(data, completions.data ?? []);
     const amounts = new Map(
       (completions.data ?? [])
@@ -203,7 +264,20 @@ function HabitsContent({ reordering }: { reordering: boolean }) {
     // Habits not due today go to a faint section at the end; reordering shows them all in place.
     const due = reordering ? data : data.filter((habit) => isScheduled(scheduleOf(habit), today));
     const notToday = reordering ? [] : data.filter((habit) => !due.includes(habit));
+    const hour = new Date().getHours();
+    const sheetTodo = todayTodos.find((item) => item.id === editingTodo);
     const sheetHabit = data.find((habit) => habit.id === amountFor);
+    // Each part of the day: its habits due today and its to-dos for today.
+    const dueByPart = new Map(groupByTimeOfDay(due).map((group) => [group.timeOfDay, group]));
+    const todosByPart = todosByTimeOfDay(reordering ? [] : todayTodos);
+    const parts = timeOfDayOptions
+      .map(({ value, label }) => ({
+        timeOfDay: value,
+        label,
+        habits: dueByPart.get(value)?.habits ?? [],
+        todos: todosByPart.get(value) ?? [],
+      }))
+      .filter((part) => part.habits.length + part.todos.length > 0);
     const section = {
       doneDates,
       today,
@@ -219,6 +293,8 @@ function HabitsContent({ reordering }: { reordering: boolean }) {
     };
     return (
       <ScrollView
+        // Add (and the part-of-day picker) work with the first tap while the keyboard is open.
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={[
           styles.width,
           styles.list,
@@ -226,8 +302,25 @@ function HabitsContent({ reordering }: { reordering: boolean }) {
         ]}
         testID="habits-list">
         <Title />
-        {groupByTimeOfDay(due).map((group) => (
-          <HabitSection key={group.timeOfDay} {...group} {...section} />
+        {!reordering && <TodoAdd onAdd={addNewTodo} />}
+        {!reordering && (
+          <OverdueCard
+            todos={overdueTodos}
+            onMoveToToday={moveTodoToToday}
+            onDone={(id) => saveTodoDone(id, true)}
+            onDelete={removeTodoItem}
+          />
+        )}
+        {parts.map((part) => (
+          <HabitSection
+            key={part.timeOfDay}
+            {...part}
+            {...section}
+            onToggleTodo={saveTodoDone}
+            onEditTodo={setEditingTodo}
+            onDeleteTodo={removeTodoItem}
+            hour={hour}
+          />
         ))}
         {notToday.length > 0 && (
           <HabitSection
@@ -252,6 +345,16 @@ function HabitsContent({ reordering }: { reordering: boolean }) {
             onClose={() => setAmountFor(null)}
           />
         )}
+        {sheetTodo && (
+          <TodoEditSheet
+            key={sheetTodo.id}
+            visible
+            title={sheetTodo.title}
+            timeOfDay={sheetTodo.timeOfDay}
+            onSave={(edit) => saveTodoEdit(sheetTodo.id, edit)}
+            onClose={() => setEditingTodo(null)}
+          />
+        )}
         {archivedLink}
       </ScrollView>
     );
@@ -262,6 +365,7 @@ function HabitsContent({ reordering }: { reordering: boolean }) {
       <Title />
       {data ? (
         <>
+          <TodoAdd onAdd={addNewTodo} />
           <EmptyState
             title="No habits yet"
             description="Add the first thing you want to do every day."

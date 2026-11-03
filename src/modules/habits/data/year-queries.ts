@@ -26,6 +26,7 @@ export const habitsYearQuery = (year: number) =>
             scheduleDays: habitsHabits.scheduleDays,
             scheduleTimes: habitsHabits.scheduleTimes,
             target: habitsHabits.target,
+            quit: habitsHabits.quit,
           })
           .from(habitsHabits)
           .where(isNull(habitsHabits.archivedAt))

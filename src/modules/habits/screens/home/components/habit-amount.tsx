@@ -13,6 +13,8 @@ type Props = {
   /** Logged today, if anything. */
   amount?: number;
   target: number;
+  /** A habit to quit: `target` is a limit. Staying under shows the amount; over it turns red. */
+  quit?: boolean;
   /** The habit's own color. */
   color: string;
   /** Opens the amount sheet. */
@@ -20,17 +22,28 @@ type Props = {
   testID: string;
 };
 
-// The circle is 44; the slop brings the touch target to 48 (agent-rules/12, review-lessons L-007).
-const hitSlop = { top: 2, bottom: 2, left: 2, right: 2 };
+// The circle is 34; the slop brings the touch target to 48 (agent-rules/12, review-lessons L-007).
+const SIZE = 34;
+const hitSlop = { top: 7, bottom: 7, left: 7, right: 7 };
 
 /**
  * The "done today" control of a measurable habit: a circle that fills from the bottom as the amount
  * grows, shows the amount (or + before any), and turns into a filled check at the target.
  */
-export function HabitAmount({ label, amount, target, color, onPress, testID }: Props) {
+export function HabitAmount({
+  label,
+  amount,
+  target,
+  quit = false,
+  color,
+  onPress,
+  testID,
+}: Props) {
   const theme = useTheme();
   const progress = amount === undefined ? 0 : amountProgress(amount, target);
-  const done = progress >= 1;
+  const done = !quit && progress >= 1;
+  const over = quit && amount !== undefined && amount > target;
+  const ring = over ? theme.danger : color;
 
   return (
     <Pressable
@@ -41,12 +54,12 @@ export function HabitAmount({ label, amount, target, color, onPress, testID }: P
       testID={testID}
       style={({ pressed }) => [
         styles.circle,
-        { borderColor: color, backgroundColor: done ? color : theme.control },
+        { borderColor: ring, backgroundColor: done ? color : theme.control },
         pressed && styles.pressed,
       ]}>
       {!done && progress > 0 && (
         <View
-          style={[styles.fill, { backgroundColor: `${color}66`, height: `${progress * 100}%` }]}
+          style={[styles.fill, { backgroundColor: `${ring}66`, height: `${progress * 100}%` }]}
         />
       )}
       {done ? (
@@ -58,7 +71,7 @@ export function HabitAmount({ label, amount, target, color, onPress, testID }: P
           />
         </View>
       ) : (
-        <ThemedText type="footnote" numberOfLines={1}>
+        <ThemedText type="footnote" themeColor={over ? 'danger' : 'text'} numberOfLines={1}>
           {amount === undefined ? '+' : formatAmount(amount)}
         </ThemedText>
       )}
@@ -68,9 +81,9 @@ export function HabitAmount({ label, amount, target, color, onPress, testID }: P
 
 const styles = StyleSheet.create({
   circle: {
-    width: Layout.control.size,
-    height: Layout.control.size,
-    borderRadius: Layout.control.size / 2,
+    width: SIZE,
+    height: SIZE,
+    borderRadius: SIZE / 2,
     borderWidth: 2,
     overflow: 'hidden',
     alignItems: 'center',

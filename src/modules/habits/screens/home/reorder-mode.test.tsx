@@ -13,8 +13,16 @@ import {
   useMoveHabit,
   useSetCompletion,
 } from '../../data/queries';
+import {
+  useAddTodo,
+  useDeleteTodo,
+  useMoveTodo,
+  useToggleTodo,
+  useTodos,
+} from '../../data/todo-queries';
 
 jest.mock('../../data/queries');
+jest.mock('../../data/todo-queries');
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
 
 const move = jest.fn();
@@ -31,6 +39,10 @@ const habit = (id: string, timeOfDay: Habit['timeOfDay'], position: number) => (
 
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.mocked(useTodos).mockReturnValue({ data: [] } as never);
+  for (const hook of [useAddTodo, useToggleTodo, useDeleteTodo, useMoveTodo]) {
+    jest.mocked(hook).mockReturnValue({ mutate: jest.fn() } as never);
+  }
   jest.mocked(useHabits).mockReturnValue({
     data: [habit('a', 'morning', 0), habit('b', 'evening', 1), habit('c', 'morning', 2)],
   } as never);

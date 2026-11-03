@@ -160,3 +160,48 @@ describe('with schedules and goals', () => {
     expect(summary).toMatchObject({ kind: 'message', headline: 'Nothing today' });
   });
 });
+
+describe('with to-dos', () => {
+  const todo = (id: string, extra: object = {}) => ({
+    id,
+    title: `Task ${id}`,
+    date: today,
+    timeOfDay: 'anytime' as TimeOfDay,
+    done: false,
+    doneAt: null,
+    position: 0,
+    createdAt: today,
+    ...extra,
+  });
+  const run = {
+    id: 'run',
+    name: 'Run',
+    emoji: '🏃',
+    timeOfDay: 'morning' as TimeOfDay,
+    position: 0,
+  };
+
+  it("counts today's to-dos with the habits, and lists the open ones up next", () => {
+    const summary = habitsHomeSummary([run], [{ habitId: 'run', date: today }], today, [
+      todo('a', { done: true }),
+      todo('b'),
+      todo('other-day', { date: '2026-11-03' }),
+    ]);
+    expect(summary).toMatchObject({ kind: 'progress', done: 2, total: 3 });
+    expect(summary.kind === 'progress' && summary.upNext.map((item) => item.name)).toEqual([
+      'Task b',
+    ]);
+  });
+
+  it('is a progress of to-dos alone when there are no habits', () => {
+    const summary = habitsHomeSummary([], [], today, [todo('a'), todo('b', { done: true })]);
+    expect(summary).toMatchObject({ kind: 'progress', done: 1, total: 2 });
+  });
+
+  it('keeps the old messages without any to-do today', () => {
+    expect(habitsHomeSummary([], [], today, [todo('x', { date: '2026-10-01' })])).toMatchObject({
+      kind: 'message',
+      headline: 'No habits yet',
+    });
+  });
+});

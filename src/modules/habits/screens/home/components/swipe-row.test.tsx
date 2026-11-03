@@ -33,11 +33,11 @@ describe('SwipeRow', () => {
     expect(screen.queryByTestId('swipe-close')).toBeNull();
   });
 
-  it('shows Edit and Archive when opened towards the trailing edge', async () => {
+  it('shows only Archive when opened towards the trailing edge', async () => {
     await renderRow('trailing');
     const user = userEvent.setup();
 
-    expect(screen.getByRole('button', { name: 'Edit Run' })).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Edit Run' })).not.toBeOnTheScreen();
     await user.press(screen.getByRole('button', { name: 'Archive Run' }));
 
     expect(onArchive).toHaveBeenCalledTimes(1);
@@ -48,7 +48,7 @@ describe('SwipeRow', () => {
     await renderRow('leading');
     const user = userEvent.setup();
 
-    await user.press(screen.getByTestId('swipe-edit-leading'));
+    await user.press(screen.getByTestId('swipe-edit'));
 
     expect(onEdit).toHaveBeenCalledTimes(1);
     expect(onOpenChange).toHaveBeenCalledWith(null);

@@ -11,8 +11,16 @@ import {
   useSetAmount,
   useSetCompletion,
 } from '../../data/queries';
+import {
+  useAddTodo,
+  useDeleteTodo,
+  useMoveTodo,
+  useToggleTodo,
+  useTodos,
+} from '../../data/todo-queries';
 
 jest.mock('../../data/queries');
+jest.mock('../../data/todo-queries');
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
 // Monday 2 November 2026.
 jest.mock('@/hooks/use-today', () => ({ useToday: () => '2026-11-02' }));
@@ -42,6 +50,10 @@ const show = (habits: Habit[], completions: object[] = []) => {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.mocked(useTodos).mockReturnValue({ data: [] } as never);
+  for (const hook of [useAddTodo, useToggleTodo, useDeleteTodo, useMoveTodo]) {
+    jest.mocked(hook).mockReturnValue({ mutate: jest.fn() } as never);
+  }
   jest.mocked(useSetCompletion).mockReturnValue({ mutate: jest.fn() } as never);
   jest.mocked(useSetAmount).mockReturnValue({ mutate: logAmount } as never);
   jest.mocked(useMoveHabit).mockReturnValue({ mutate: jest.fn() } as never);

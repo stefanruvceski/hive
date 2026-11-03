@@ -13,6 +13,7 @@ export type YearHabit = {
   scheduleDays?: string | null;
   scheduleTimes?: number | null;
   target?: number | null;
+  quit?: boolean | null;
 };
 
 const monthLabels = [

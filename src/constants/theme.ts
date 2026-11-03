@@ -245,6 +245,8 @@ export const Layout = {
     gap: 12,
     controlPadding: 12,
     icon: { size: 30, radius: 8, glyph: 16 },
+    /** Width of the slot before a Habits row's title: an emoji or a to-do's check, so titles line up. */
+    leading: 28,
   },
   /** Segmented control (Settings): segment height and radius, track padding and radius. */
   segmented: { height: 38, radius: 19, trackPadding: 3, trackRadius: 22 },

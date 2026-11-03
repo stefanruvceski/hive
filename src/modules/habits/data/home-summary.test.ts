@@ -4,9 +4,11 @@ import { useToday } from '@/hooks/use-today';
 
 import { useHabitsHomeSummary } from './home-summary';
 import { useCompletions, useHabits } from './queries';
+import { useTodos } from './todo-queries';
 
 // The database boundary: Habits' query hooks (docs/agent-rules/09 §5).
 jest.mock('./queries');
+jest.mock('./todo-queries');
 jest.mock('@/hooks/use-today');
 
 const habit = (id: string) => ({
@@ -26,6 +28,7 @@ function mockQueries(habits: object, completions: object) {
 beforeEach(() => {
   jest.clearAllMocks();
   jest.mocked(useToday).mockReturnValue('2026-11-02');
+  jest.mocked(useTodos).mockReturnValue({ data: [] } as never);
 });
 
 describe('useHabitsHomeSummary', () => {

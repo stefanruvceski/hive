@@ -24,6 +24,8 @@ type Props = {
   onOpenAmount?: () => void;
   /** Not due today: drawn fainter. */
   dimmed?: boolean;
+  /** A habit to quit: "Avoid" in front of the streak; an amount over the limit is flagged. */
+  quit?: boolean;
   onToggle: (done: boolean) => void;
   /** Reorder mode: the check gives way to move controls. */
   reorder?: { canUp: boolean; canDown: boolean; onMove: (direction: Direction) => void };
@@ -42,6 +44,7 @@ export function HabitRow({
   goal,
   onOpenAmount,
   dimmed = false,
+  quit = false,
   onToggle,
   reorder,
   onEdit,
@@ -54,7 +57,9 @@ export function HabitRow({
   ];
   return (
     <View style={[styles.row, dimmed && styles.dimmed]} testID={`habits-item-${habit.id}`}>
-      <ThemedText aria-hidden>{habit.emoji}</ThemedText>
+      <View style={styles.leading} aria-hidden>
+        <ThemedText>{habit.emoji}</ThemedText>
+      </View>
       {/* Grows and wraps instead of running past the card (agent-rules/03 §2). Swiping is not
           available to a screen reader, so Edit and Archive are custom actions on the name. */}
       <View
@@ -68,7 +73,7 @@ export function HabitRow({
         testID={`habits-item-text-${habit.id}`}>
         <ThemedText>{habit.name}</ThemedText>
         <ThemedText type="footnote" themeColor="textSecondary" testID={`habits-streak-${habit.id}`}>
-          {`Streak: ${streak} ${streak === 1 ? streakUnit : `${streakUnit}s`}`}
+          {`${quit ? 'Avoid · ' : ''}Streak: ${streak} ${streak === 1 ? streakUnit : `${streakUnit}s`}`}
         </ThemedText>
         {note ? (
           <ThemedText type="footnote" themeColor="textSecondary" testID={`habits-note-${habit.id}`}>
@@ -83,6 +88,7 @@ export function HabitRow({
           color={habitColor(habit, scheme)}
           amount={goal.amount}
           target={goal.target}
+          quit={quit}
           label={`Log amount: ${habit.name}`}
           onPress={() => onOpenAmount?.()}
           testID={`habits-amount-${habit.id}`}
@@ -91,7 +97,7 @@ export function HabitRow({
         <HabitCheck
           color={habitColor(habit, scheme)}
           checked={doneToday}
-          label={`Done today: ${habit.name}`}
+          label={quit ? `Held out today: ${habit.name}` : `Done today: ${habit.name}`}
           onPress={() => onToggle(!doneToday)}
           testID={`habits-check-${habit.id}`}
         />
@@ -108,6 +114,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Layout.listRow.gap,
+  },
+  leading: {
+    width: Layout.listRow.leading,
+    alignItems: 'center',
   },
   dimmed: {
     opacity: 0.55,

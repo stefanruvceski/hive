@@ -128,6 +128,29 @@ describe('HabitsNew', () => {
     );
   });
 
+  it('saves a quit habit with its limit', async () => {
+    await renderForm();
+    const user = userEvent.setup();
+
+    await user.type(screen.getByTestId('habits-new-name'), 'Coffee');
+    await user.press(screen.getByRole('switch', { name: 'Quit habit' }));
+    await user.press(screen.getByRole('switch', { name: 'Measure an amount' }));
+    await user.type(screen.getByTestId('habits-new-goal-unit'), 'cups');
+    await user.type(screen.getByTestId('habits-new-goal-target'), '2');
+    await user.press(screen.getByTestId('habits-new-save'));
+
+    expect(mutate).toHaveBeenCalledWith(
+      {
+        name: 'Coffee',
+        emoji: '🎯',
+        timeOfDay: 'anytime',
+        quit: true,
+        goal: { unit: 'cups', target: 2, aggregation: 'sum' },
+      },
+      expect.anything(),
+    );
+  });
+
   // isPending only disables Save after a re-render, and a SQLite write settles at once, before the
   // form has animated out. Two quick taps must still save once (#42 review).
   it('saves once when Save is tapped twice quickly', async () => {

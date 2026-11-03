@@ -2,6 +2,7 @@ import { useToday } from '@/hooks/use-today';
 import type { HomeSummaryResult } from '@/utils/home-summary';
 
 import { useCompletions, useHabits } from './queries';
+import { useTodos } from './todo-queries';
 import { habitsHomeSummary } from '../domain/today';
 
 /**
@@ -13,9 +14,13 @@ export function useHabitsHomeSummary(): HomeSummaryResult {
   const habits = useHabits();
   const completions = useCompletions();
   const today = useToday();
+  const todos = useTodos(today);
 
   if (habits.data && completions.data) {
-    return { status: 'success', summary: habitsHomeSummary(habits.data, completions.data, today) };
+    return {
+      status: 'success',
+      summary: habitsHomeSummary(habits.data, completions.data, today, todos.data ?? []),
+    };
   }
   if (habits.isError || completions.isError) return { status: 'error' };
   return { status: 'pending' };
