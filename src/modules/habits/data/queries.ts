@@ -4,10 +4,10 @@ import { and, asc, eq, isNotNull, isNull, max } from 'drizzle-orm';
 import { getDb } from '@/lib/db/client';
 import { toIsoDate } from '@/utils/format-date';
 
-import { habitsCompletions, habitsHabits } from './schema';
+import { habitsCompletions, habitsHabits, habitsTodos } from './schema';
 import { type AmountChange, type Goal, setAmount } from '../domain/goal';
 import { type NewHabit, newHabitId, normalizeName } from '../domain/habits';
-import { type Direction, endPosition, moveWithinPart } from '../domain/order';
+import { endPosition } from '../domain/order';
 import { type Schedule, formatDays } from '../domain/schedule';
 import { type Completion, setCompletion } from '../domain/streak';
 
@@ -38,6 +38,22 @@ export const habitsKeys = {
   archived: () => [...habitsKeys.all, 'archived'] as const,
   completions: () => [...habitsKeys.all, 'completions'] as const,
 };
+
+/**
+ * The position after everything on the list: habits and to-dos share one sequence (they are
+ * dragged among each other), so the end is the highest position in either table.
+ */
+export function nextPosition(db: Pick<ReturnType<typeof getDb>, 'select'>): number {
+  const habit = db
+    .select({ position: max(habitsHabits.position) })
+    .from(habitsHabits)
+    .get();
+  const todo = db
+    .select({ position: max(habitsTodos.position) })
+    .from(habitsTodos)
+    .get();
+  return Math.max(habit?.position ?? -1, todo?.position ?? -1) + 1;
+}
 
 /** Every active (not archived) habit, in list order. */
 export const habitsListQuery = () =>
@@ -81,10 +97,6 @@ export function useCreateHabit() {
       const name = normalizeName(input.name);
       if (!name) throw new Error('A habit needs a name.');
       getDb().transaction((tx) => {
-        const last = tx
-          .select({ position: max(habitsHabits.position) })
-          .from(habitsHabits)
-          .get();
         tx.insert(habitsHabits)
           .values({
             id: newHabitId(),
@@ -95,7 +107,7 @@ export function useCreateHabit() {
             ...scheduleColumns(input.schedule),
             ...goalColumns(input.goal),
             quit: input.quit ?? false,
-            position: (last?.position ?? -1) + 1,
+            position: nextPosition(tx),
             createdAt: toIsoDate(new Date()),
           })
           .run();
@@ -204,10 +216,6 @@ export function useUpdateHabit() {
       getDb().transaction((tx) => {
         const current = tx.select().from(habitsHabits).where(eq(habitsHabits.id, input.id)).get();
         if (!current) throw new Error('Habit not found.');
-        const last = tx
-          .select({ position: max(habitsHabits.position) })
-          .from(habitsHabits)
-          .get();
         tx.update(habitsHabits)
           .set({
             name,
@@ -217,9 +225,7 @@ export function useUpdateHabit() {
             ...scheduleColumns(input.schedule),
             ...goalColumns(input.goal),
             quit: input.quit ?? false,
-            ...(current.timeOfDay === input.timeOfDay
-              ? {}
-              : { position: (last?.position ?? -1) + 1 }),
+            ...(current.timeOfDay === input.timeOfDay ? {} : { position: nextPosition(tx) }),
           })
           .where(eq(habitsHabits.id, input.id))
           .run();
@@ -264,30 +270,6 @@ function useOptimisticHabits<V>(
 
 const byPosition = (a: Habit, b: Habit) => a.position - b.position;
 
-/** Moves a habit up or down within its part of the day and rewrites the positions. */
-export function useMoveHabit() {
-  return useOptimisticHabits<{ id: string; direction: Direction }>(
-    ({ id, direction }) => {
-      getDb().transaction((tx) => {
-        const active = tx.select().from(habitsHabits).where(isNull(habitsHabits.archivedAt)).all();
-        const before = new Map(active.map((habit) => [habit.id, habit.position]));
-        for (const habit of moveWithinPart(active, id, direction)) {
-          if (habit.position !== before.get(habit.id)) {
-            tx.update(habitsHabits)
-              .set({ position: habit.position })
-              .where(eq(habitsHabits.id, habit.id))
-              .run();
-          }
-        }
-      });
-    },
-    ({ id, direction }, lists) => ({
-      ...lists,
-      active: moveWithinPart(lists.active, id, direction).sort(byPosition),
-    }),
-  );
-}
-
 /** Archives a habit: it leaves the list, streaks and Today; its completions are kept. */
 export function useArchiveHabit() {
   return useOptimisticHabits<string>(
@@ -315,12 +297,8 @@ export function useRestoreHabit() {
   return useOptimisticHabits<string>(
     (id) => {
       getDb().transaction((tx) => {
-        const last = tx
-          .select({ position: max(habitsHabits.position) })
-          .from(habitsHabits)
-          .get();
         tx.update(habitsHabits)
-          .set({ archivedAt: null, position: (last?.position ?? -1) + 1 })
+          .set({ archivedAt: null, position: nextPosition(tx) })
           .where(eq(habitsHabits.id, id))
           .run();
       });

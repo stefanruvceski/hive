@@ -17,17 +17,21 @@ type Props = {
   /** Screen-reader alternatives to the swipe buttons. */
   onEdit?: () => void;
   onDelete?: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 };
 
 /**
  * A one-off to-do, laid out like a habit's row so a list reads as one: an icon, the title, and the
  * "done" check at the end: square where a habit's is round. Star, Edit and Delete are swipe buttons.
  */
-export function TodoRow({ todo, onToggle, onEdit, onDelete }: Props) {
+export function TodoRow({ todo, onToggle, onEdit, onDelete, onMoveUp, onMoveDown }: Props) {
   const theme = useTheme();
   const actions = [
     ...(onEdit ? [{ name: 'edit', label: 'Edit' }] : []),
     ...(onDelete ? [{ name: 'delete', label: 'Delete' }] : []),
+    ...(onMoveUp ? [{ name: 'moveUp', label: 'Move up' }] : []),
+    ...(onMoveDown ? [{ name: 'moveDown', label: 'Move down' }] : []),
   ];
 
   return (
@@ -47,6 +51,8 @@ export function TodoRow({ todo, onToggle, onEdit, onDelete }: Props) {
           const name = event.nativeEvent.actionName;
           if (name === 'edit') onEdit?.();
           else if (name === 'delete') onDelete?.();
+          else if (name === 'moveUp') onMoveUp?.();
+          else if (name === 'moveDown') onMoveDown?.();
         }}
         testID={`habits-todo-text-${todo.id}`}>
         <ThemedText

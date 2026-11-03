@@ -1,10 +1,10 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { eq, max, or } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 
 import { getDb } from '@/lib/db/client';
 import { toIsoDate } from '@/utils/format-date';
 
-import { habitsKeys } from './queries';
+import { habitsKeys, nextPosition } from './queries';
 import { habitsTodos, type TimeOfDay } from './schema';
 import { editTodo, moveTodoTo, removeTodo, setTodoDone, type Todo } from '../domain/todos';
 
@@ -61,17 +61,13 @@ export function useAddTodo() {
       const text = title.trim();
       if (!text) throw new Error('A to-do needs a title.');
       getDb().transaction((tx) => {
-        const last = tx
-          .select({ position: max(habitsTodos.position) })
-          .from(habitsTodos)
-          .get();
         tx.insert(habitsTodos)
           .values({
             id,
             title: text,
             date,
             timeOfDay,
-            position: (last?.position ?? -1) + 1,
+            position: nextPosition(tx),
             createdAt: toIsoDate(new Date()),
           })
           .run();
