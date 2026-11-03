@@ -30,6 +30,7 @@ import { doneDatesByHabit } from '../../domain/streak';
 import type { SwipeSide } from '../../domain/swipe';
 
 const addHabit = () => router.push('/habits/new');
+const openMood = () => router.push('/habits/mood');
 const editHabit = (id: string) => router.push({ pathname: '/habits/[id]', params: { id } });
 const openArchived = () => router.push('/habits/archived');
 
@@ -69,6 +70,12 @@ export function HabitsHome() {
                     testID="habits-reorder-toggle"
                   />
                 )}
+                <GlassButton
+                  icon={{ ios: 'face.smiling', android: 'mood', web: 'mood' }}
+                  label="Mood"
+                  onPress={openMood}
+                  testID="habits-mood-open"
+                />
                 <GlassButton
                   icon={{ ios: 'plus', android: 'add', web: 'add' }}
                   label="Add habit"

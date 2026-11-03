@@ -33,3 +33,14 @@ export const habitsCompletions = sqliteTable(
   },
   (table) => [primaryKey({ columns: [table.habitId, table.date] })],
 );
+
+/** One mood and motivation entry per local day (1–5 each, optional note). */
+export const habitsMood = sqliteTable('habits_mood', {
+  /** Local ISO date (`YYYY-MM-DD`); one entry per day. */
+  date: text('date').primaryKey(),
+  mood: integer('mood').notNull(),
+  motivation: integer('motivation').notNull(),
+  note: text('note'),
+  /** ISO timestamp of the last save. */
+  updatedAt: text('updated_at').notNull(),
+});
