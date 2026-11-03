@@ -1,0 +1,31 @@
+# Habits (#16): open Reminders, turn the Morning reminder on (the system asks for permission
+# the first time), move its time by 15 minutes and turn it off again. What the reminder says and
+# when it is planned is covered by domain/reminders.test.ts; the notification itself arrives
+# outside the app, so Maestro does not wait for it.
+# Run locally: pnpm test:e2e   (needs a dev build installed on the simulator/emulator)
+appId: com.ruvceski.hive.dev
+tags:
+  - habits
+---
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: allow
+- tapOn:
+    id: 'home-open-habits'
+- tapOn:
+    id: 'habits-reminders-link'
+- assertVisible:
+    id: 'habits-reminders-screen'
+- tapOn:
+    id: 'habits-reminder-morning-switch'
+- assertVisible:
+    id: 'habits-reminder-morning-time'
+- assertVisible: '08:00'
+- tapOn:
+    id: 'habits-reminder-morning-later'
+- assertVisible: '08:15'
+- tapOn:
+    id: 'habits-reminder-morning-switch'
+- assertNotVisible:
+    id: 'habits-reminder-morning-time'

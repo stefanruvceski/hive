@@ -62,6 +62,7 @@ const addHabit = () => router.push('/habits/new');
 const openMood = () => router.push('/habits/mood');
 const editHabit = (id: string) => router.push({ pathname: '/habits/[id]', params: { id } });
 const openArchived = () => router.push('/habits/archived');
+const openReminders = () => router.push('/habits/reminders');
 const openMonth = () => router.push('/habits/month');
 const openYear = () => router.push('/habits/year');
 
@@ -230,8 +231,13 @@ function HabitsContent() {
         ]),
     });
 
-  const archivedLink = hasArchived && (
-    <TextButton label="Archived habits" onPress={openArchived} testID="habits-archived-link" />
+  const archivedLink = (
+    <>
+      <TextButton label="Reminders" onPress={openReminders} testID="habits-reminders-link" />
+      {hasArchived && (
+        <TextButton label="Archived habits" onPress={openArchived} testID="habits-archived-link" />
+      )}
+    </>
   );
 
   const data = habits.data && completions.data ? habits.data : undefined;
@@ -332,13 +338,16 @@ function HabitsContent() {
           testID="habits-list">
           <View ref={contentRef} collapsable={false} style={styles.list}>
             <Title />
-            <TodoAdd onAdd={addNewTodo} />
-            <OverdueCard
-              todos={overdueTodos}
-              onMoveToToday={moveTodoToToday}
-              onDone={(id) => saveTodoDone(id, true)}
-              onDelete={removeTodoItem}
-            />
+            {/* The same space under it as between two sections (a section's bottom margin). */}
+            <View style={styles.top}>
+              <TodoAdd onAdd={addNewTodo} />
+              <OverdueCard
+                todos={overdueTodos}
+                onMoveToToday={moveTodoToToday}
+                onDone={(id) => saveTodoDone(id, true)}
+                onDelete={removeTodoItem}
+              />
+            </View>
             {parts.map((part) => (
               <HabitSection
                 key={part.timeOfDay}
@@ -438,6 +447,10 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: Spacing.two,
+  },
+  top: {
+    gap: Spacing.two,
+    marginBottom: Spacing.three,
   },
   title: {
     marginHorizontal: Spacing.one,
