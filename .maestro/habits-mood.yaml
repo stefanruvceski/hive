@@ -1,0 +1,32 @@
+# Habits (#13): open Mood from the Habits header → pick a mood and a motivation → note → save →
+# the entry is still there after a restart.
+# Run locally: pnpm test:e2e   (needs a dev build installed on the simulator/emulator)
+appId: com.ruvceski.hive.dev
+tags:
+  - habits
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: 'home-open-habits'
+- tapOn:
+    id: 'habits-mood-open'
+- assertVisible:
+    id: 'habits-mood-title'
+- tapOn:
+    id: 'habits-mood-face-4'
+- tapOn:
+    id: 'habits-mood-motivation-4'
+- tapOn:
+    id: 'habits-mood-note'
+- inputText: 'Ran today'
+- hideKeyboard
+- tapOn:
+    id: 'habits-mood-save'
+- stopApp
+- launchApp
+- tapOn:
+    id: 'home-open-habits'
+- tapOn:
+    id: 'habits-mood-open'
+- assertVisible: 'Ran today'
