@@ -88,3 +88,11 @@ export const habitsTodos = sqliteTable('habits_todos', {
   /** Local ISO date the task was added. */
   createdAt: text('created_at').notNull(),
 });
+
+/** One reminder per part of the day: when to remind, and whether it is on. No row = off. */
+export const habitsReminders = sqliteTable('habits_reminders', {
+  timeOfDay: text('time_of_day', { enum: timesOfDay }).primaryKey(),
+  enabled: integer('enabled', { mode: 'boolean' }).notNull().default(false),
+  hour: integer('hour').notNull(),
+  minute: integer('minute').notNull(),
+});

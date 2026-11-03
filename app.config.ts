@@ -66,6 +66,8 @@ export default ({ config: base }: ConfigContext): ExpoConfig => ({
   plugins: [
     'expo-router',
     'expo-sqlite',
+    // Local reminders only: no push token, no APNs entitlement.
+    ['expo-notifications', { enableRemoteNotifications: false }],
     [
       'expo-splash-screen',
       {

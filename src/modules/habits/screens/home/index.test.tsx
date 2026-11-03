@@ -102,6 +102,14 @@ describe('HabitsHome', () => {
     expect(router.push).toHaveBeenCalledWith('/habits/month');
   });
 
+  it('opens Reminders from the link under the list', async () => {
+    mockedHabits.mockReturnValue(result({ data: [habit('run', 'Run', 'morning', 0)] }));
+    await renderHabits();
+
+    await userEvent.setup().press(screen.getByTestId('habits-reminders-link'));
+    expect(router.push).toHaveBeenCalledWith('/habits/reminders');
+  });
+
   it('opens the Add habit form from the header', async () => {
     mockedHabits.mockReturnValue(result({ data: [habit('run', 'Run', 'morning', 0)] }));
     await renderHabits();

@@ -14,6 +14,7 @@ import { useThemeName } from '@/hooks/use-theme';
 import { getDb } from '@/lib/db/client';
 import migrations from '@/lib/db/migrations/migrations';
 import { queryClient } from '@/lib/query-client';
+import { HabitsReminderSync } from '@/modules/habits/screens/reminders/reminder-sync';
 import { customizeOptions } from '@/screens/customize/customize-options';
 import { groupFolderOptions } from '@/screens/group-folder/folder-options';
 
@@ -44,6 +45,8 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <AppearanceGate>
           <ThemeProvider value={navigationTheme[scheme]}>
+            {/* Keeps the Habits reminders scheduled without opening Habits. */}
+            <HabitsReminderSync />
             <Stack>
               {/* Presentation is navigator-level, so it lives here (agent-rules/02 §5). */}
               <Stack.Screen name="group/[id]" options={groupFolderOptions(scheme)} />
