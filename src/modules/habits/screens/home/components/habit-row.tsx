@@ -2,11 +2,13 @@ import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Layout, Spacing } from '@/constants/theme';
+import { useThemeName } from '@/hooks/use-theme';
 
 import { HabitCheck } from './habit-check';
 import { ReorderControls } from './reorder-controls';
 import type { Habit } from '../../../data/queries';
 import type { Direction } from '../../../domain/order';
+import { habitColor } from '../../../habit-color';
 
 type Props = {
   habit: Habit;
@@ -30,6 +32,7 @@ export function HabitRow({
   onEdit,
   onArchive,
 }: Props) {
+  const scheme = useThemeName();
   const actions = [
     ...(onEdit ? [{ name: 'edit', label: 'Edit' }] : []),
     ...(onArchive ? [{ name: 'archive', label: 'Archive' }] : []),
@@ -57,6 +60,7 @@ export function HabitRow({
         <ReorderControls habit={habit} {...reorder} />
       ) : (
         <HabitCheck
+          color={habitColor(habit, scheme)}
           checked={doneToday}
           label={`Done today: ${habit.name}`}
           onPress={() => onToggle(!doneToday)}

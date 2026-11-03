@@ -52,6 +52,33 @@ describe('HabitsEdit', () => {
     expect(router.dismissTo).toHaveBeenCalledWith('/habits');
   });
 
+  it("opens on the habit's color and saves a new one", async () => {
+    jest.mocked(useHabits).mockReturnValue({ data: [{ ...run, color: 'sky' }] } as never);
+    await renderEdit();
+    const user = userEvent.setup();
+
+    expect(screen.getByRole('radio', { name: 'Sky' })).toBeChecked();
+    await user.press(screen.getByRole('radio', { name: 'Rose' }));
+    await user.press(screen.getByTestId('habits-edit-save'));
+    expect(update).toHaveBeenCalledWith(
+      { id: 'run', name: 'Run', emoji: '🏃', timeOfDay: 'morning', color: 'rose' },
+      expect.anything(),
+    );
+  });
+
+  it('saves Automatic by leaving the color out', async () => {
+    jest.mocked(useHabits).mockReturnValue({ data: [{ ...run, color: 'sky' }] } as never);
+    await renderEdit();
+    const user = userEvent.setup();
+
+    await user.press(screen.getByRole('radio', { name: 'Automatic color' }));
+    await user.press(screen.getByTestId('habits-edit-save'));
+    expect(update).toHaveBeenCalledWith(
+      { id: 'run', name: 'Run', emoji: '🏃', timeOfDay: 'morning' },
+      expect.anything(),
+    );
+  });
+
   it('archives only after the user confirms', async () => {
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     await renderEdit();

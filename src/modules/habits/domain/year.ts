@@ -3,7 +3,7 @@
 
 import { type Completion, previousDay } from './streak';
 
-export type YearHabit = { id: string; name: string };
+export type YearHabit = { id: string; name: string; color?: string | null };
 
 const monthLabels = [
   'Jan',
@@ -158,9 +158,16 @@ export function yearInsights({ year, habits, completions, today }: Input): YearI
   return { total, activeDays: perDay.size, perDay, bestWeekday, longestStreak, mostCompleted };
 }
 
-export function yearSummary(year: number, total: number, activeDays: number): string {
+/** The heatmap's accessible label; `habitName` when it shows one habit instead of all. */
+export function yearSummary(
+  year: number,
+  total: number,
+  activeDays: number,
+  habitName?: string,
+): string {
   const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`;
-  return `Year ${year}, ${plural(total, 'completion')} on ${plural(activeDays, 'active day')}`;
+  const subject = habitName ? `, ${habitName}` : '';
+  return `Year ${year}${subject}, ${plural(total, 'completion')} on ${plural(activeDays, 'active day')}`;
 }
 
 /** The week column a date is in, or null when it isn't in the year's grid. */

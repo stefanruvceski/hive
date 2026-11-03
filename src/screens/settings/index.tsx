@@ -4,8 +4,8 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { ThemedText } from '@/components/themed-text';
 import { ErrorState } from '@/components/ui/error-state';
-import { GlassButton } from '@/components/ui/glass-button';
 import { LoadingState } from '@/components/ui/loading-state';
+import { ScreenHeader } from '@/components/ui/screen-header';
 import { type SegmentedOption, SegmentedControl } from '@/components/ui/segmented-control';
 import { ToggleSwitch } from '@/components/ui/toggle-switch';
 import { Wallpaper } from '@/components/ui/wallpaper';
@@ -38,20 +38,17 @@ export function Settings() {
       {/* No bottom edge: the list scrolls to the screen edge and clears the home indicator with
           padding, instead of being cut off above it. */}
       <SafeAreaView edges={['top', 'right', 'left']} style={styles.container}>
+        <View style={styles.headerWrap}>
+          <ScreenHeader
+            title="Settings"
+            onBack={() => router.back()}
+            backTestID="settings-back"
+            titleTestID="settings-title"
+          />
+        </View>
         <ScrollView
           contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Spacing.five }]}
           testID="settings-scroll">
-          <View style={styles.header}>
-            <GlassButton
-              icon={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
-              label="Back"
-              onPress={() => router.back()}
-              testID="settings-back"
-            />
-          </View>
-          <ThemedText type="title" role="heading" style={styles.title} testID="settings-title">
-            Settings
-          </ThemedText>
           <Preferences />
           <BackupGroup />
           <AppInfoCard />
@@ -162,13 +159,11 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.two,
     gap: Spacing.two,
   },
-  header: {
-    flexDirection: 'row',
-  },
-  title: {
-    marginHorizontal: Spacing.one,
-    marginTop: Spacing.one,
-    marginBottom: Spacing.three,
+  headerWrap: {
+    width: '100%',
+    maxWidth: MaxContentWidth,
+    alignSelf: 'center',
+    paddingHorizontal: Layout.screenMargin,
   },
   inset: {
     marginHorizontal: Layout.listRow.paddingHorizontal,

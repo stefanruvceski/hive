@@ -1,6 +1,9 @@
 import {
+  allHabitEmojis,
   canSave,
+  firstGrapheme,
   groupByTimeOfDay,
+  habitColorIndex,
   habitEmojis,
   newHabitId,
   normalizeName,
@@ -79,9 +82,51 @@ describe('habitEmojis', () => {
   });
 });
 
+describe('allHabitEmojis', () => {
+  it('keeps the first 24 in place and adds many more, all distinct', () => {
+    expect(allHabitEmojis.slice(0, habitEmojis.length)).toEqual(habitEmojis);
+    expect(allHabitEmojis.length).toBeGreaterThanOrEqual(60);
+    expect(new Set(allHabitEmojis).size).toBe(allHabitEmojis.length);
+  });
+});
+
+describe('firstGrapheme', () => {
+  it.each([
+    ['🚀', '🚀'],
+    ['🚀🔥', '🚀'],
+    ['👨‍👩‍👧 family', '👨‍👩‍👧'],
+    ['🇷🇸x', '🇷🇸'],
+    ['❤️', '❤️'],
+    ['a', 'a'],
+    ['  😀', '😀'],
+    ['', ''],
+    ['   ', ''],
+  ])('%j -> %j', (text, expected) => {
+    expect(firstGrapheme(text)).toBe(expected);
+  });
+});
+
 describe('newHabitId', () => {
   it('returns a different id every time', () => {
     const ids = new Set(Array.from({ length: 100 }, () => newHabitId()));
     expect(ids.size).toBe(100);
+  });
+});
+
+describe('habitColorIndex', () => {
+  it('is stable for an id and always inside the palette', () => {
+    for (const id of ['a', 'read', 'b1c2d3', '8f14e45f-ceea-467a-9575-2c5d4fd1b1c6', '']) {
+      const index = habitColorIndex(id, 8);
+      expect(index).toBe(habitColorIndex(id, 8));
+      expect(Number.isInteger(index)).toBe(true);
+      expect(index).toBeGreaterThanOrEqual(0);
+      expect(index).toBeLessThan(8);
+    }
+  });
+
+  it('spreads different ids over the palette', () => {
+    const ids = Array.from({ length: 200 }, (_, i) => `habit-${i}`);
+    const used = new Set(ids.map((id) => habitColorIndex(id, 8)));
+    expect(used.size).toBe(8);
   });
 });

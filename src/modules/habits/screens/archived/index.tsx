@@ -6,9 +6,9 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ThemedText } from '@/components/themed-text';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
-import { GlassButton } from '@/components/ui/glass-button';
 import { GlassSurface } from '@/components/ui/glass-surface';
 import { LoadingState } from '@/components/ui/loading-state';
+import { ScreenHeader } from '@/components/ui/screen-header';
 import { Wallpaper } from '@/components/ui/wallpaper';
 import { Layout, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -49,12 +49,12 @@ export function HabitsArchived() {
   return (
     <Wallpaper style={styles.container} testID="habits-archived-screen">
       <SafeAreaView edges={['top', 'right', 'left']} style={styles.container}>
-        <View style={[styles.width, styles.header]}>
-          <GlassButton
-            icon={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
-            label="Back"
-            onPress={() => router.back()}
-            testID="habits-archived-back"
+        <View style={styles.width}>
+          <ScreenHeader
+            title="Archived habits"
+            onBack={() => router.back()}
+            backTestID="habits-archived-back"
+            titleTestID="habits-archived-title"
           />
         </View>
         <ScrollView
@@ -64,9 +64,6 @@ export function HabitsArchived() {
             { paddingBottom: insets.bottom + Spacing.five },
           ]}
           testID="habits-archived-list">
-          <ThemedText type="title" role="heading" style={styles.title}>
-            Archived habits
-          </ThemedText>
           {habits && habits.length > 0 ? (
             <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.card}>
               {habits.map((habit, index) => (
@@ -127,13 +124,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: Layout.screenMargin,
   },
-  header: { flexDirection: 'row', paddingTop: Spacing.two },
   list: { gap: Spacing.two },
-  title: {
-    marginHorizontal: Spacing.one,
-    marginTop: Spacing.three,
-    marginBottom: Spacing.three,
-  },
   card: { overflow: 'hidden' },
   name: {
     minHeight: Layout.listRow.minHeight,

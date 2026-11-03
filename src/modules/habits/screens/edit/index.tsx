@@ -63,7 +63,12 @@ export function HabitsEdit({ id }: { id: string }) {
     <HabitForm
       testID="habits-edit"
       title="Edit habit"
-      initial={{ name: habit.name, emoji: habit.emoji, timeOfDay: habit.timeOfDay }}
+      initial={{
+        name: habit.name,
+        emoji: habit.emoji,
+        timeOfDay: habit.timeOfDay,
+        color: habit.color ?? undefined,
+      }}
       onSave={(draft, callbacks) => update.mutate({ id, ...draft }, callbacks)}
       isPending={update.isPending}
       isError={update.isError}>

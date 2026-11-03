@@ -1,13 +1,15 @@
 import { SymbolView } from 'expo-symbols';
+import { type ComponentRef, useRef } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { GlassSurface } from '@/components/ui/glass-surface';
 import { Layout, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useThemeName } from '@/hooks/use-theme';
 
 import type { Habit } from '../../../data/queries';
 import { type MonthDay, cellState } from '../../../domain/month';
+import { habitColor } from '../../../habit-color';
 
 type Props = {
   habits: Habit[];
@@ -19,6 +21,9 @@ type Props = {
 };
 
 const none: ReadonlySet<string> = new Set();
+// Narrower than the 48 pt row so more days fit at once; the row stays 48 pt high.
+const CELL_WIDTH = 40;
+const MARK = 30;
 const weekdayInitials = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 /**
@@ -27,6 +32,16 @@ const weekdayInitials = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
  */
 export function MonthGrid({ habits, days, doneDates, today, onToggle }: Props) {
   const theme = useTheme();
+  const themeName = useThemeName();
+  const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
+  const viewportWidth = useRef(0);
+
+  // Opens on today, centered; a month without today starts at its first day.
+  const centerOnToday = () => {
+    const index = days.findIndex(({ date }) => date === today);
+    const x = index < 0 ? 0 : index * CELL_WIDTH + CELL_WIDTH / 2;
+    scroll.current?.scrollTo({ x: Math.max(0, x - viewportWidth.current / 2), animated: false });
+  };
 
   return (
     <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.card}>
@@ -35,13 +50,21 @@ export function MonthGrid({ habits, days, doneDates, today, onToggle }: Props) {
           <View style={styles.cell} />
           {habits.map((habit) => (
             <View key={habit.id} style={[styles.cell, styles.name]}>
-              <ThemedText type="footnote" themeColor="text" numberOfLines={1}>
+              <ThemedText type="footnote" themeColor="text" numberOfLines={2}>
                 {habit.emoji} {habit.name}
               </ThemedText>
             </View>
           ))}
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} testID="habits-month-scroll">
+        <ScrollView
+          ref={scroll}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          onLayout={(event) => {
+            viewportWidth.current = event.nativeEvent.layout.width;
+          }}
+          onContentSizeChange={centerOnToday}
+          testID="habits-month-scroll">
           <View>
             <View style={styles.row}>
               {days.map(({ date, day, weekday }) => (
@@ -81,12 +104,8 @@ export function MonthGrid({ habits, days, doneDates, today, onToggle }: Props) {
                         <View
                           style={[
                             styles.mark,
-                            done
-                              ? { backgroundColor: theme.accent, borderColor: theme.accent }
-                              : {
-                                  backgroundColor: theme.control,
-                                  borderColor: theme.controlBorder,
-                                },
+                            { borderColor: habitColor(habit, themeName) },
+                            done && { backgroundColor: habitColor(habit, themeName) },
                             state === 'future' && styles.future,
                             pressed && styles.pressed,
                           ]}>
@@ -94,7 +113,7 @@ export function MonthGrid({ habits, days, doneDates, today, onToggle }: Props) {
                             <SymbolView
                               name={{ ios: 'checkmark', android: 'check', web: 'check' }}
                               size={Layout.control.glyph}
-                              tintColor={theme.onAccent}
+                              tintColor={theme.background}
                             />
                           )}
                         </View>
@@ -126,7 +145,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   cell: {
-    width: Layout.minTouchAndroid,
+    width: CELL_WIDTH,
     height: Layout.minTouchAndroid,
     alignItems: 'center',
     justifyContent: 'center',
@@ -136,10 +155,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   mark: {
-    width: Layout.control.size - Spacing.two,
-    height: Layout.control.size - Spacing.two,
+    width: MARK,
+    height: MARK,
     borderRadius: Spacing.two,
-    borderWidth: 1,
+    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },

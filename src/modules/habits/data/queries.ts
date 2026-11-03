@@ -71,6 +71,7 @@ export function useCreateHabit() {
             name,
             emoji: input.emoji,
             timeOfDay: input.timeOfDay,
+            color: input.color ?? null,
             position: (last?.position ?? -1) + 1,
             createdAt: toIsoDate(new Date()),
           })
@@ -147,6 +148,7 @@ export function useUpdateHabit() {
             name,
             emoji: input.emoji,
             timeOfDay: input.timeOfDay,
+            color: input.color ?? null,
             ...(current.timeOfDay === input.timeOfDay
               ? {}
               : { position: (last?.position ?? -1) + 1 }),

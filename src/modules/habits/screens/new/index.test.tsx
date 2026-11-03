@@ -52,6 +52,21 @@ describe('HabitsNew', () => {
     expect(router.dismissTo).toHaveBeenCalledWith('/habits');
   });
 
+  it('saves the picked color, starting on Automatic', async () => {
+    await renderForm();
+    const user = userEvent.setup();
+
+    expect(screen.getByRole('radio', { name: 'Automatic color' })).toBeChecked();
+    await user.type(screen.getByTestId('habits-new-name'), 'Read');
+    await user.press(screen.getByRole('radio', { name: 'Pink' }));
+    await user.press(screen.getByTestId('habits-new-save'));
+
+    expect(mutate).toHaveBeenCalledWith(
+      { name: 'Read', emoji: '🎯', timeOfDay: 'anytime', color: 'pink' },
+      expect.anything(),
+    );
+  });
+
   // isPending only disables Save after a re-render, and a SQLite write settles at once, before the
   // form has animated out. Two quick taps must still save once (#42 review).
   it('saves once when Save is tapped twice quickly', async () => {

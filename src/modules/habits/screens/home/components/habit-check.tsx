@@ -8,6 +8,8 @@ type Props = {
   checked: boolean;
   /** Accessible name; the row shows the habit's name. */
   label: string;
+  /** The habit's own color: the fill when done, the outline when not. Without it, the accent. */
+  color?: string;
   onPress: () => void;
   testID: string;
 };
@@ -16,10 +18,10 @@ type Props = {
 const hitSlop = { top: 2, bottom: 2, left: 2, right: 2 };
 
 /**
- * Round "done today" check (decided at checkpoint A of #7): an accent-filled circle with a check
- * when done, a control ring when not. Private to Habits until a second module needs one.
+ * Round "done today" check (decided at checkpoint A of #7): a circle filled with the habit's color
+ * (accent without one) and a check when done, a ring in the color when not. Private to Habits until a second module needs one.
  */
-export function HabitCheck({ checked, label, onPress, testID }: Props) {
+export function HabitCheck({ checked, label, color, onPress, testID }: Props) {
   const theme = useTheme();
 
   return (
@@ -33,15 +35,17 @@ export function HabitCheck({ checked, label, onPress, testID }: Props) {
       style={({ pressed }) => [
         styles.circle,
         checked
-          ? { backgroundColor: theme.accent, borderColor: theme.accent }
-          : { backgroundColor: theme.control, borderColor: theme.controlBorder },
+          ? { backgroundColor: color ?? theme.accent, borderColor: color ?? theme.accent }
+          : color
+            ? { backgroundColor: theme.control, borderColor: color, borderWidth: 2 }
+            : { backgroundColor: theme.control, borderColor: theme.controlBorder },
         pressed && styles.pressed,
       ]}>
       {checked && (
         <SymbolView
           name={{ ios: 'checkmark', android: 'check', web: 'check' }}
           size={Layout.control.glyph}
-          tintColor={theme.onAccent}
+          tintColor={color ? theme.background : theme.onAccent}
         />
       )}
     </Pressable>

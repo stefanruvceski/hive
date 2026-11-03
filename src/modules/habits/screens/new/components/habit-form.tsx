@@ -4,20 +4,21 @@ import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
-import { GlassButton } from '@/components/ui/glass-button';
 import { PrimaryButton } from '@/components/ui/primary-button';
+import { ScreenHeader } from '@/components/ui/screen-header';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Wallpaper } from '@/components/ui/wallpaper';
 import { Fonts, Layout, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+import { ColorGrid } from './color-grid';
 import { EmojiGrid } from './emoji-grid';
 import { FormGroup } from './form-group';
 import type { TimeOfDay } from '../../../data/schema';
 import {
   canSave,
+  allHabitEmojis,
   defaultEmoji,
-  habitEmojis,
   type NewHabit,
   timeOfDayOptions,
 } from '../../../domain/habits';
@@ -36,13 +37,15 @@ type Props = {
   children?: ReactNode;
 };
 
-/** The habit form shared by Add and Edit: name, emoji, part of the day. */
+/** The habit form shared by Add and Edit: name, emoji, color, part of the day. */
 export function HabitForm({ testID, title, initial, onSave, isPending, isError, children }: Props) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   // The draft lives here until Save (07 §7); a failed save keeps it.
   const [name, setName] = useState(initial?.name ?? '');
   const [emoji, setEmoji] = useState(initial?.emoji ?? defaultEmoji);
+  // A `HabitColors` key; undefined = Automatic (from the habit's id).
+  const [color, setColor] = useState<string | undefined>(initial?.color);
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>(initial?.timeOfDay ?? 'anytime');
   // `isPending` disables Save only after a re-render; this stops a second quick tap before it.
   // Cleared only on error: after a save the form is on its way out and stays locked.
@@ -56,7 +59,7 @@ export function HabitForm({ testID, title, initial, onSave, isPending, isError, 
     saving.current = true;
     // The mutation trims and validates the name (07 §7).
     onSave(
-      { name, emoji, timeOfDay },
+      { name, emoji, timeOfDay, color },
       {
         onSuccess: close,
         onError: () => {
@@ -69,23 +72,28 @@ export function HabitForm({ testID, title, initial, onSave, isPending, isError, 
   return (
     <Wallpaper style={styles.container} testID={`${testID}-screen`}>
       <SafeAreaView edges={['top', 'right', 'left']} style={styles.container}>
+        <View style={styles.headerWrap}>
+          <ScreenHeader
+            title={title}
+            onBack={close}
+            backTestID={`${testID}-back`}
+            titleTestID={`${testID}-title`}
+            trailing={
+              <PrimaryButton
+                label="Save"
+                size="compact"
+                onPress={save}
+                disabled={!canSave(name) || isPending}
+                testID={`${testID}-save`}
+              />
+            }
+          />
+        </View>
         <ScrollView
           keyboardShouldPersistTaps="handled"
           automaticallyAdjustKeyboardInsets
           contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Spacing.five }]}
           testID={`${testID}-scroll`}>
-          <View style={styles.header}>
-            <GlassButton
-              icon={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
-              label="Back"
-              onPress={close}
-              testID={`${testID}-back`}
-            />
-          </View>
-          <ThemedText type="title" role="heading" style={styles.title} testID={`${testID}-title`}>
-            {title}
-          </ThemedText>
-
           <FormGroup title="Name" testID={`${testID}-name-group`}>
             <View style={styles.nameRow}>
               <ThemedText aria-hidden>{emoji}</ThemedText>
@@ -108,11 +116,15 @@ export function HabitForm({ testID, title, initial, onSave, isPending, isError, 
 
           <FormGroup title="Emoji" padded testID={`${testID}-emoji-group`}>
             <EmojiGrid
-              emojis={habitEmojis}
+              emojis={allHabitEmojis}
               value={emoji}
               onChange={setEmoji}
               testID={`${testID}-emoji`}
             />
+          </FormGroup>
+
+          <FormGroup title="Color" padded testID={`${testID}-color-group`}>
+            <ColorGrid value={color} onChange={setColor} testID={`${testID}-color`} />
           </FormGroup>
 
           <FormGroup title="Part of the day" padded testID={`${testID}-time-group`}>
@@ -135,12 +147,6 @@ export function HabitForm({ testID, title, initial, onSave, isPending, isError, 
               {"Couldn't save the habit. Try again."}
             </ThemedText>
           )}
-          <PrimaryButton
-            label="Save"
-            onPress={save}
-            disabled={!canSave(name) || isPending}
-            testID={`${testID}-save`}
-          />
           {children}
         </ScrollView>
       </SafeAreaView>
@@ -160,13 +166,11 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.two,
     gap: Spacing.two,
   },
-  header: {
-    flexDirection: 'row',
-  },
-  title: {
-    marginHorizontal: Spacing.one,
-    marginTop: Spacing.one,
-    marginBottom: Spacing.three,
+  headerWrap: {
+    width: '100%',
+    maxWidth: MaxContentWidth,
+    alignSelf: 'center',
+    paddingHorizontal: Layout.screenMargin,
   },
   nameRow: {
     minHeight: Layout.listRow.minHeight,
