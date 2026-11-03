@@ -67,6 +67,67 @@ describe('HabitsNew', () => {
     );
   });
 
+  it('saves a weekly schedule', async () => {
+    await renderForm();
+    const user = userEvent.setup();
+
+    await user.type(screen.getByTestId('habits-new-name'), 'Read');
+    await user.press(screen.getByTestId('habits-new-schedule-type-weekly'));
+    await user.press(screen.getByRole('button', { name: 'More times' }));
+    await user.press(screen.getByTestId('habits-new-save'));
+
+    expect(mutate).toHaveBeenCalledWith(
+      {
+        name: 'Read',
+        emoji: '🎯',
+        timeOfDay: 'anytime',
+        schedule: { type: 'weekly', days: [], times: 4 },
+      },
+      expect.anything(),
+    );
+  });
+
+  it('saves chosen weekdays, and needs at least one', async () => {
+    await renderForm();
+    const user = userEvent.setup();
+
+    await user.type(screen.getByTestId('habits-new-name'), 'Gym');
+    await user.press(screen.getByTestId('habits-new-schedule-type-weekdays'));
+    await user.press(screen.getByRole('checkbox', { name: 'Monday' }));
+    await user.press(screen.getByTestId('habits-new-save'));
+    expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({ schedule: { type: 'weekdays', days: [2, 3, 4, 5], times: 3 } }),
+      expect.anything(),
+    );
+
+    for (const name of ['Tuesday', 'Wednesday', 'Thursday', 'Friday']) {
+      await user.press(screen.getByRole('checkbox', { name }));
+    }
+    expect(screen.getByTestId('habits-new-save')).toBeDisabled();
+  });
+
+  it('saves a goal once it has a target', async () => {
+    await renderForm();
+    const user = userEvent.setup();
+
+    await user.type(screen.getByTestId('habits-new-name'), 'Water');
+    await user.press(screen.getByRole('switch', { name: 'Measure an amount' }));
+    expect(screen.getByTestId('habits-new-save')).toBeDisabled();
+    await user.type(screen.getByTestId('habits-new-goal-unit'), 'glasses');
+    await user.type(screen.getByTestId('habits-new-goal-target'), '8');
+    await user.press(screen.getByTestId('habits-new-save'));
+
+    expect(mutate).toHaveBeenCalledWith(
+      {
+        name: 'Water',
+        emoji: '🎯',
+        timeOfDay: 'anytime',
+        goal: { unit: 'glasses', target: 8, aggregation: 'sum' },
+      },
+      expect.anything(),
+    );
+  });
+
   // isPending only disables Save after a re-render, and a SQLite write settles at once, before the
   // form has animated out. Two quick taps must still save once (#42 review).
   it('saves once when Save is tapped twice quickly', async () => {

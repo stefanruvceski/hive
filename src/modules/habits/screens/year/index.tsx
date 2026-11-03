@@ -17,6 +17,7 @@ import { useToday } from '@/hooks/use-today';
 import { HabitFilter } from './habit-filter';
 import { YearHeatmap } from './heatmap';
 import { type YearData, useYear } from '../../data/year-queries';
+import { amountFractions, countingCompletions, isMeasurable } from '../../domain/goal';
 import { weekdayNames, yearInsights, yearSummary } from '../../domain/year';
 import { habitColor } from '../../habit-color';
 
@@ -165,20 +166,30 @@ function Dashboard({
 }) {
   const scheme = useThemeName();
   const selected = data.habits.find((habit) => habit.id === selectedId);
+  // A measurable habit counts on the days it reached its target.
+  const counted = countingCompletions(data.habits, data.completions);
   const shown = selected
     ? {
         habits: [selected],
-        completions: data.completions.filter(({ habitId }) => habitId === selected.id),
+        completions: counted.filter(({ habitId }) => habitId === selected.id),
       }
-    : data;
+    : { habits: data.habits, completions: counted };
   const insights = yearInsights({ year, today, ...shown });
+  // One measurable habit: its heatmap also shows the days that fell short of the target.
+  const fractions =
+    selected && isMeasurable(selected)
+      ? amountFractions(
+          selected.target ?? 0,
+          data.completions.filter(({ habitId }) => habitId === selected.id),
+        )
+      : undefined;
   // One habit alone needs no filter.
   const filter =
     data.habits.length > 1 ? (
       <HabitFilter habits={data.habits} selectedId={selected?.id ?? null} onSelect={onSelect} />
     ) : null;
 
-  if (insights.total === 0) {
+  if (insights.total === 0 && !fractions?.size) {
     return (
       <>
         {filter}
@@ -217,9 +228,9 @@ function Dashboard({
     },
     longestStreak && {
       id: 'longest-streak',
-      value: `${longestStreak.length} d`,
+      value: `${longestStreak.length} ${longestStreak.unit === 'week' ? 'wk' : 'd'}`,
       caption: selected ? 'Longest streak' : `Longest streak · ${longestStreak.name}`,
-      sentence: `Your longest streak is ${plural(longestStreak.length, 'day')}, for ${longestStreak.name}.`,
+      sentence: `Your longest streak is ${plural(longestStreak.length, longestStreak.unit ?? 'day')}, for ${longestStreak.name}.`,
     },
     !selected &&
       mostCompleted && {
@@ -239,6 +250,7 @@ function Dashboard({
           habitCount={data.habits.length}
           perDay={insights.perDay}
           color={selected ? habitColor(selected, scheme) : undefined}
+          fractions={fractions}
           summary={yearSummary(year, total, activeDays, selected?.name)}
           focusDate={today.startsWith(`${year}-`) ? today : undefined}
         />

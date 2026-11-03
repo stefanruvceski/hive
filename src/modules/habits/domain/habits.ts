@@ -1,9 +1,19 @@
 // Pure Habits logic: no React, no database. Tested directly in habits.test.ts.
 
+import type { Goal } from './goal';
+import type { Schedule } from './schedule';
 import type { TimeOfDay } from '../data/schema';
 
 /** `color` is a `HabitColors` key; left out = automatic. */
-export type NewHabit = { name: string; emoji: string; timeOfDay: TimeOfDay; color?: string };
+/** `schedule` and `goal` are left out for a daily yes/no habit. */
+export type NewHabit = {
+  name: string;
+  emoji: string;
+  timeOfDay: TimeOfDay;
+  color?: string;
+  schedule?: Schedule;
+  goal?: Goal;
+};
 
 /** The parts of the day in list order, with their labels. */
 export const timeOfDayOptions: readonly { value: TimeOfDay; label: string }[] = [

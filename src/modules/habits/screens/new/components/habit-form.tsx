@@ -14,7 +14,10 @@ import { useTheme } from '@/hooks/use-theme';
 import { ColorGrid } from './color-grid';
 import { EmojiGrid } from './emoji-grid';
 import { FormGroup } from './form-group';
+import { GoalField } from './goal-field';
+import { ScheduleField } from './schedule-field';
 import type { TimeOfDay } from '../../../data/schema';
+import { type Goal, isValidGoal } from '../../../domain/goal';
 import {
   canSave,
   allHabitEmojis,
@@ -22,6 +25,10 @@ import {
   type NewHabit,
   timeOfDayOptions,
 } from '../../../domain/habits';
+import { type Schedule, isValidSchedule } from '../../../domain/schedule';
+
+/** A new habit is daily; the weekly count a switch to Weekly starts from. */
+const dailySchedule: Schedule = { type: 'daily', days: [], times: 3 };
 
 type Props = {
   /** Prefix of every testID: `habits-new` for the add form, `habits-edit` for the edit form. */
@@ -37,7 +44,7 @@ type Props = {
   children?: ReactNode;
 };
 
-/** The habit form shared by Add and Edit: name, emoji, color, part of the day. */
+/** The habit form shared by Add and Edit: name, emoji, color, part of the day, schedule, goal. */
 export function HabitForm({ testID, title, initial, onSave, isPending, isError, children }: Props) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -46,10 +53,14 @@ export function HabitForm({ testID, title, initial, onSave, isPending, isError, 
   const [emoji, setEmoji] = useState(initial?.emoji ?? defaultEmoji);
   // A `HabitColors` key; undefined = Automatic (from the habit's id).
   const [color, setColor] = useState<string | undefined>(initial?.color);
+  const [schedule, setSchedule] = useState<Schedule>(initial?.schedule ?? dailySchedule);
+  const [goal, setGoal] = useState<Goal | undefined>(initial?.goal);
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>(initial?.timeOfDay ?? 'anytime');
   // `isPending` disables Save only after a re-render; this stops a second quick tap before it.
   // Cleared only on error: after a save the form is on its way out and stays locked.
   const saving = useRef(false);
+
+  const valid = canSave(name) && isValidSchedule(schedule) && (!goal || isValidGoal(goal));
 
   // Back and Save both land on the list, also when the form was opened by deep link.
   const close = () => router.dismissTo('/habits');
@@ -59,7 +70,14 @@ export function HabitForm({ testID, title, initial, onSave, isPending, isError, 
     saving.current = true;
     // The mutation trims and validates the name (07 §7).
     onSave(
-      { name, emoji, timeOfDay, color },
+      {
+        name,
+        emoji,
+        timeOfDay,
+        color,
+        schedule: schedule.type === 'daily' ? undefined : schedule,
+        goal,
+      },
       {
         onSuccess: close,
         onError: () => {
@@ -83,7 +101,7 @@ export function HabitForm({ testID, title, initial, onSave, isPending, isError, 
                 label="Save"
                 size="compact"
                 onPress={save}
-                disabled={!canSave(name) || isPending}
+                disabled={!valid || isPending}
                 testID={`${testID}-save`}
               />
             }
@@ -114,16 +132,17 @@ export function HabitForm({ testID, title, initial, onSave, isPending, isError, 
             </View>
           </FormGroup>
 
-          <FormGroup title="Emoji" padded testID={`${testID}-emoji-group`}>
+          <FormGroup padded testID={`${testID}-emoji-group`}>
             <EmojiGrid
               emojis={allHabitEmojis}
               value={emoji}
               onChange={setEmoji}
               testID={`${testID}-emoji`}
+              rows={3}
             />
           </FormGroup>
 
-          <FormGroup title="Color" padded testID={`${testID}-color-group`}>
+          <FormGroup padded testID={`${testID}-color-group`}>
             <ColorGrid value={color} onChange={setColor} testID={`${testID}-color`} />
           </FormGroup>
 
@@ -135,6 +154,14 @@ export function HabitForm({ testID, title, initial, onSave, isPending, isError, 
               onChange={setTimeOfDay}
               testID={`${testID}-time`}
             />
+          </FormGroup>
+
+          <FormGroup padded testID={`${testID}-schedule-group`}>
+            <ScheduleField value={schedule} onChange={setSchedule} testID={`${testID}-schedule`} />
+          </FormGroup>
+
+          <FormGroup padded testID={`${testID}-goal-group`}>
+            <GoalField value={goal} onChange={setGoal} testID={`${testID}-goal`} />
           </FormGroup>
 
           {isError && (

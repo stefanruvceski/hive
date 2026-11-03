@@ -8,8 +8,10 @@ import { Layout, Spacing } from '@/constants/theme';
 import { useTheme, useThemeName } from '@/hooks/use-theme';
 
 import type { Habit } from '../../../data/queries';
+import { amountProgress, isMeasurable, shortAmount } from '../../../domain/goal';
 import { type MonthDay, cellState } from '../../../domain/month';
-import { habitColor } from '../../../habit-color';
+import { isScheduled, scheduleOf } from '../../../domain/schedule';
+import { habitColor, withAlpha } from '../../../habit-color';
 
 type Props = {
   habits: Habit[];
@@ -18,6 +20,10 @@ type Props = {
   doneDates: ReadonlyMap<string, ReadonlySet<string>>;
   today: string;
   onToggle: (habitId: string, date: string, done: boolean) => void;
+  /** What a measurable habit was given each day: habit id → date → amount. */
+  amounts?: ReadonlyMap<string, ReadonlyMap<string, number>>;
+  /** A measurable habit asks for an amount instead of toggling. */
+  onOpenAmount?: (habitId: string, date: string) => void;
 };
 
 const none: ReadonlySet<string> = new Set();
@@ -30,7 +36,15 @@ const weekdayInitials = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
  * Habits as rows, days as columns. The names stay put while the days scroll sideways, so the grid
  * fits a narrow phone. A cell is a 48 pt touch target; future days can't be touched.
  */
-export function MonthGrid({ habits, days, doneDates, today, onToggle }: Props) {
+export function MonthGrid({
+  habits,
+  days,
+  doneDates,
+  amounts,
+  today,
+  onToggle,
+  onOpenAmount,
+}: Props) {
   const theme = useTheme();
   const themeName = useThemeName();
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
@@ -86,6 +100,14 @@ export function MonthGrid({ habits, days, doneDates, today, onToggle }: Props) {
                 {days.map(({ date, day }) => {
                   const state = cellState(date, doneDates.get(habit.id) ?? none, today);
                   const done = state === 'done';
+                  // A day off is fainter but can still be marked.
+                  const off = !done && !isScheduled(scheduleOf(habit), date);
+                  // A measurable day short of its target shows the amount and how far it got.
+                  const amount = isMeasurable(habit)
+                    ? amounts?.get(habit.id)?.get(date)
+                    : undefined;
+                  const partial = !done && amount !== undefined;
+                  const color = habitColor(habit, themeName);
                   return (
                     <Pressable
                       key={date}
@@ -94,7 +116,11 @@ export function MonthGrid({ habits, days, doneDates, today, onToggle }: Props) {
                       aria-disabled={state === 'future'}
                       aria-label={`${habit.name}, day ${day}`}
                       disabled={state === 'future'}
-                      onPress={() => onToggle(habit.id, date, !done)}
+                      onPress={() =>
+                        isMeasurable(habit)
+                          ? onOpenAmount?.(habit.id, date)
+                          : onToggle(habit.id, date, !done)
+                      }
                       testID={`habits-month-cell-${habit.id}-${date}`}
                       style={[
                         styles.cell,
@@ -104,11 +130,27 @@ export function MonthGrid({ habits, days, doneDates, today, onToggle }: Props) {
                         <View
                           style={[
                             styles.mark,
-                            { borderColor: habitColor(habit, themeName) },
-                            done && { backgroundColor: habitColor(habit, themeName) },
-                            state === 'future' && styles.future,
+                            { borderColor: color },
+                            done && { backgroundColor: color },
+                            (state === 'future' || off) && styles.future,
                             pressed && styles.pressed,
                           ]}>
+                          {partial && (
+                            <View
+                              style={[
+                                styles.fill,
+                                {
+                                  backgroundColor: withAlpha(color, 0.4),
+                                  height: `${amountProgress(amount, habit.target ?? 0) * 100}%`,
+                                },
+                              ]}
+                            />
+                          )}
+                          {partial && (
+                            <ThemedText type="footnote" numberOfLines={1}>
+                              {shortAmount(amount)}
+                            </ThemedText>
+                          )}
                           {done && (
                             <SymbolView
                               name={{ ios: 'checkmark', android: 'check', web: 'check' }}
@@ -159,8 +201,15 @@ const styles = StyleSheet.create({
     height: MARK,
     borderRadius: Spacing.two,
     borderWidth: 2,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  fill: {
+    position: 'absolute',
+    start: 0,
+    end: 0,
+    bottom: 0,
   },
   future: {
     opacity: 0.35,

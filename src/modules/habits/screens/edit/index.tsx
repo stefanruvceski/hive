@@ -8,6 +8,8 @@ import { Wallpaper } from '@/components/ui/wallpaper';
 import { Layout, MaxContentWidth } from '@/constants/theme';
 
 import { useArchiveHabit, useHabits, useUpdateHabit } from '../../data/queries';
+import { isMeasurable } from '../../domain/goal';
+import { scheduleOf } from '../../domain/schedule';
 import { TextButton } from '../home/components/text-button';
 import { HabitForm } from '../new/components/habit-form';
 
@@ -17,6 +19,7 @@ export function HabitsEdit({ id }: { id: string }) {
   const update = useUpdateHabit();
   const archive = useArchiveHabit();
   const habit = habits.data?.find((item) => item.id === id);
+  const schedule = scheduleOf(habit ?? {});
 
   const archiveHabit = () =>
     archive.mutate(id, {
@@ -68,6 +71,14 @@ export function HabitsEdit({ id }: { id: string }) {
         emoji: habit.emoji,
         timeOfDay: habit.timeOfDay,
         color: habit.color ?? undefined,
+        schedule: schedule.type === 'daily' ? undefined : schedule,
+        goal: isMeasurable(habit)
+          ? {
+              unit: habit.unit ?? '',
+              target: habit.target ?? 0,
+              aggregation: habit.aggregation,
+            }
+          : undefined,
       }}
       onSave={(draft, callbacks) => update.mutate({ id, ...draft }, callbacks)}
       isPending={update.isPending}

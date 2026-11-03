@@ -218,6 +218,25 @@ describe('yearInsights', () => {
   });
 });
 
+describe('yearInsights with schedules', () => {
+  it('lets days off keep a weekday streak, and measures a weekly habit in weeks', () => {
+    const result = yearInsights({
+      year: 2026,
+      habits: [
+        { id: 'gym', name: 'Gym', scheduleType: 'weekdays', scheduleDays: '1,3,5' },
+        { id: 'run', name: 'Run', scheduleType: 'weekly', scheduleTimes: 2 },
+      ],
+      completions: [
+        ...done('gym', '2026-11-02', '2026-11-04', '2026-11-06'),
+        ...done('run', '2026-11-02', '2026-11-03', '2026-11-09', '2026-11-10', '2026-11-16'),
+      ],
+      today: '2026-12-31',
+    });
+    // Gym: 3 days in a row (days off between). Run: 2 weeks at the target = 14 days' worth.
+    expect(result.longestStreak).toEqual({ name: 'Run', length: 2, unit: 'week' });
+  });
+});
+
 describe('yearSummary', () => {
   it.each([
     [2026, 143, 97, 'Year 2026, 143 completions on 97 active days'],

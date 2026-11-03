@@ -5,7 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { HabitsMonth } from './index';
 import { useMonthCompletions, useSetMonthCompletion } from '../../data/month-queries';
-import { useHabits } from '../../data/queries';
+import { useHabits, useSetAmount } from '../../data/queries';
 
 // The database boundary: the module's query hooks (09 §5). Domain logic is tested without mocks.
 jest.mock('../../data/queries');
@@ -88,6 +88,66 @@ describe('HabitsMonth', () => {
       { habitId: 'read', date: '2026-11-12', done: true },
       expect.anything(),
     );
+  });
+
+  it('asks for an amount on a measurable habit, for the day pressed', async () => {
+    const logAmount = jest.fn();
+    jest.mocked(useSetAmount).mockReturnValue({ mutate: logAmount } as never);
+    mockedHabits.mockReturnValue({
+      data: [{ ...habit('read', 'Read'), unit: 'pages', target: 10 }],
+    } as unknown as ReturnType<typeof useHabits>);
+    mockedCompletions.mockReturnValue({
+      data: [{ habitId: 'read', date: '2026-11-03', amount: 4 }],
+    } as ReturnType<typeof useMonthCompletions>);
+    const user = userEvent.setup();
+    await renderMonth();
+
+    expect(cell('2026-11-03')).not.toBeChecked();
+    await user.press(cell('2026-11-03'));
+    expect(screen.getByTestId('habits-amount-input').props.value).toBe('4');
+    await user.press(screen.getByTestId('habits-amount-plus'));
+    await user.press(screen.getByTestId('habits-amount-save'));
+    expect(logAmount).toHaveBeenCalledWith(
+      { habitId: 'read', date: '2026-11-03', amount: 5 },
+      expect.anything(),
+    );
+    expect(mutate).not.toHaveBeenCalled();
+  });
+
+  it('writes a partial amount in the cell, and nothing but the check at the target', async () => {
+    mockedHabits.mockReturnValue({
+      data: [{ ...habit('read', 'Read'), unit: 'pages', target: 10 }],
+    } as unknown as ReturnType<typeof useHabits>);
+    mockedCompletions.mockReturnValue({
+      data: [
+        { habitId: 'read', date: '2026-11-03', amount: 4 },
+        { habitId: 'read', date: '2026-11-04', amount: 10 },
+        { habitId: 'read', date: '2026-11-05', amount: 1250 },
+      ],
+    } as ReturnType<typeof useMonthCompletions>);
+    await renderMonth();
+
+    expect(within(cell('2026-11-03')).getByText('4')).toBeOnTheScreen();
+    expect(cell('2026-11-03')).not.toBeChecked();
+    expect(within(cell('2026-11-04')).queryByText('10')).not.toBeOnTheScreen();
+    expect(cell('2026-11-04')).toBeChecked();
+    expect(within(cell('2026-11-06')).queryByText(/\d/)).not.toBeOnTheScreen();
+  });
+
+  it('counts a measurable day as done once it reaches the target', async () => {
+    mockedHabits.mockReturnValue({
+      data: [{ ...habit('read', 'Read'), unit: 'pages', target: 10 }],
+    } as unknown as ReturnType<typeof useHabits>);
+    mockedCompletions.mockReturnValue({
+      data: [
+        { habitId: 'read', date: '2026-11-03', amount: 10 },
+        { habitId: 'read', date: '2026-11-04', amount: 9 },
+      ],
+    } as ReturnType<typeof useMonthCompletions>);
+    await renderMonth();
+
+    expect(cell('2026-11-03')).toBeChecked();
+    expect(cell('2026-11-04')).not.toBeChecked();
   });
 
   it('does not toggle a future day', async () => {

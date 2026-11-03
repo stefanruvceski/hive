@@ -20,3 +20,10 @@ export function habitColor(
   const color = chosen ?? HabitColors[habitColorIndex(habit.id, automaticCount)] ?? HabitColors[0];
   return color[scheme];
 }
+
+/** A `#RRGGBB` color with an opacity of 0–1 (as `#RRGGBBAA`): the partial fill of an amount. */
+export function withAlpha(color: string, alpha: number): string {
+  return `${color}${Math.round(alpha * 255)
+    .toString(16)
+    .padStart(2, '0')}`;
+}

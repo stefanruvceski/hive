@@ -1,0 +1,40 @@
+# Habits schedules (#9) and measurable habits (#10): add a habit that is due on chosen days and
+# measured against a daily target, log an amount from the list, and see it done at the target.
+# Run locally: pnpm test:e2e   (needs a dev build installed on the simulator/emulator)
+appId: com.ruvceski.hive.dev
+tags:
+  - habits
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: 'home-open-habits'
+- tapOn:
+    id: 'habits-empty-add'
+- tapOn:
+    id: 'habits-new-name'
+- inputText: 'Water'
+- hideKeyboard
+# Every day, with a goal of 2 glasses.
+- tapOn:
+    id: 'habits-new-goal-switch'
+- tapOn:
+    id: 'habits-new-goal-unit'
+- inputText: 'glasses'
+- tapOn:
+    id: 'habits-new-goal-target'
+- inputText: '2'
+- hideKeyboard
+- tapOn:
+    id: 'habits-new-save'
+- assertVisible: 'Water'
+# Log 2 glasses: the circle turns into a check.
+- tapOn:
+    id: 'habits-amount-.*'
+- tapOn:
+    id: 'habits-amount-input'
+- inputText: '2'
+- tapOn:
+    id: 'habits-amount-save'
+- assertVisible:
+    id: 'habits-amount-.*-done'

@@ -5,11 +5,31 @@ import { getDb } from '@/lib/db/client';
 import { toIsoDate } from '@/utils/format-date';
 
 import { habitsCompletions, habitsHabits } from './schema';
+import { type AmountChange, type Goal, setAmount } from '../domain/goal';
 import { type NewHabit, newHabitId, normalizeName } from '../domain/habits';
 import { type Direction, endPosition, moveWithinPart } from '../domain/order';
+import { type Schedule, formatDays } from '../domain/schedule';
 import { type Completion, setCompletion } from '../domain/streak';
 
 export type Habit = typeof habitsHabits.$inferSelect;
+
+/** The columns a habit's schedule is stored in; none means daily. */
+function scheduleColumns(schedule?: Schedule) {
+  return {
+    scheduleType: schedule?.type ?? ('daily' as const),
+    scheduleDays: schedule?.type === 'weekdays' ? formatDays(schedule.days) : null,
+    scheduleTimes: schedule?.type === 'weekly' ? schedule.times : null,
+  };
+}
+
+/** The columns a measurable habit's goal is stored in; none means a plain yes/no habit. */
+function goalColumns(goal?: Goal) {
+  return {
+    unit: goal?.unit.trim() || null,
+    target: goal?.target ?? null,
+    aggregation: goal?.aggregation ?? ('sum' as const),
+  };
+}
 
 // Hierarchical key factory — every key for this module comes from here (07 §1).
 export const habitsKeys = {
@@ -72,6 +92,8 @@ export function useCreateHabit() {
             emoji: input.emoji,
             timeOfDay: input.timeOfDay,
             color: input.color ?? null,
+            ...scheduleColumns(input.schedule),
+            ...goalColumns(input.goal),
             position: (last?.position ?? -1) + 1,
             createdAt: toIsoDate(new Date()),
           })
@@ -127,6 +149,48 @@ export function useSetCompletion() {
   });
 }
 
+/**
+ * Logs how much of a measurable habit was done on a day; `null` clears it. Optimistic on every
+ * completions query (the list and each opened month), rolls back if the write fails, and settling
+ * refreshes them (streaks, Today).
+ */
+export function useSetAmount() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ habitId, date, amount }: AmountChange) => {
+      if (amount === null) {
+        getDb()
+          .delete(habitsCompletions)
+          .where(and(eq(habitsCompletions.habitId, habitId), eq(habitsCompletions.date, date)))
+          .run();
+        return;
+      }
+      getDb()
+        .insert(habitsCompletions)
+        .values({ habitId, date, amount })
+        .onConflictDoUpdate({
+          target: [habitsCompletions.habitId, habitsCompletions.date],
+          set: { amount },
+        })
+        .run();
+    },
+    onMutate: async (change) => {
+      await queryClient.cancelQueries({ queryKey: habitsKeys.completions() });
+      const previous = queryClient.getQueriesData<Completion[]>({
+        queryKey: habitsKeys.completions(),
+      });
+      queryClient.setQueriesData<Completion[]>({ queryKey: habitsKeys.completions() }, (old) =>
+        old ? setAmount(old, change) : old,
+      );
+      return { previous };
+    },
+    onError: (_error, _change, context) => {
+      for (const [key, data] of context?.previous ?? []) queryClient.setQueryData(key, data);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: habitsKeys.completions() }),
+  });
+}
+
 export type HabitEdit = NewHabit & { id: string };
 
 /** Saves the edit form. A habit that changes part of the day goes to the end of the new part. */
@@ -149,6 +213,8 @@ export function useUpdateHabit() {
             emoji: input.emoji,
             timeOfDay: input.timeOfDay,
             color: input.color ?? null,
+            ...scheduleColumns(input.schedule),
+            ...goalColumns(input.goal),
             ...(current.timeOfDay === input.timeOfDay
               ? {}
               : { position: (last?.position ?? -1) + 1 }),

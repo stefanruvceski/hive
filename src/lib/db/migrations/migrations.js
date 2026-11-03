@@ -12,6 +12,7 @@ import m0007 from './0007_chubby_quasimodo.sql';
 import m0008 from './0008_married_veda.sql';
 import m0009 from './0009_polite_tiger_shark.sql';
 import m0010 from './0010_naive_jack_flag.sql';
+import m0011 from './0011_glossy_dark_phoenix.sql';
 
   export default {
     journal,
@@ -26,7 +27,8 @@ m0006,
 m0007,
 m0008,
 m0009,
-m0010
+m0010,
+m0011
     }
   }
   
