@@ -10,13 +10,21 @@ import { HabitRow } from './habit-row';
 import { SwipeRow } from './swipe-row';
 import type { Habit } from '../../../data/queries';
 import type { TimeOfDay } from '../../../data/schema';
+import { isMeasurable } from '../../../domain/goal';
 import { canMove, type Direction } from '../../../domain/order';
-import { currentStreak } from '../../../domain/streak';
+import { scheduleOf, streakOf, weeklyProgress } from '../../../domain/schedule';
 import type { SwipeSide } from '../../../domain/swipe';
 
 type Props = {
   timeOfDay: TimeOfDay;
+  /** Replaces `timeOfDay` in the section's testID (the "Not today" section). */
+  id?: string;
   label: string;
+  /** Not due today: the rows are drawn fainter. */
+  dimmed?: boolean;
+  /** What is logged today for the measurable habits. */
+  amounts?: ReadonlyMap<string, number>;
+  onOpenAmount?: (habitId: string) => void;
   habits: Habit[];
   /** Each habit's done dates (`doneDatesByHabit`). */
   doneDates: ReadonlyMap<string, ReadonlySet<string>>;
@@ -33,10 +41,28 @@ type Props = {
 
 const none: ReadonlySet<string> = new Set();
 
+/** The streak, the weekly progress, and the goal with today's amount, of one habit's row. */
+function rowFacts(habit: Habit, done: ReadonlySet<string>, today: string, amount?: number) {
+  const schedule = scheduleOf(habit);
+  const streak = streakOf(schedule, done, today);
+  const week = schedule.type === 'weekly' ? weeklyProgress(schedule, done, today) : undefined;
+  const target = isMeasurable(habit) ? (habit.target ?? 0) : undefined;
+  return {
+    streak: streak.value,
+    streakUnit: streak.unit,
+    note: week ? `${week.done} of ${week.times} this week` : undefined,
+    goal: target === undefined ? undefined : { target, amount },
+  };
+}
+
 /** A part of the day and its habits: a header over a glass list, as the Settings list groups. */
 export function HabitSection({
   timeOfDay,
+  id,
   label,
+  dimmed = false,
+  amounts,
+  onOpenAmount,
   habits,
   doneDates,
   today,
@@ -50,7 +76,7 @@ export function HabitSection({
   const theme = useTheme();
 
   return (
-    <View style={styles.section} testID={`habits-section-${timeOfDay}`}>
+    <View style={styles.section} testID={`habits-section-${id ?? timeOfDay}`}>
       <ThemedText type="listHeader" role="heading" style={styles.inset}>
         {label}
       </ThemedText>
@@ -69,7 +95,9 @@ export function HabitSection({
               <HabitRow
                 habit={habit}
                 doneToday={(doneDates.get(habit.id) ?? none).has(today)}
-                streak={currentStreak(doneDates.get(habit.id) ?? none, today)}
+                {...rowFacts(habit, doneDates.get(habit.id) ?? none, today, amounts?.get(habit.id))}
+                dimmed={dimmed}
+                onOpenAmount={() => onOpenAmount?.(habit.id)}
                 onToggle={(done) => onToggle(habit.id, done)}
                 reorder={
                   onMove

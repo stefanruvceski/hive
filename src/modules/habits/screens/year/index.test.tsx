@@ -102,6 +102,21 @@ describe('HabitsYear', () => {
     expect(screen.queryByTestId('habits-year-filter')).not.toBeOnTheScreen();
   });
 
+  it('counts a measurable habit only on days it reached its target', async () => {
+    jest.mocked(useYear).mockReturnValue({
+      data: {
+        habits: [{ id: 'water', name: 'Water', target: 8 }],
+        completions: [
+          { habitId: 'water', date: '2026-06-01', amount: 8 },
+          { habitId: 'water', date: '2026-06-02', amount: 3 },
+        ],
+      },
+    } as never);
+    await renderYear();
+
+    expect(screen.getByLabelText('Year 2026, 1 completion on 1 active day')).toBeOnTheScreen();
+  });
+
   it('shows an empty state for a year without completions', async () => {
     jest.mocked(useYear).mockReturnValue({ data: { habits, completions: [] } } as never);
     await renderYear();

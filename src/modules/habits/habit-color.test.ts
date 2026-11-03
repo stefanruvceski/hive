@@ -1,6 +1,6 @@
 import { HabitColors } from '@/constants/theme';
 
-import { habitColor, habitColorOptions } from './habit-color';
+import { habitColor, habitColorOptions, withAlpha } from './habit-color';
 
 describe('habitColorOptions', () => {
   it('has 14 distinct keys and colors per theme', () => {
@@ -25,5 +25,17 @@ describe('habitColor', () => {
       expect(firstEight).toContain(result);
       expect(result).toBe(habitColor({ id: 'read', color }, 'dark'));
     }
+  });
+});
+
+describe('withAlpha', () => {
+  const base = HabitColors[0].dark;
+
+  it.each([
+    [1, 'ff'],
+    [0, '00'],
+    [0.5, '80'],
+  ])('at %d adds %s', (alpha, suffix) => {
+    expect(withAlpha(base, alpha)).toBe(`${base}${suffix}`);
   });
 });

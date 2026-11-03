@@ -19,9 +19,10 @@ import {
   useMonthCompletions,
   useSetMonthCompletion,
 } from '../../data/month-queries';
-import { useHabits } from '../../data/queries';
+import { useHabits, useSetAmount } from '../../data/queries';
+import { amountsByHabit, doneDatesFor } from '../../domain/goal';
 import { canShowNext, monthDays, monthOf, monthTitle, shiftMonth } from '../../domain/month';
-import { doneDatesByHabit } from '../../domain/streak';
+import { AmountSheet } from '../home/components/amount-sheet';
 
 /** The month grid: every habit by every day of a month; past days can be fixed. Header as Habits. */
 export function HabitsMonth() {
@@ -98,6 +99,25 @@ function MonthContent({ month, today }: { month: ReturnType<typeof monthOf>; tod
   const completions = useMonthCompletions(month);
   const setCompletion = useSetMonthCompletion(month);
 
+  // The measurable habit and day whose amount sheet is open.
+  const [amountFor, setAmountFor] = useState<{ habitId: string; date: string } | null>(null);
+  const logAmount = useSetAmount();
+  const saveAmount = (amount: number | null) => {
+    if (!amountFor) return;
+    const { habitId, date } = amountFor;
+    setAmountFor(null);
+    logAmount.mutate(
+      { habitId, date, amount },
+      {
+        onError: () =>
+          Alert.alert("Couldn't save", 'Your change was not saved. Please try again.', [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Try again', onPress: () => saveAmount(amount) },
+          ]),
+      },
+    );
+  };
+
   // Optimistic: the cell flips at once and rolls back on failure, then offers a retry (07 §2).
   const save = (change: MonthCompletionChange) =>
     setCompletion.mutate(change, {
@@ -109,6 +129,10 @@ function MonthContent({ month, today }: { month: ReturnType<typeof monthOf>; tod
     });
 
   const data = habits.data && completions.data ? habits.data : undefined;
+  const sheetHabit = data?.find((habit) => habit.id === amountFor?.habitId);
+  const sheetAmount = completions.data?.find(
+    (row) => row.habitId === amountFor?.habitId && row.date === amountFor?.date,
+  )?.amount;
   const error = habits.error ?? completions.error;
   const isError = !data && (habits.isError || completions.isError);
   const refetch = () => {
@@ -128,10 +152,25 @@ function MonthContent({ month, today }: { month: ReturnType<typeof monthOf>; tod
         <MonthGrid
           habits={data}
           days={monthDays(month)}
-          doneDates={doneDatesByHabit(completions.data ?? [])}
+          doneDates={doneDatesFor(data, completions.data ?? [])}
+          amounts={amountsByHabit(completions.data ?? [])}
           today={today}
           onToggle={(habitId, date, done) => save({ habitId, date, done })}
+          onOpenAmount={(habitId, date) => setAmountFor({ habitId, date })}
         />
+        {sheetHabit && amountFor && (
+          <AmountSheet
+            key={`${amountFor.habitId}-${amountFor.date}`}
+            visible
+            title={`${sheetHabit.name} · ${amountFor.date}`}
+            unit={sheetHabit.unit}
+            target={sheetHabit.target ?? 0}
+            amount={sheetAmount ?? undefined}
+            onSave={(amount) => saveAmount(amount)}
+            onClear={() => saveAmount(null)}
+            onClose={() => setAmountFor(null)}
+          />
+        )}
       </ScrollView>
     );
   }

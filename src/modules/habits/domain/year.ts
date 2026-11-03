@@ -1,9 +1,19 @@
 // Pure year-dashboard logic: no React, no database. Tested directly in year.test.ts.
 // Dates are local ISO dates (`YYYY-MM-DD`) as stored; calendar maths is UTC, so no DST drift.
 
-import { type Completion, previousDay } from './streak';
+import { longestStreakOf, scheduleOf, type ScheduleType } from './schedule';
+import type { Completion } from './streak';
 
-export type YearHabit = { id: string; name: string; color?: string | null };
+/** A habit as the year view reads it; the schedule and target decide what counts and the streak. */
+export type YearHabit = {
+  id: string;
+  name: string;
+  color?: string | null;
+  scheduleType?: ScheduleType | null;
+  scheduleDays?: string | null;
+  scheduleTimes?: number | null;
+  target?: number | null;
+};
 
 const monthLabels = [
   'Jan',
@@ -90,7 +100,8 @@ export type YearInsights = {
   perDay: Map<string, number>;
   /** 0 = Monday; the weekday with the highest completion rate. */
   bestWeekday: number | null;
-  longestStreak: { name: string; length: number } | null;
+  /** `unit` is only set for weeks (a habit with a weekly target); days otherwise. */
+  longestStreak: { name: string; length: number; unit?: 'week' } | null;
   mostCompleted: { name: string; count: number } | null;
 };
 
@@ -106,12 +117,12 @@ const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompar
 
 export function yearInsights({ year, habits, completions, today }: Input): YearInsights {
   const prefix = `${year}-`;
-  const names = new Map(habits.map((habit) => [habit.id, habit.name]));
+  const byId = new Map(habits.map((habit) => [habit.id, habit]));
   const datesByHabit = new Map<string, string[]>();
   const perDay = new Map<string, number>();
   let total = 0;
   for (const { habitId, date } of completions) {
-    if (!date.startsWith(prefix) || !names.has(habitId)) continue;
+    if (!date.startsWith(prefix) || !byId.has(habitId)) continue;
     total += 1;
     perDay.set(date, (perDay.get(date) ?? 0) + 1);
     datesByHabit.set(habitId, [...(datesByHabit.get(habitId) ?? []), date]);
@@ -119,16 +130,24 @@ export function yearInsights({ year, habits, completions, today }: Input): YearI
 
   let longestStreak: YearInsights['longestStreak'] = null;
   let mostCompleted: YearInsights['mostCompleted'] = null;
-  const ranked = [...datesByHabit].map(([id, dates]) => ({ name: names.get(id) ?? '', dates }));
-  for (const { name, dates } of ranked.sort(byName)) {
+  const ranked = [...datesByHabit].map(([id, dates]) => ({ habit: byId.get(id), dates }));
+  let longestInDays = 0;
+  for (const { habit, dates } of ranked.sort((a, b) =>
+    byName({ name: a.habit?.name ?? '' }, { name: b.habit?.name ?? '' }),
+  )) {
+    if (!habit) continue;
+    const name = habit.name;
     const count = dates.length;
     if (!mostCompleted || count > mostCompleted.count) mostCompleted = { name, count };
-    let run = 0;
-    let previous = '';
-    for (const date of [...dates].sort()) {
-      run = previousDay(date) === previous ? run + 1 : 1;
-      previous = date;
-      if (!longestStreak || run > longestStreak.length) longestStreak = { name, length: run };
+    const streak = longestStreakOf(scheduleOf(habit), new Set(dates));
+    const inDays = streak.value * (streak.unit === 'week' ? 7 : 1);
+    if (inDays > longestInDays) {
+      longestInDays = inDays;
+      longestStreak = {
+        name,
+        length: streak.value,
+        ...(streak.unit === 'week' ? { unit: 'week' as const } : {}),
+      };
     }
   }
 

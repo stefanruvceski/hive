@@ -1,8 +1,11 @@
 // Pure streak logic: no React, no database. Tested directly in streak.test.ts.
 // Behaviour follows hive-poc HabitStats.currentStreak; every habit is daily until schedules (#9).
 
-/** A habit done on a local date (`YYYY-MM-DD`): one `habits_completions` row. */
-export type Completion = { habitId: string; date: string };
+/**
+ * A habit logged on a local date (`YYYY-MM-DD`): one `habits_completions` row. `amount` is what a
+ * measurable habit was given that day; null (or missing) is a plain "done".
+ */
+export type Completion = { habitId: string; date: string; amount?: number | null };
 
 /** The day before an ISO date, by calendar (UTC maths): no DST or time-zone drift. */
 export function previousDay(date: string): string {

@@ -18,7 +18,15 @@ export const habitsYearQuery = (year: number) =>
       const db = getDb();
       return {
         habits: db
-          .select({ id: habitsHabits.id, name: habitsHabits.name, color: habitsHabits.color })
+          .select({
+            id: habitsHabits.id,
+            name: habitsHabits.name,
+            color: habitsHabits.color,
+            scheduleType: habitsHabits.scheduleType,
+            scheduleDays: habitsHabits.scheduleDays,
+            scheduleTimes: habitsHabits.scheduleTimes,
+            target: habitsHabits.target,
+          })
           .from(habitsHabits)
           .where(isNull(habitsHabits.archivedAt))
           .all(),

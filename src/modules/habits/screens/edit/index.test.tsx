@@ -79,6 +79,40 @@ describe('HabitsEdit', () => {
     );
   });
 
+  it("opens on the habit's schedule and goal and keeps them when saving", async () => {
+    jest.mocked(useHabits).mockReturnValue({
+      data: [
+        {
+          ...run,
+          scheduleType: 'weekly',
+          scheduleTimes: 2,
+          unit: 'km',
+          target: 5,
+          aggregation: 'max',
+        },
+      ],
+    } as never);
+    await renderEdit();
+    const user = userEvent.setup();
+
+    expect(screen.getByTestId('habits-edit-schedule-times')).toHaveTextContent('2 times a week');
+    expect(screen.getByRole('switch', { name: 'Measure an amount' })).toBeChecked();
+    expect(screen.getByTestId('habits-edit-goal-unit').props.value).toBe('km');
+    expect(screen.getByTestId('habits-edit-goal-target').props.value).toBe('5');
+    await user.press(screen.getByTestId('habits-edit-save'));
+    expect(update).toHaveBeenCalledWith(
+      {
+        id: 'run',
+        name: 'Run',
+        emoji: '🏃',
+        timeOfDay: 'morning',
+        schedule: { type: 'weekly', days: [], times: 2 },
+        goal: { unit: 'km', target: 5, aggregation: 'max' },
+      },
+      expect.anything(),
+    );
+  });
+
   it('archives only after the user confirms', async () => {
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     await renderEdit();

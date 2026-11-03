@@ -13,6 +13,7 @@ import { Wallpaper } from '@/components/ui/wallpaper';
 import { Layout, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useToday } from '@/hooks/use-today';
 
+import { AmountSheet } from './components/amount-sheet';
 import { HabitSection } from './components/habit-section';
 import { TextButton } from './components/text-button';
 import {
@@ -22,11 +23,13 @@ import {
   useCompletions,
   useHabits,
   useMoveHabit,
+  useSetAmount,
   useSetCompletion,
 } from '../../data/queries';
+import { doneDatesFor } from '../../domain/goal';
 import { groupByTimeOfDay } from '../../domain/habits';
 import type { Direction } from '../../domain/order';
-import { doneDatesByHabit } from '../../domain/streak';
+import { isScheduled, scheduleOf } from '../../domain/schedule';
 import type { SwipeSide } from '../../domain/swipe';
 
 const addHabit = () => router.push('/habits/new');
@@ -122,6 +125,9 @@ function HabitsContent({ reordering }: { reordering: boolean }) {
   const habits = useHabits();
   const completions = useCompletions();
   const setCompletion = useSetCompletion();
+  const logAmount = useSetAmount();
+  // The measurable habit whose amount sheet is open.
+  const [amountFor, setAmountFor] = useState<string | null>(null);
   const move = useMoveHabit();
   const archive = useArchiveHabit();
   // One row shows its swipe buttons at a time.
@@ -138,6 +144,21 @@ function HabitsContent({ reordering }: { reordering: boolean }) {
           { text: 'Try again', onPress: () => save(change) },
         ]),
     });
+
+  // Optimistic like the check; a failed write rolls back and offers a retry.
+  const saveAmount = (habitId: string, amount: number | null) => {
+    setAmountFor(null);
+    logAmount.mutate(
+      { habitId, date: today, amount },
+      {
+        onError: () =>
+          Alert.alert("Couldn't save", 'Your change was not saved. Please try again.', [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Try again', onPress: () => saveAmount(habitId, amount) },
+          ]),
+      },
+    );
+  };
 
   const moveHabit = (id: string, direction: Direction) =>
     move.mutate(
@@ -173,7 +194,29 @@ function HabitsContent({ reordering }: { reordering: boolean }) {
   };
 
   if (data && data.length > 0) {
-    const doneDates = doneDatesByHabit(completions.data ?? []);
+    const doneDates = doneDatesFor(data, completions.data ?? []);
+    const amounts = new Map(
+      (completions.data ?? [])
+        .filter((row) => row.date === today && row.amount != null)
+        .map((row) => [row.habitId, row.amount ?? 0]),
+    );
+    // Habits not due today go to a faint section at the end; reordering shows them all in place.
+    const due = reordering ? data : data.filter((habit) => isScheduled(scheduleOf(habit), today));
+    const notToday = reordering ? [] : data.filter((habit) => !due.includes(habit));
+    const sheetHabit = data.find((habit) => habit.id === amountFor);
+    const section = {
+      doneDates,
+      today,
+      amounts,
+      onToggle: (habitId: string, done: boolean) => save({ habitId, date: today, done }),
+      onMove: reordering ? moveHabit : undefined,
+      onEdit: editHabit,
+      onArchive: archiveHabit,
+      onOpenAmount: setAmountFor,
+      open,
+      onOpenChange: (habitId: string, side: SwipeSide | null) =>
+        setOpen(side ? { habitId, side } : null),
+    };
     return (
       <ScrollView
         contentContainerStyle={[
@@ -183,20 +226,32 @@ function HabitsContent({ reordering }: { reordering: boolean }) {
         ]}
         testID="habits-list">
         <Title />
-        {groupByTimeOfDay(data).map((group) => (
-          <HabitSection
-            key={group.timeOfDay}
-            {...group}
-            doneDates={doneDates}
-            today={today}
-            onToggle={(habitId, done) => save({ habitId, date: today, done })}
-            onMove={reordering ? moveHabit : undefined}
-            onEdit={editHabit}
-            onArchive={archiveHabit}
-            open={open}
-            onOpenChange={(habitId, side) => setOpen(side ? { habitId, side } : null)}
-          />
+        {groupByTimeOfDay(due).map((group) => (
+          <HabitSection key={group.timeOfDay} {...group} {...section} />
         ))}
+        {notToday.length > 0 && (
+          <HabitSection
+            timeOfDay="anytime"
+            id="not-today"
+            label="Not today"
+            habits={notToday}
+            dimmed
+            {...section}
+          />
+        )}
+        {sheetHabit && (
+          <AmountSheet
+            key={sheetHabit.id}
+            visible
+            title={sheetHabit.name}
+            unit={sheetHabit.unit}
+            target={sheetHabit.target ?? 0}
+            amount={amounts.get(sheetHabit.id)}
+            onSave={(amount) => saveAmount(sheetHabit.id, amount)}
+            onClear={() => saveAmount(sheetHabit.id, null)}
+            onClose={() => setAmountFor(null)}
+          />
+        )}
         {archivedLink}
       </ScrollView>
     );

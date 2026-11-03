@@ -78,6 +78,13 @@
       "when": 1793718128296,
       "tag": "0010_naive_jack_flag",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1793720373500,
+      "tag": "0011_glossy_dark_phoenix",
+      "breakpoints": true
     }
   ]
 }

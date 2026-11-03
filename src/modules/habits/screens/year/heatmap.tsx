@@ -6,6 +6,13 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { buildYearGrid, heatLevel, weekColumn } from '../../domain/year';
+import { withAlpha } from '../../habit-color';
+
+/** A day's fill in one habit's color: full when done, fainter the less of the target it got. */
+function habitFill(color: string, empty: string, value = 0): string {
+  if (value <= 0) return empty;
+  return value >= 1 ? color : withAlpha(color, 0.25 + 0.5 * value);
+}
 
 const CELL = 14;
 const GAP = 3;
@@ -16,6 +23,8 @@ type Props = {
   habitCount: number;
   perDay: ReadonlyMap<string, number>;
   summary: string;
+  /** For one measurable habit: how far each logged day got to the target, 0–1. */
+  fractions?: ReadonlyMap<string, number>;
   /** One habit's color: a done day is filled with it. Without it the days shade by how many habits were done. */
   color?: string;
   /** Today, when the year is the current one: the heatmap opens on its week, not on January. */
@@ -23,7 +32,15 @@ type Props = {
 };
 
 /** One cell per day, Mon-first week columns; one accessible element, cells are not focusable. */
-export function YearHeatmap({ year, habitCount, perDay, summary, color, focusDate }: Props) {
+export function YearHeatmap({
+  year,
+  habitCount,
+  perDay,
+  summary,
+  color,
+  fractions,
+  focusDate,
+}: Props) {
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const viewportWidth = useRef(0);
   const theme = useTheme();
@@ -70,9 +87,11 @@ export function YearHeatmap({ year, habitCount, perDay, summary, color, focusDat
                         ? null
                         : {
                             backgroundColor: color
-                              ? (perDay.get(date) ?? 0) > 0
-                                ? color
-                                : fills[0]
+                              ? habitFill(
+                                  color,
+                                  theme.segmentTrack,
+                                  fractions?.get(date) ?? perDay.get(date),
+                                )
                               : fills[heatLevel(perDay.get(date) ?? 0, habitCount)],
                           },
                     ]}

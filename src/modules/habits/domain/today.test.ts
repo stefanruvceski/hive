@@ -100,3 +100,63 @@ describe('habitsHomeSummary', () => {
     });
   });
 });
+
+describe('with schedules and goals', () => {
+  const mondayHabit = { id: 'm', scheduleType: 'weekdays' as const, scheduleDays: '1' };
+  const tuesdayHabit = { id: 't', scheduleType: 'weekdays' as const, scheduleDays: '2' };
+  const water = { id: 'w', target: 8 };
+
+  it('counts only the habits scheduled today', () => {
+    const list = [{ id: 'a' }, mondayHabit, tuesdayHabit];
+    expect(countDoneToday(list, [{ habitId: 'm', date: today }], today)).toEqual({
+      done: 1,
+      total: 2,
+    });
+  });
+
+  it('counts a measurable habit once its amount reaches the target', () => {
+    expect(countDoneToday([water], [{ habitId: 'w', date: today, amount: 5 }], today)).toEqual({
+      done: 0,
+      total: 1,
+    });
+    expect(countDoneToday([water], [{ habitId: 'w', date: today, amount: 8 }], today)).toEqual({
+      done: 1,
+      total: 1,
+    });
+  });
+
+  it('keeps unscheduled and met habits out of "up next", by part of the day', () => {
+    const habit = (id: string, extra: object = {}) => ({
+      id,
+      name: id,
+      emoji: '🎯',
+      timeOfDay: 'anytime' as TimeOfDay,
+      position: 0,
+      ...extra,
+    });
+    const summary = habitsHomeSummary(
+      [habit('open'), habit('off', tuesdayHabit), habit('met', { target: 2 })],
+      [{ habitId: 'met', date: today, amount: 3 }],
+      today,
+    );
+    expect(summary).toMatchObject({ kind: 'progress', done: 1, total: 2 });
+    expect(summary.kind === 'progress' && summary.upNext.map((item) => item.id)).toEqual(['open']);
+  });
+
+  it('says so when nothing is scheduled today', () => {
+    const summary = habitsHomeSummary(
+      [
+        {
+          name: 'Tue',
+          emoji: '🎯',
+          timeOfDay: 'anytime' as TimeOfDay,
+          position: 0,
+          ...tuesdayHabit,
+        },
+      ],
+      [],
+      today,
+    );
+    expect(summary).toMatchObject({ kind: 'message', headline: 'Nothing today' });
+  });
+});

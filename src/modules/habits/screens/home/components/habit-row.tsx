@@ -4,6 +4,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Layout, Spacing } from '@/constants/theme';
 import { useThemeName } from '@/hooks/use-theme';
 
+import { HabitAmount } from './habit-amount';
 import { HabitCheck } from './habit-check';
 import { ReorderControls } from './reorder-controls';
 import type { Habit } from '../../../data/queries';
@@ -14,6 +15,15 @@ type Props = {
   habit: Habit;
   doneToday: boolean;
   streak: number;
+  /** What the streak counts: days (default) or weeks, for a habit with a weekly target. */
+  streakUnit?: 'day' | 'week';
+  /** A second line under the streak: this week's progress, or today's amount. */
+  note?: string;
+  /** A measurable habit: its target and what is logged today; the check becomes an amount circle. */
+  goal?: { target: number; amount?: number };
+  onOpenAmount?: () => void;
+  /** Not due today: drawn fainter. */
+  dimmed?: boolean;
   onToggle: (done: boolean) => void;
   /** Reorder mode: the check gives way to move controls. */
   reorder?: { canUp: boolean; canDown: boolean; onMove: (direction: Direction) => void };
@@ -27,6 +37,11 @@ export function HabitRow({
   habit,
   doneToday,
   streak,
+  streakUnit = 'day',
+  note,
+  goal,
+  onOpenAmount,
+  dimmed = false,
   onToggle,
   reorder,
   onEdit,
@@ -38,7 +53,7 @@ export function HabitRow({
     ...(onArchive ? [{ name: 'archive', label: 'Archive' }] : []),
   ];
   return (
-    <View style={styles.row} testID={`habits-item-${habit.id}`}>
+    <View style={[styles.row, dimmed && styles.dimmed]} testID={`habits-item-${habit.id}`}>
       <ThemedText aria-hidden>{habit.emoji}</ThemedText>
       {/* Grows and wraps instead of running past the card (agent-rules/03 §2). Swiping is not
           available to a screen reader, so Edit and Archive are custom actions on the name. */}
@@ -53,11 +68,25 @@ export function HabitRow({
         testID={`habits-item-text-${habit.id}`}>
         <ThemedText>{habit.name}</ThemedText>
         <ThemedText type="footnote" themeColor="textSecondary" testID={`habits-streak-${habit.id}`}>
-          {`Streak: ${streak} ${streak === 1 ? 'day' : 'days'}`}
+          {`Streak: ${streak} ${streak === 1 ? streakUnit : `${streakUnit}s`}`}
         </ThemedText>
+        {note ? (
+          <ThemedText type="footnote" themeColor="textSecondary" testID={`habits-note-${habit.id}`}>
+            {note}
+          </ThemedText>
+        ) : null}
       </View>
       {reorder ? (
         <ReorderControls habit={habit} {...reorder} />
+      ) : goal ? (
+        <HabitAmount
+          color={habitColor(habit, scheme)}
+          amount={goal.amount}
+          target={goal.target}
+          label={`Log amount: ${habit.name}`}
+          onPress={() => onOpenAmount?.()}
+          testID={`habits-amount-${habit.id}`}
+        />
       ) : (
         <HabitCheck
           color={habitColor(habit, scheme)}
@@ -79,6 +108,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Layout.listRow.gap,
+  },
+  dimmed: {
+    opacity: 0.55,
   },
   text: {
     flex: 1,
