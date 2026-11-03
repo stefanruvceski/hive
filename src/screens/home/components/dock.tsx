@@ -29,7 +29,7 @@ export function Dock({ pinned, bottom, onOpen }: Props) {
         radius={Layout.radius.dock}
         role="toolbar"
         aria-label="Pinned apps"
-        style={styles.dock}
+        style={[styles.dock, pinned.length === 0 && styles.alone]}
         testID="home-dock">
         {pinned.map((app) => (
           <Pressable
@@ -90,6 +90,10 @@ const styles = StyleSheet.create({
     paddingVertical: Layout.dock.padding.vertical,
     paddingStart: Layout.dock.padding.start,
     paddingEnd: Layout.dock.padding.end,
+  },
+  // Only the Customize button: the same space on every side, not the wider start of a row of apps.
+  alone: {
+    paddingStart: Layout.dock.padding.end,
   },
   divider: {
     width: StyleSheet.hairlineWidth,

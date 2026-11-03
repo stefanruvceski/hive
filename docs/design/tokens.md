@@ -126,6 +126,25 @@ glows (alpha 0.45–0.75); light uses pale ones (alpha 0.16–0.32). Exact gradi
 | Drawify | `#C4B5FD` | `#6D28D9` |
 | Music   | `#F9A8D4` | `#BE185D` |
 
+**Habit colors** (#14 follow-up; proposed here, not yet in the canvas): in the Month grid and the Year habit picker each habit has its own color. The user picks one of 14 on the Add / Edit habit form (a row of 44 pt round swatches, wrapping; the chosen one has a 3 pt ring in `text` and a check; an "Auto" swatch first means none stored). A habit with none stored takes one of the first eight by its id. An open Month day is a 2 pt outline in the color, a done day is filled with it and the check uses `background`; future days fade to 35 %. Stored by `key` (`HabitColors` in `theme.ts`); never rename a key.
+
+| Key       | Dark      | Light     |
+| --------- | --------- | --------- |
+| `teal`    | `#2DD4BF` | `#0F766E` |
+| `blue`    | `#60A5FA` | `#2563EB` |
+| `amber`   | `#FBBF24` | `#B45309` |
+| `rose`    | `#FB7185` | `#E11D48` |
+| `violet`  | `#C4B5FD` | `#6D28D9` |
+| `sky`     | `#38BDF8` | `#0369A1` |
+| `orange`  | `#FB923C` | `#C2410C` |
+| `green`   | `#4ADE80` | `#15803D` |
+| `pink`    | `#F9A8D4` | `#BE185D` |
+| `lime`    | `#BEF264` | `#4D7C0F` |
+| `indigo`  | `#818CF8` | `#4338CA` |
+| `red`     | `#F87171` | `#B91C1C` |
+| `cyan`    | `#22D3EE` | `#0E7490` |
+| `fuchsia` | `#E879F9` | `#A21CAF` |
+
 Icon tiles are tinted, not filled: dark = navy gradient `#1D2A47 → #111A2E`, light = white gradient
 `#FFFFFF → #F1F5F9`; the glyph and a 1 px border (tint at ~27 % alpha) carry the app color. No app may
 use the accent teal as its tint (it would read as "selected").

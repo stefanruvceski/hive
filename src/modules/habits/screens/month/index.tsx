@@ -4,11 +4,10 @@ import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ThemedText } from '@/components/themed-text';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
-import { GlassButton } from '@/components/ui/glass-button';
 import { LoadingState } from '@/components/ui/loading-state';
+import { ScreenHeader } from '@/components/ui/screen-header';
 import { Wallpaper } from '@/components/ui/wallpaper';
 import { Layout, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -34,23 +33,22 @@ export function HabitsMonth() {
   return (
     <Wallpaper style={styles.container} testID="habits-month-screen">
       <SafeAreaView edges={['top', 'right', 'left']} style={styles.container}>
-        <View style={[styles.header, styles.width]}>
-          <GlassButton
-            icon={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
-            label="Back"
-            onPress={() => router.back()}
-            testID="habits-month-back"
-          />
-        </View>
-        <View style={[styles.switcher, styles.width]}>
-          <Step direction="previous" enabled onPress={() => setMonthsBack(monthsBack + 1)} />
-          <ThemedText type="section" role="heading" testID="habits-month-title">
-            {monthTitle(month)}
-          </ThemedText>
-          <Step
-            direction="next"
-            enabled={canShowNext(month, today)}
-            onPress={() => setMonthsBack(monthsBack - 1)}
+        <View style={styles.width}>
+          <ScreenHeader
+            title={monthTitle(month)}
+            onBack={() => router.back()}
+            backTestID="habits-month-back"
+            titleTestID="habits-month-title"
+            titleStart={
+              <Step direction="previous" enabled onPress={() => setMonthsBack(monthsBack + 1)} />
+            }
+            titleEnd={
+              <Step
+                direction="next"
+                enabled={canShowNext(month, today)}
+                onPress={() => setMonthsBack(monthsBack - 1)}
+              />
+            }
           />
         </View>
         <MonthContent month={month} today={today} />
@@ -59,7 +57,7 @@ export function HabitsMonth() {
   );
 }
 
-/** Round "previous / next month" control, 44 pt with slop to 48; faded and inert when disabled. */
+/** Plain "previous / next month" chevron (not a round button, so it isn't mistaken for Back); 48 pt, faded and inert when disabled. */
 function Step({
   direction,
   enabled,
@@ -77,14 +75,9 @@ function Step({
       aria-label={previous ? 'Previous month' : 'Next month'}
       aria-disabled={!enabled}
       disabled={!enabled}
-      hitSlop={Spacing.half}
       onPress={onPress}
       testID={`habits-month-${direction}`}
-      style={[
-        styles.step,
-        { backgroundColor: theme.control, borderColor: theme.controlBorder },
-        !enabled && styles.disabled,
-      ]}>
+      style={[styles.step, !enabled && styles.disabled]}>
       <SymbolView
         name={
           previous
@@ -92,7 +85,7 @@ function Step({
             : { ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }
         }
         size={Layout.control.glyph}
-        tintColor={theme.controlGlyph}
+        tintColor={theme.accentText}
       />
     </Pressable>
   );
@@ -129,7 +122,7 @@ function MonthContent({ month, today }: { month: ReturnType<typeof monthOf>; tod
         contentContainerStyle={[
           styles.width,
           styles.list,
-          { paddingBottom: insets.bottom + Spacing.five },
+          { paddingTop: Spacing.two, paddingBottom: insets.bottom + Spacing.five },
         ]}
         testID="habits-month-list">
         <MonthGrid
@@ -170,22 +163,9 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: Layout.screenMargin,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: Spacing.two,
-  },
-  switcher: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Spacing.three,
-  },
   step: {
-    width: Layout.control.size,
-    height: Layout.control.size,
-    borderRadius: Layout.control.size / 2,
-    borderWidth: 1,
+    minWidth: Layout.minTouchAndroid,
+    minHeight: Layout.minTouchAndroid,
     alignItems: 'center',
     justifyContent: 'center',
   },

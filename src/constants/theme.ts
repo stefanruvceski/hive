@@ -178,6 +178,27 @@ export const AppTints = {
 
 export type AppTint = keyof typeof AppTints;
 
+/**
+ * Habits' own colors (Month grid, Year picker, the habit form). A habit stores a `key`; none stored
+ * means one of the first eight, from its id. Lighter on dark, deeper on light. Never rename a key.
+ */
+export const HabitColors = [
+  { key: 'teal', dark: '#2DD4BF', light: '#0F766E' },
+  { key: 'blue', dark: '#60A5FA', light: '#2563EB' },
+  { key: 'amber', dark: '#FBBF24', light: '#B45309' },
+  { key: 'rose', dark: '#FB7185', light: '#E11D48' },
+  { key: 'violet', dark: '#C4B5FD', light: '#6D28D9' },
+  { key: 'sky', dark: '#38BDF8', light: '#0369A1' },
+  { key: 'orange', dark: '#FB923C', light: '#C2410C' },
+  { key: 'green', dark: '#4ADE80', light: '#15803D' },
+  { key: 'pink', dark: '#F9A8D4', light: '#BE185D' },
+  { key: 'lime', dark: '#BEF264', light: '#4D7C0F' },
+  { key: 'indigo', dark: '#818CF8', light: '#4338CA' },
+  { key: 'red', dark: '#F87171', light: '#B91C1C' },
+  { key: 'cyan', dark: '#22D3EE', light: '#0E7490' },
+  { key: 'fuchsia', dark: '#E879F9', light: '#A21CAF' },
+] as const;
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */

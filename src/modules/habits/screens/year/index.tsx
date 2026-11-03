@@ -6,16 +6,19 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ThemedText } from '@/components/themed-text';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
-import { GlassButton } from '@/components/ui/glass-button';
 import { GlassSurface } from '@/components/ui/glass-surface';
 import { LoadingState } from '@/components/ui/loading-state';
+import { ScreenHeader } from '@/components/ui/screen-header';
 import { Wallpaper } from '@/components/ui/wallpaper';
 import { Layout, MaxContentWidth, Spacing } from '@/constants/theme';
+import { useThemeName } from '@/hooks/use-theme';
 import { useToday } from '@/hooks/use-today';
 
+import { HabitFilter } from './habit-filter';
 import { YearHeatmap } from './heatmap';
 import { type YearData, useYear } from '../../data/year-queries';
 import { weekdayNames, yearInsights, yearSummary } from '../../domain/year';
+import { habitColor } from '../../habit-color';
 
 const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`;
 
@@ -29,12 +32,12 @@ export function HabitsYear() {
   return (
     <Wallpaper style={styles.container} testID="habits-year-screen">
       <SafeAreaView edges={['top', 'right', 'left']} style={styles.container}>
-        <View style={[styles.width, styles.header]}>
-          <GlassButton
-            icon={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
-            label="Back"
-            onPress={() => router.back()}
-            testID="habits-year-back"
+        <View style={styles.width}>
+          <ScreenHeader
+            title="Year"
+            onBack={() => router.back()}
+            backTestID="habits-year-back"
+            titleTestID="habits-year-title"
           />
         </View>
         <YearContent
@@ -114,6 +117,8 @@ function YearContent({
 }) {
   const insets = useSafeAreaInsets();
   const query = useYear(year);
+  // null = all habits; kept while switching years.
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   return (
     <ScrollView
@@ -123,12 +128,15 @@ function YearContent({
         { paddingBottom: insets.bottom + Spacing.five },
       ]}
       testID="habits-year-content">
-      <ThemedText type="title" role="heading" style={styles.title}>
-        Year
-      </ThemedText>
       <YearSwitcher year={year} onPrevious={onPrevious} onNext={onNext} />
       {query.data ? (
-        <Dashboard year={year} today={today} data={query.data} />
+        <Dashboard
+          year={year}
+          today={today}
+          data={query.data}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+        />
       ) : query.isError ? (
         <ErrorState
           error={query.error}
@@ -142,15 +150,48 @@ function YearContent({
   );
 }
 
-function Dashboard({ year, today, data }: { year: number; today: string; data: YearData }) {
-  const insights = yearInsights({ year, today, ...data });
+function Dashboard({
+  year,
+  today,
+  data,
+  selectedId,
+  onSelect,
+}: {
+  year: number;
+  today: string;
+  data: YearData;
+  selectedId: string | null;
+  onSelect: (habitId: string | null) => void;
+}) {
+  const scheme = useThemeName();
+  const selected = data.habits.find((habit) => habit.id === selectedId);
+  const shown = selected
+    ? {
+        habits: [selected],
+        completions: data.completions.filter(({ habitId }) => habitId === selected.id),
+      }
+    : data;
+  const insights = yearInsights({ year, today, ...shown });
+  // One habit alone needs no filter.
+  const filter =
+    data.habits.length > 1 ? (
+      <HabitFilter habits={data.habits} selectedId={selected?.id ?? null} onSelect={onSelect} />
+    ) : null;
+
   if (insights.total === 0) {
     return (
-      <EmptyState
-        title={`Nothing done in ${year}`}
-        description="Mark a habit done and your year fills in here."
-        testID="habits-year-empty"
-      />
+      <>
+        {filter}
+        <EmptyState
+          title={selected ? `Nothing done for ${selected.name}` : `Nothing done in ${year}`}
+          description={
+            selected
+              ? `Mark ${selected.name} done and its year fills in here.`
+              : 'Mark a habit done and your year fills in here.'
+          }
+          testID="habits-year-empty"
+        />
+      </>
     );
   }
 
@@ -177,25 +218,28 @@ function Dashboard({ year, today, data }: { year: number; today: string; data: Y
     longestStreak && {
       id: 'longest-streak',
       value: `${longestStreak.length} d`,
-      caption: `Longest streak · ${longestStreak.name}`,
+      caption: selected ? 'Longest streak' : `Longest streak · ${longestStreak.name}`,
       sentence: `Your longest streak is ${plural(longestStreak.length, 'day')}, for ${longestStreak.name}.`,
     },
-    mostCompleted && {
-      id: 'most-completed',
-      value: String(mostCompleted.count),
-      caption: `Most done · ${mostCompleted.name}`,
-      sentence: `${mostCompleted.name} is your most completed habit, done ${plural(mostCompleted.count, 'time')}.`,
-    },
+    !selected &&
+      mostCompleted && {
+        id: 'most-completed',
+        value: String(mostCompleted.count),
+        caption: `Most done · ${mostCompleted.name}`,
+        sentence: `${mostCompleted.name} is your most completed habit, done ${plural(mostCompleted.count, 'time')}.`,
+      },
   ];
 
   return (
     <>
+      {filter}
       <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.card}>
         <YearHeatmap
           year={year}
           habitCount={data.habits.length}
           perDay={insights.perDay}
-          summary={yearSummary(year, total, activeDays)}
+          color={selected ? habitColor(selected, scheme) : undefined}
+          summary={yearSummary(year, total, activeDays, selected?.name)}
           focusDate={today.startsWith(`${year}-`) ? today : undefined}
         />
       </GlassSurface>
@@ -232,9 +276,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: Layout.screenMargin,
   },
-  header: { flexDirection: 'row', paddingTop: Spacing.two },
   content: { gap: Spacing.three },
-  title: { marginHorizontal: Spacing.one, marginTop: Spacing.three },
   switcher: {
     flexDirection: 'row',
     alignItems: 'center',

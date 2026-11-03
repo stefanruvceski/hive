@@ -1,0 +1,1 @@
+ALTER TABLE `habits_habits` ADD `color` text;

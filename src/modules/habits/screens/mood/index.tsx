@@ -5,9 +5,9 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { ThemedText } from '@/components/themed-text';
 import { ErrorState } from '@/components/ui/error-state';
-import { GlassButton } from '@/components/ui/glass-button';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PrimaryButton } from '@/components/ui/primary-button';
+import { ScreenHeader } from '@/components/ui/screen-header';
 import { SegmentedControl, type SegmentedOption } from '@/components/ui/segmented-control';
 import { Wallpaper } from '@/components/ui/wallpaper';
 import { Fonts, Layout, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -39,22 +39,19 @@ export function HabitsMood() {
   return (
     <Wallpaper style={styles.container} testID="habits-mood-screen">
       <SafeAreaView edges={['top', 'right', 'left']} style={styles.container}>
+        <View style={styles.headerWrap}>
+          <ScreenHeader
+            title="Mood"
+            onBack={() => router.back()}
+            backTestID="habits-mood-back"
+            titleTestID="habits-mood-title"
+          />
+        </View>
         <ScrollView
           keyboardShouldPersistTaps="handled"
           automaticallyAdjustKeyboardInsets
           contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Spacing.five }]}
           testID="habits-mood-scroll">
-          <View style={styles.header}>
-            <GlassButton
-              icon={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
-              label="Back"
-              onPress={() => router.back()}
-              testID="habits-mood-back"
-            />
-          </View>
-          <ThemedText type="title" role="heading" style={styles.title} testID="habits-mood-title">
-            Mood
-          </ThemedText>
           {isPending ? (
             <LoadingState testID="habits-mood-loading" />
           ) : isError ? (
@@ -202,13 +199,11 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.two,
     gap: Spacing.two,
   },
-  header: {
-    flexDirection: 'row',
-  },
-  title: {
-    marginHorizontal: Spacing.one,
-    marginTop: Spacing.one,
-    marginBottom: Spacing.three,
+  headerWrap: {
+    width: '100%',
+    maxWidth: MaxContentWidth,
+    alignSelf: 'center',
+    paddingHorizontal: Layout.screenMargin,
   },
   faces: {
     flexDirection: 'row',

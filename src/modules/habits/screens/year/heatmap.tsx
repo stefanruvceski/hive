@@ -16,12 +16,14 @@ type Props = {
   habitCount: number;
   perDay: ReadonlyMap<string, number>;
   summary: string;
+  /** One habit's color: a done day is filled with it. Without it the days shade by how many habits were done. */
+  color?: string;
   /** Today, when the year is the current one: the heatmap opens on its week, not on January. */
   focusDate?: string;
 };
 
 /** One cell per day, Mon-first week columns; one accessible element, cells are not focusable. */
-export function YearHeatmap({ year, habitCount, perDay, summary, focusDate }: Props) {
+export function YearHeatmap({ year, habitCount, perDay, summary, color, focusDate }: Props) {
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const viewportWidth = useRef(0);
   const theme = useTheme();
@@ -66,7 +68,13 @@ export function YearHeatmap({ year, habitCount, perDay, summary, focusDate }: Pr
                       styles.cell,
                       date === null
                         ? null
-                        : { backgroundColor: fills[heatLevel(perDay.get(date) ?? 0, habitCount)] },
+                        : {
+                            backgroundColor: color
+                              ? (perDay.get(date) ?? 0) > 0
+                                ? color
+                                : fills[0]
+                              : fills[heatLevel(perDay.get(date) ?? 0, habitCount)],
+                          },
                     ]}
                   />
                 ))}

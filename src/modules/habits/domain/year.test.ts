@@ -228,6 +228,15 @@ describe('yearSummary', () => {
   });
 });
 
+describe('yearSummary for one habit', () => {
+  it.each([
+    [2026, 12, 12, 'Koko', 'Year 2026, Koko, 12 completions on 12 active days'],
+    [2026, 1, 1, 'Read 10 pages', 'Year 2026, Read 10 pages, 1 completion on 1 active day'],
+  ])('%i %s', (year, total, active, name, text) => {
+    expect(yearSummary(year, total, active, name)).toBe(text);
+  });
+});
+
 describe('weekColumn', () => {
   it.each([
     [2026, '2026-01-01', 0],

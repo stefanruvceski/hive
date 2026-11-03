@@ -19,6 +19,8 @@ export const habitsHabits = sqliteTable('habits_habits', {
   createdAt: text('created_at').notNull(),
   /** Local ISO date the habit was archived; null while it is active. Its completions are kept. */
   archivedAt: text('archived_at'),
+  /** Key of the color the user picked (`HabitColors` in theme.ts); null = automatic, from the id. */
+  color: text('color'),
 });
 
 /** The days a habit was done: one row per habit and local date. No row = not done that day. */

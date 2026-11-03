@@ -63,6 +63,45 @@ describe('HabitsYear', () => {
     expect(screen.getByTestId('habits-year-next')).toBeEnabled();
   });
 
+  it('shows one habit in its own color when picked, and everything again on All', async () => {
+    const user = userEvent.setup();
+    await renderYear();
+
+    expect(screen.getByTestId('habits-year-filter-all')).toBeChecked();
+    await user.press(screen.getByTestId('habits-year-filter-read'));
+
+    expect(screen.getByTestId('habits-year-filter-read')).toBeChecked();
+    expect(
+      screen.getByLabelText('Year 2026, Read, 1 completion on 1 active day'),
+    ).toBeOnTheScreen();
+    expect(screen.queryByTestId('habits-year-most-completed')).not.toBeOnTheScreen();
+
+    await user.press(screen.getByTestId('habits-year-filter-all'));
+    expect(screen.getByLabelText('Year 2026, 3 completions on 2 active days')).toBeOnTheScreen();
+    expect(screen.getByTestId('habits-year-most-completed')).toBeOnTheScreen();
+  });
+
+  it('says so when the picked habit has nothing in the year', async () => {
+    jest.mocked(useYear).mockReturnValue({
+      data: { habits, completions: [{ habitId: 'run', date: '2026-06-01' }] },
+    } as never);
+    const user = userEvent.setup();
+    await renderYear();
+
+    await user.press(screen.getByTestId('habits-year-filter-read'));
+    expect(screen.getByText('Nothing done for Read')).toBeOnTheScreen();
+    expect(screen.getByTestId('habits-year-filter-read')).toBeOnTheScreen();
+  });
+
+  it('has no filter with a single habit', async () => {
+    jest.mocked(useYear).mockReturnValue({
+      data: { habits: [habits[0]], completions: [{ habitId: 'run', date: '2026-06-01' }] },
+    } as never);
+    await renderYear();
+
+    expect(screen.queryByTestId('habits-year-filter')).not.toBeOnTheScreen();
+  });
+
   it('shows an empty state for a year without completions', async () => {
     jest.mocked(useYear).mockReturnValue({ data: { habits, completions: [] } } as never);
     await renderYear();
