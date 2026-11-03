@@ -3,6 +3,7 @@ import { Pressable, StyleSheet } from 'react-native';
 
 import { Layout } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { tapHaptic } from '@/lib/haptics';
 
 type Props = {
   checked: boolean;
@@ -31,7 +32,10 @@ export function HabitCheck({ checked, label, color, onPress, testID }: Props) {
       aria-checked={checked}
       aria-label={label}
       hitSlop={hitSlop}
-      onPress={onPress}
+      onPress={() => {
+        tapHaptic();
+        onPress();
+      }}
       testID={testID}
       style={({ pressed }) => [
         styles.circle,

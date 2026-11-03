@@ -16,9 +16,11 @@ import { useToday } from '@/hooks/use-today';
 import { AmountSheet } from './components/amount-sheet';
 import { HabitSection, type SectionItem } from './components/habit-section';
 import { OverdueCard } from './components/overdue-card';
+import { StarterSuggestions } from './components/starter-suggestions';
 import { TextButton } from './components/text-button';
 import { TodoAdd } from './components/todo-add';
 import { TodoEditSheet } from './components/todo-edit-sheet';
+import { UndoBar } from './components/undo-bar';
 import {
   DragLayer,
   type HostView,
@@ -30,7 +32,9 @@ import {
   useArchivedHabits,
   useArchiveHabit,
   useCompletions,
+  useCreateHabit,
   useHabits,
+  useRestoreHabit,
   useSetAmount,
   useSetCompletion,
 } from '../../data/queries';
@@ -55,6 +59,7 @@ import {
   type Row,
 } from '../../domain/reorder';
 import { isScheduled, scheduleOf } from '../../domain/schedule';
+import { pickSuggestions } from '../../domain/suggestions';
 import type { SwipeSide } from '../../domain/swipe';
 import { overdue, todosFor } from '../../domain/todos';
 
@@ -63,6 +68,7 @@ const openMood = () => router.push('/habits/mood');
 const editHabit = (id: string) => router.push({ pathname: '/habits/[id]', params: { id } });
 const openArchived = () => router.push('/habits/archived');
 const openReminders = () => router.push('/habits/reminders');
+const openBackup = () => router.push('/habits/backup');
 const openMonth = () => router.push('/habits/month');
 const openYear = () => router.push('/habits/year');
 
@@ -144,6 +150,10 @@ function HabitsContent() {
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const contentRef = useRef<HostView>(null);
   const archive = useArchiveHabit();
+  const restore = useRestoreHabit();
+  const createHabit = useCreateHabit();
+  // The last archive/delete, offered to take back for a few seconds.
+  const [undo, setUndo] = useState<{ message: string; run: () => void } | null>(null);
   // One row shows its swipe buttons at a time.
   const [open, setOpen] = useState<{ habitId: string; side: SwipeSide } | null>(null);
   const archived = useArchivedHabits();
@@ -187,11 +197,20 @@ function HabitsContent() {
       { id, done },
       retryTodo(() => saveTodoDone(id, done)),
     );
-  const removeTodoItem = (id: string) =>
-    deleteTodo.mutate(
-      id,
-      retryTodo(() => removeTodoItem(id)),
-    );
+  const removeTodoItem = (id: string) => {
+    const todo = todos.data?.find((item) => item.id === id);
+    deleteTodo.mutate(id, {
+      ...retryTodo(() => removeTodoItem(id)),
+      onSuccess: () => {
+        if (!todo) return;
+        const { title, date, timeOfDay } = todo;
+        setUndo({
+          message: 'To-do deleted',
+          run: () => addTodo.mutate({ id, title, date, timeOfDay }),
+        });
+      },
+    });
+  };
   const moveTodoToToday = (id: string) =>
     moveTodo.mutate(
       { id, date: today },
@@ -224,6 +243,7 @@ function HabitsContent() {
 
   const archiveHabit = (id: string) =>
     archive.mutate(id, {
+      onSuccess: () => setUndo({ message: 'Habit archived', run: () => restore.mutate(id) }),
       onError: () =>
         Alert.alert("Couldn't archive", 'The habit was not archived. Please try again.', [
           { text: 'Cancel', style: 'cancel' },
@@ -231,9 +251,30 @@ function HabitsContent() {
         ]),
     });
 
+  const addSuggestions = async (ids: ReadonlySet<string>) => {
+    try {
+      // One after the other, so they keep the order they were offered in.
+      for (const habit of pickSuggestions(ids)) await createHabit.mutateAsync(habit);
+    } catch {
+      Alert.alert("Couldn't add", 'The habits were not added. Please try again.');
+    }
+  };
+
+  const undoBar = undo && (
+    <UndoBar
+      message={undo.message}
+      onUndo={() => {
+        undo.run();
+        setUndo(null);
+      }}
+      onDismiss={() => setUndo(null)}
+    />
+  );
+
   const archivedLink = (
     <>
       <TextButton label="Reminders" onPress={openReminders} testID="habits-reminders-link" />
+      <TextButton label="Backup" onPress={openBackup} testID="habits-backup-link" />
       {hasArchived && (
         <TextButton label="Archived habits" onPress={openArchived} testID="habits-archived-link" />
       )}
@@ -397,6 +438,7 @@ function HabitsContent() {
           )}
           {archivedLink}
         </ScrollView>
+        {undoBar}
       </ListDragProvider>
     );
   }
@@ -411,7 +453,10 @@ function HabitsContent() {
             title="No habits yet"
             description="Add the first thing you want to do every day."
             action={
-              <PrimaryButton label="Add habit" onPress={addHabit} testID="habits-empty-add" />
+              <>
+                <PrimaryButton label="Add habit" onPress={addHabit} testID="habits-empty-add" />
+                <StarterSuggestions onAdd={addSuggestions} />
+              </>
             }
             testID="habits-empty"
           />
@@ -422,6 +467,7 @@ function HabitsContent() {
       ) : (
         <LoadingState testID="habits-loading" />
       )}
+      {undoBar}
     </View>
   );
 }

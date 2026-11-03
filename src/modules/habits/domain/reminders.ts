@@ -69,6 +69,12 @@ type PlanHabit = {
 };
 type PlanTodo = { id: string; title: string; date: string; timeOfDay: TimeOfDay; done: boolean };
 
+/** What a Habits reminder carries, so a tap on it can be told apart from any other notification. */
+export const reminderData = { kind: 'habits-reminder' } as const;
+
+export const isReminderData = (data: unknown): boolean =>
+  typeof data === 'object' && data !== null && 'kind' in data && data.kind === reminderData.kind;
+
 export type PlannedReminder = { id: string; at: Date; title: string; body: string };
 
 /** A local ISO date and a time of day, as a moment. */

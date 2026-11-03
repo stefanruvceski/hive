@@ -1,8 +1,11 @@
 import { render, screen, userEvent } from '@testing-library/react-native';
 
 import { HabitColors } from '@/constants/theme';
+import { tapHaptic } from '@/lib/haptics';
 
 import { HabitCheck } from './habit-check';
+
+jest.mock('@/lib/haptics', () => ({ tapHaptic: jest.fn(), liftHaptic: jest.fn() }));
 
 const color = HabitColors[3].dark;
 
@@ -22,6 +25,8 @@ const renderCheck = (props: { checked: boolean; color?: string; onPress?: () => 
   );
 
 describe('HabitCheck', () => {
+  beforeEach(() => jest.clearAllMocks());
+
   it('is filled with the habit color when done', async () => {
     await renderCheck({ checked: true, color });
 
@@ -43,5 +48,12 @@ describe('HabitCheck', () => {
     expect(screen.getByRole('checkbox', { name: 'Done today: Run' })).toBeChecked();
     await userEvent.setup().press(screen.getByTestId('check'));
     expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('taps with a haptic when pressed', async () => {
+    await renderCheck({ checked: false });
+    await userEvent.setup().press(screen.getByTestId('check'));
+
+    expect(tapHaptic).toHaveBeenCalledTimes(1);
   });
 });

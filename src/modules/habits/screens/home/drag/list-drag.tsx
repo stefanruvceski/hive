@@ -28,6 +28,7 @@ import Animated, {
 
 import { Layout } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { liftHaptic } from '@/lib/haptics';
 
 import type { TimeOfDay } from '../../../data/schema';
 import {
@@ -215,6 +216,7 @@ export function useListDragController({
       session.current = { key, rect, ghost, parts: [], grab, origin, frame };
       x.set(rect.x);
       y.set(rect.y);
+      liftHaptic();
       const { liftScale, liftOpacity } = Layout.listDrag;
       scale.set(reduceMotion ? 1 : withTiming(liftScale));
       opacity.set(liftOpacity);
