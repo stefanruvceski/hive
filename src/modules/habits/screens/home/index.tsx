@@ -33,6 +33,7 @@ const addHabit = () => router.push('/habits/new');
 const openMood = () => router.push('/habits/mood');
 const editHabit = (id: string) => router.push({ pathname: '/habits/[id]', params: { id } });
 const openArchived = () => router.push('/habits/archived');
+const openMonth = () => router.push('/habits/month');
 const openYear = () => router.push('/habits/year');
 
 /** Habits' entry screen: the habits grouped by part of the day. Header as in Settings. */
@@ -76,6 +77,12 @@ export function HabitsHome() {
                   label="Mood"
                   onPress={openMood}
                   testID="habits-mood-open"
+                />
+                <GlassButton
+                  icon={{ ios: 'square.grid.3x3', android: 'grid_view', web: 'grid_view' }}
+                  label="Month"
+                  onPress={openMonth}
+                  testID="habits-month"
                 />
                 <GlassButton
                   icon={{ ios: 'calendar', android: 'calendar_month', web: 'calendar_month' }}

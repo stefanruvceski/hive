@@ -1,0 +1,59 @@
+# Habits month grid (#14): open it from the Habits header → the current month is shown with the
+# habit as a row → a day cell toggles → going back a month works and the next arrow stops at the
+# current month.
+# Run locally: pnpm test:e2e   (needs a dev build installed on the simulator/emulator)
+appId: com.ruvceski.hive.dev
+tags:
+  - habits
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: 'home-open-habits'
+- tapOn:
+    id: 'habits-empty-add'
+- tapOn:
+    id: 'habits-new-name'
+- inputText: 'Read 10 pages'
+- hideKeyboard
+- tapOn:
+    id: 'habits-new-save'
+- assertVisible: 'Read 10 pages'
+- tapOn:
+    id: 'habits-month'
+- assertVisible:
+    id: 'habits-month-title'
+- assertVisible:
+    id: 'habits-month-today'
+# Cell ids hold the random habit id and the date, so they are matched by pattern. The first match
+# is the 1st of the month: a past (or today's) day, so it can always be toggled.
+- assertVisible:
+    id: 'habits-month-cell-.*'
+    checked: false
+- tapOn:
+    id: 'habits-month-cell-.*'
+- assertVisible:
+    id: 'habits-month-cell-.*'
+    checked: true
+- tapOn:
+    id: 'habits-month-cell-.*'
+- assertVisible:
+    id: 'habits-month-cell-.*'
+    checked: false
+# The current month is the last one: next is disabled until we go back.
+- assertVisible:
+    id: 'habits-month-next'
+    enabled: false
+- tapOn:
+    id: 'habits-month-previous'
+- assertVisible:
+    id: 'habits-month-next'
+    enabled: true
+- tapOn:
+    id: 'habits-month-next'
+- assertVisible:
+    id: 'habits-month-next'
+    enabled: false
+- tapOn:
+    id: 'habits-month-back'
+- assertVisible: 'Read 10 pages'
