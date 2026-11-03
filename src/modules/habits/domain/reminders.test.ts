@@ -1,7 +1,9 @@
 import {
   defaultReminders,
   formatTime,
+  isReminderData,
   planReminders,
+  reminderData,
   reminderMessage,
   shiftTime,
   type ReminderSetting,
@@ -145,5 +147,14 @@ describe('planReminders', () => {
       '2026-11-03-morning',
       '2026-11-03-evening',
     ]);
+  });
+});
+
+describe('isReminderData', () => {
+  it('recognises what a Habits reminder carries, and nothing else', () => {
+    expect(isReminderData(reminderData)).toBe(true);
+    expect(isReminderData({ kind: 'other' })).toBe(false);
+    expect(isReminderData(null)).toBe(false);
+    expect(isReminderData('habits-reminder')).toBe(false);
   });
 });

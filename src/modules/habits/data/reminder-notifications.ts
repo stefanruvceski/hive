@@ -3,16 +3,18 @@
 import {
   AndroidImportance,
   cancelAllScheduledNotificationsAsync,
+  DEFAULT_ACTION_IDENTIFIER,
   getPermissionsAsync,
   requestPermissionsAsync,
   scheduleNotificationAsync,
   SchedulableTriggerInputTypes,
   setNotificationChannelAsync,
   setNotificationHandler,
+  useLastNotificationResponse,
 } from 'expo-notifications';
 import { Platform } from 'react-native';
 
-import type { PlannedReminder } from '../domain/reminders';
+import { isReminderData, reminderData, type PlannedReminder } from '../domain/reminders';
 
 const channelId = 'habit-reminders';
 
@@ -61,10 +63,22 @@ export function scheduleReminders(planned: readonly PlannedReminder[]): Promise<
       for (const { id, at, title, body } of planned) {
         await scheduleNotificationAsync({
           identifier: id,
-          content: { title, body },
+          content: { title, body, data: reminderData },
           trigger: { type: SchedulableTriggerInputTypes.DATE, date: at, channelId },
         });
       }
     });
   return queue;
+}
+
+/**
+ * Identifies the latest tap on a Habits reminder (also the one that launched the app), or null.
+ * A new tap gives a new value, so the caller can act once per tap.
+ */
+export function useReminderTap(): string | null {
+  const response = useLastNotificationResponse();
+  if (!response || response.actionIdentifier !== DEFAULT_ACTION_IDENTIFIER) return null;
+  const { identifier, content } = response.notification.request;
+  if (!isReminderData(content.data)) return null;
+  return `${identifier}@${response.notification.date}`;
 }
