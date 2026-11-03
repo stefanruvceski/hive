@@ -1,0 +1,73 @@
+# Habits (#8): swipe a habit for Edit and Archive → restore it → delete it permanently. The
+# habit's id is random, so its controls are matched by pattern. A full swipe (runs Archive without
+# the buttons) is covered by domain/swipe.test.ts: Maestro cannot control the swipe distance.
+# Run locally: pnpm test:e2e   (needs a dev build installed on the simulator/emulator)
+appId: com.ruvceski.hive.dev
+tags:
+  - habits
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: 'home-open-habits'
+- tapOn:
+    id: 'habits-empty-add'
+- tapOn:
+    id: 'habits-new-name'
+- inputText: 'Read'
+- hideKeyboard
+- tapOn:
+    id: 'habits-new-save'
+- assertVisible: 'Read'
+# Swipe towards the start of the row: Edit and Archive appear. Tap Edit, rename, move to evening.
+- swipe:
+    from:
+      id: 'habits-streak-.*'
+    direction: LEFT
+- tapOn:
+    id: 'habits-swipe-.*-edit'
+- tapOn:
+    id: 'habits-edit-name'
+- inputText: ' 10 pages'
+- hideKeyboard
+- tapOn:
+    id: 'habits-edit-time-evening'
+- tapOn:
+    id: 'habits-edit-save'
+- assertVisible:
+    id: 'habits-section-evening'
+- assertVisible: 'Read 10 pages'
+# Swipe and tap Archive: it is gone from the list.
+- swipe:
+    from:
+      id: 'habits-streak-.*'
+    direction: LEFT
+- tapOn:
+    id: 'habits-swipe-.*-archive'
+- assertVisible:
+    id: 'habits-empty'
+# Restore from Archived habits.
+- tapOn:
+    id: 'habits-archived-link'
+- assertVisible: 'Read 10 pages'
+- tapOn:
+    id: 'habits-archived-restore-.*'
+- assertVisible:
+    id: 'habits-archived-empty'
+- tapOn:
+    id: 'habits-archived-back'
+- assertVisible: 'Read 10 pages'
+# Archive again and delete permanently (the confirm warns about the history).
+- swipe:
+    from:
+      id: 'habits-streak-.*'
+    direction: LEFT
+- tapOn:
+    id: 'habits-swipe-.*-archive'
+- tapOn:
+    id: 'habits-archived-link'
+- tapOn:
+    id: 'habits-archived-delete-.*'
+- tapOn: 'Delete'
+- assertVisible:
+    id: 'habits-archived-empty'
