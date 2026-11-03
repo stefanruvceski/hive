@@ -1,0 +1,40 @@
+# Habits year dashboard (#15): add a habit, mark it done today, open Year → the heatmap and the
+# insights show it; the next-year button is disabled; the previous year is empty.
+# Run locally: pnpm test:e2e   (needs a dev build installed on the simulator/emulator)
+appId: com.ruvceski.hive.dev
+tags:
+  - habits
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: 'home-open-habits'
+- tapOn:
+    id: 'habits-empty-add'
+- tapOn:
+    id: 'habits-new-name'
+- inputText: 'Read'
+- hideKeyboard
+- tapOn:
+    id: 'habits-new-save'
+- tapOn:
+    id: 'habits-check-.*'
+- tapOn:
+    id: 'habits-year'
+- assertVisible:
+    id: 'habits-year-screen'
+- assertVisible:
+    id: 'habits-year-heatmap'
+- assertVisible:
+    id: 'habits-year-total'
+- assertVisible:
+    id: 'habits-year-most-completed'
+# Cannot go past the current year; the previous year has nothing done.
+- tapOn:
+    id: 'habits-year-prev'
+- assertVisible:
+    id: 'habits-year-empty'
+- tapOn:
+    id: 'habits-year-back'
+- assertVisible:
+    id: 'habits-screen'

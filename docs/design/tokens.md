@@ -79,6 +79,15 @@ settle.
 | -------- | ------------------------ | -------------------- | ------------------------------------- |
 | `dotOff` | `rgba(255,255,255,0.25)` | `rgba(15,23,42,0.2)` | Page dot that is not the current page |
 
+**Habits year heatmap** (#15; proposed here, not yet in the canvas): one 14 pt cell per day, radius 3, 3 apart. A day with no completions uses `segmentTrack`; otherwise the share of habits done picks a step.
+
+| Token   | Dark                    | Light                   | Use                                 |
+| ------- | ----------------------- | ----------------------- | ----------------------------------- |
+| `heat1` | `rgba(45,212,191,0.28)` | `rgba(45,212,191,0.30)` | Up to a quarter of the habits done  |
+| `heat2` | `rgba(45,212,191,0.50)` | `rgba(45,212,191,0.55)` | Up to half                          |
+| `heat3` | `rgba(45,212,191,0.75)` | `rgba(20,184,166,0.80)` | Up to three quarters                |
+| `heat4` | `#2DD4BF`               | `#0F766E`               | More than three quarters, up to all |
+
 Section: the heading 4 in from the first widget, then the widget strip and the dots, 10 apart. The strip
 starts where the group grid starts (20 on a 390 pt phone, more on wider screens, so Today and the cards
 line up; #33 review). Widgets are square cards (169, padding 13, radius 30) 12 apart, with an 8 pt
