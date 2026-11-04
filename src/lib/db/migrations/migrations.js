@@ -16,6 +16,7 @@ import m0011 from './0011_glossy_dark_phoenix.sql';
 import m0012 from './0012_past_arclight.sql';
 import m0013 from './0013_amazing_epoch.sql';
 import m0014 from './0014_square_ben_parker.sql';
+import m0015 from './0015_abandoned_ronan.sql';
 
   export default {
     journal,
@@ -34,7 +35,8 @@ m0010,
 m0011,
 m0012,
 m0013,
-m0014
+m0014,
+m0015
     }
   }
   

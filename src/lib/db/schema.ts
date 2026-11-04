@@ -44,3 +44,18 @@ export const homeAppUsage = sqliteTable(
   },
   (table) => [primaryKey({ columns: [table.moduleId, table.date] })],
 );
+
+/** Module events outbox (ADR 0003): append-only, deleted once every registered consumer has read it. */
+export const coreEvents = sqliteTable('core_events', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  type: text('type').notNull(),
+  version: integer('version').notNull(),
+  payload: text('payload').notNull(),
+  createdAt: integer('created_at').notNull(),
+});
+
+/** One row per registered event consumer: the last event it handled. */
+export const coreEventCursor = sqliteTable('core_event_cursor', {
+  consumer: text('consumer').primaryKey(),
+  lastEventId: integer('last_event_id').notNull(),
+});
