@@ -50,10 +50,8 @@ const renderScreen = () =>
 describe('MoneyBudgets', () => {
   it("shows this month's spending against the limit in force", async () => {
     await renderScreen();
-    expect(screen.getByTestId('money-budget-status-food')).toHaveTextContent(
-      /90\.00 RSD of 100\.00 RSD/,
-    );
-    expect(screen.getByTestId('money-budget-status-fun')).toHaveTextContent(/0\.00 RSD spent/);
+    expect(screen.getByTestId('money-budget-status-food')).toHaveTextContent(/90 RSD of 100 RSD/);
+    expect(screen.getByTestId('money-budget-status-fun')).toHaveTextContent(/0 RSD spent/);
   });
 
   it('saves a new limit from this month on', async () => {

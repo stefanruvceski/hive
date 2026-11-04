@@ -120,8 +120,8 @@ describe('MoneyEntry', () => {
 
     await user.type(screen.getByTestId('money-entry-amount'), '10');
     await user.press(screen.getByTestId('money-entry-currency-EUR'));
-    expect(screen.getByTestId('money-entry-rate').props.value).toBe('117.2');
-    expect(screen.getByTestId('money-entry-rsd')).toHaveTextContent(/1,172\.00 RSD/);
+    expect(screen.queryByTestId('money-entry-rate')).not.toBeOnTheScreen();
+    expect(screen.getByTestId('money-entry-rsd')).toHaveTextContent(/1,172 RSD at 117\.2$/);
   });
 
   it("prefers the bank's rate for the day and says so", async () => {
@@ -131,20 +131,21 @@ describe('MoneyEntry', () => {
 
     await user.type(screen.getByTestId('money-entry-amount'), '10');
     await user.press(screen.getByTestId('money-entry-currency-EUR'));
-    expect(screen.getByTestId('money-entry-rate').props.value).toBe('117.4');
-    expect(screen.getByTestId('money-entry-rsd')).toHaveTextContent(/NBS middle rate/);
+    expect(screen.queryByTestId('money-entry-rate')).not.toBeOnTheScreen();
+    expect(screen.getByTestId('money-entry-rsd')).toHaveTextContent(
+      /at 117\.4 \(NBS middle rate\)/,
+    );
   });
 
-  it('lets the user overwrite the fetched rate', async () => {
-    jest.mocked(useNbsRate).mockReturnValue({ data: 117.4, isFetching: false } as never);
+  it('asks for a rate only when none is known', async () => {
+    jest.mocked(useNbsRate).mockReturnValue({ data: undefined, isFetching: false } as never);
     await renderEntry();
     const user = userEvent.setup();
 
     await user.type(screen.getByTestId('money-entry-amount'), '10');
-    await user.press(screen.getByTestId('money-entry-currency-EUR'));
-    await user.clear(screen.getByTestId('money-entry-rate'));
+    await user.press(screen.getByTestId('money-entry-currency-USD'));
     await user.type(screen.getByTestId('money-entry-rate'), '118');
-    expect(screen.getByTestId('money-entry-rsd')).toHaveTextContent(/1,180\.00 RSD at 118$/);
+    expect(screen.getByTestId('money-entry-rsd')).toHaveTextContent(/1,180 RSD at 118$/);
   });
 
   it('says when the bank rate is being fetched', async () => {

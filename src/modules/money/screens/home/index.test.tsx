@@ -57,9 +57,9 @@ describe('MoneyHome', () => {
     await renderHome();
 
     expect(screen.getByTestId('money-month-label')).toHaveTextContent('November 2026');
-    expect(screen.getByTestId('money-total-income')).toHaveTextContent(/5,000\.00 RSD/);
-    expect(screen.getByTestId('money-total-expense')).toHaveTextContent(/1,200\.00 RSD/);
-    expect(screen.getByTestId('money-total-balance')).toHaveTextContent(/\+3,800\.00 RSD/);
+    expect(screen.getByTestId('money-total-income')).toHaveTextContent(/5,000/);
+    expect(screen.getByTestId('money-total-expense')).toHaveTextContent(/1,200/);
+    expect(screen.getByTestId('money-total-balance')).toHaveTextContent(/\+3,800/);
     expect(screen.getByTestId('money-entry-a')).toBeOnTheScreen();
     expect(screen.queryByTestId('money-entry-c')).not.toBeOnTheScreen();
     expect(screen.queryByTestId('money-entry-d')).not.toBeOnTheScreen();
@@ -73,7 +73,7 @@ describe('MoneyHome', () => {
     );
     await renderHome();
 
-    expect(screen.getByTestId('money-entry-a')).toHaveTextContent(/1,170\.00 RSD/);
+    expect(screen.getByTestId('money-entry-a')).toHaveTextContent(/1,170 RSD/);
     expect(screen.getByTestId('money-entry-a')).toHaveTextContent(/10\.00 EUR/);
   });
 

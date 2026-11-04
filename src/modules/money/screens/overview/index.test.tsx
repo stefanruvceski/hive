@@ -40,7 +40,7 @@ describe('MoneyOverview', () => {
     ]);
     await renderScreen();
 
-    expect(screen.getByTestId('money-overview-spent')).toHaveTextContent(/100\.00 RSD/);
+    expect(screen.getByTestId('money-overview-spent')).toHaveTextContent(/100 RSD/);
     expect(screen.getByTestId('money-overview-category-food')).toHaveTextContent(/75%/);
     expect(screen.getByTestId('money-overview-category-fun')).toHaveTextContent(/25%/);
   });
@@ -69,7 +69,7 @@ describe('MoneyOverview', () => {
     expect(screen.getByTestId('money-overview-label')).toHaveTextContent('2026');
     expect(screen.getByTestId('money-overview-chart')).toBeOnTheScreen();
     expect(screen.getByTestId('money-overview-year-summary')).toHaveTextContent(
-      /Income 200\.00 RSD, spent 75\.00 RSD/,
+      /Income 200 RSD, spent 75 RSD/,
     );
   });
 

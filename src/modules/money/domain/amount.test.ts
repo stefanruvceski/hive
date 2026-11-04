@@ -1,4 +1,13 @@
-import { allocate, formatMinor, minorToText, parseAmount, parseRate, toRsdMinor } from './amount';
+import {
+  allocate,
+  currencies,
+  formatMinor,
+  formatWhole,
+  minorToText,
+  parseAmount,
+  parseRate,
+  toRsdMinor,
+} from './amount';
 
 describe('parseAmount', () => {
   it('reads whole and decimal amounts, with a comma or a dot', () => {
@@ -19,11 +28,20 @@ describe('parseAmount', () => {
   });
 });
 
+describe('currencies', () => {
+  it('offers the base currency first and no BAM', () => {
+    expect(currencies[0]).toBe('RSD');
+    expect(currencies).not.toContain('BAM');
+  });
+});
+
 describe('formatMinor', () => {
   it('groups thousands and shows the currency', () => {
     expect(formatMinor(123450, 'EUR')).toBe('1,234.50 EUR');
-    expect(formatMinor(5)).toBe('0.05 RSD');
-    expect(formatMinor(-100000)).toBe('−1,000.00 RSD');
+    expect(formatMinor(5)).toBe('0 RSD');
+    expect(formatMinor(123450)).toBe('1,235 RSD');
+    expect(formatMinor(-100000)).toBe('−1,000 RSD');
+    expect(formatWhole(-100000)).toBe('−1,000');
     expect(minorToText(1250)).toBe('12.50');
   });
 });

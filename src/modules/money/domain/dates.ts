@@ -56,3 +56,17 @@ export const monthBounds = (month: string): { from: string; to: string } => ({
 
 export const isIsoDate = (value: string): boolean =>
   /^\d{4}-\d{2}-\d{2}$/.test(value) && utc(value).toISOString().slice(0, 10) === value;
+
+/** A `YYYY-MM-DD` day as a local date at noon, which no time zone shifts to another day. */
+export const isoToDate = (date: string): Date => {
+  const [year = 0, month = 1, day = 1] = date.split('-').map(Number);
+  return new Date(year, month - 1, day, 12);
+};
+
+/** The local calendar day of a date as `YYYY-MM-DD`. */
+export const dateToIso = (date: Date): string =>
+  [
+    String(date.getFullYear()).padStart(4, '0'),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-');

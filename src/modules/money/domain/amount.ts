@@ -1,7 +1,7 @@
 // Pure money arithmetic: amounts are integer minor units (para/cents), never floats. Tested in amount.test.ts.
 
 /** Currencies offered in V1 (all with two decimals). RSD is the base. */
-export const currencies = ['RSD', 'EUR', 'USD', 'CHF', 'GBP', 'BAM'] as const;
+export const currencies = ['RSD', 'EUR', 'USD', 'CHF', 'GBP'] as const;
 export type Currency = (typeof currencies)[number];
 export const baseCurrency: Currency = 'RSD';
 
@@ -16,8 +16,15 @@ export function parseAmount(text: string): number | null {
   return minor > 0 && minor <= maxMinor ? minor : null;
 }
 
-/** "1,234.50 EUR"; a minus sign for negative. */
+/** Whole units with thousands separators and no currency: 123450 → "1,235"; a minus sign for negative. */
+export function formatWhole(minor: number): string {
+  const whole = String(Math.round(Math.abs(minor) / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `${minor < 0 && whole !== '0' ? '−' : ''}${whole}`;
+}
+
+/** "1,234.50 EUR"; dinars are shown whole ("1,235 RSD"); a minus sign for negative. */
 export function formatMinor(minor: number, currency: string = baseCurrency): string {
+  if (currency === baseCurrency) return `${formatWhole(minor)} ${currency}`;
   const sign = minor < 0 ? '−' : '';
   const abs = Math.abs(minor);
   const whole = String(Math.floor(abs / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');

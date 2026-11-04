@@ -14,7 +14,7 @@ import { useToday } from '@/hooks/use-today';
 
 import { type Category, type Entry, useCategories, useEntries } from '../../data/queries';
 import { useGenerateRecurring } from '../../data/recurring-queries';
-import { formatMinor } from '../../domain/amount';
+import { formatMinor, formatWhole } from '../../domain/amount';
 import { monthLabel, monthOf, shiftMonth } from '../../domain/dates';
 import { groupByDay, totalsOf } from '../../domain/entries';
 import { categoryLabel, inView, type Business } from '../../domain/owners';
@@ -224,6 +224,9 @@ function Month({
         <Total label="Spent" value={totals.expense} testID="money-total-expense" />
         <Total label="Balance" value={totals.balance} testID="money-total-balance" signed />
       </GlassSurface>
+      <ThemedText type="footnote" themeColor="textTertiary" testID="money-totals-note">
+        Totals in RSD
+      </ThemedText>
       {groupByDay(entries).map((day) => (
         <View key={day.date} style={styles.day} testID={`money-day-${day.date}`}>
           <ThemedText type="listHeader">{day.date}</ThemedText>
@@ -266,7 +269,7 @@ function Total({
       <ThemedText type="footnote" themeColor="textTertiary">
         {label}
       </ThemedText>
-      <ThemedText type="headline">{`${signed && value > 0 ? '+' : ''}${formatMinor(value)}`}</ThemedText>
+      <ThemedText type="headline">{`${signed && value > 0 ? '+' : ''}${formatWhole(value)}`}</ThemedText>
     </View>
   );
 }

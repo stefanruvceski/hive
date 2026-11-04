@@ -1,7 +1,9 @@
 import {
   addDays,
+  dateToIso,
   daysInMonth,
   isIsoDate,
+  isoToDate,
   isoWeekday,
   monthBounds,
   monthLabel,
@@ -42,5 +44,10 @@ describe('dates', () => {
     expect(isIsoDate('2026-02-29')).toBe(false);
     expect(isIsoDate('2026-11-03')).toBe(true);
     expect(isIsoDate('11/03/2026')).toBe(false);
+  });
+
+  it('converts a day to a local date and back', () => {
+    expect(dateToIso(isoToDate('2026-11-04'))).toBe('2026-11-04');
+    expect(dateToIso(isoToDate('2026-01-01'))).toBe('2026-01-01');
   });
 });

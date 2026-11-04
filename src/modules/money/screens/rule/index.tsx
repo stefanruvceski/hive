@@ -13,6 +13,7 @@ import { baseCurrency, currencies, minorToText, parseAmount } from '../../domain
 import { isIsoDate } from '../../domain/dates';
 import { type Business, ownerForView, ownerOf, spaceOfOwner } from '../../domain/owners';
 import { weekdayName } from '../../domain/recurring';
+import { DateField } from '../components/date-field';
 import { Chips, Field, Group } from '../components/fields';
 import { Gate } from '../components/gate';
 import { MoneyScreen } from '../components/money-screen';
@@ -33,26 +34,36 @@ export function MoneyRule({ id }: { id?: string }) {
   const categories = useCategories();
   const scope = useMoneyView();
   const rule = id ? rules.data?.find((row) => row.id === id) : undefined;
+  const queries = [rules, categories, ...scope.queries];
+  const title = id ? 'Edit rule' : 'New rule';
+  if (queries.some((query) => query.data === undefined)) {
+    return (
+      <MoneyScreen id="money-rule" title={title}>
+        <Gate queries={queries} id="money-rule">
+          {null}
+        </Gate>
+      </MoneyScreen>
+    );
+  }
   return (
-    <MoneyScreen id="money-rule" title={id ? 'Edit rule' : 'New rule'}>
-      <Gate queries={[rules, categories, ...scope.queries]} id="money-rule">
-        <RuleForm
-          rule={rule}
-          categories={categories.data ?? []}
-          businesses={scope.live}
-          startOwner={rule ? ownerOf(rule) : ownerForView(scope.view)}
-        />
-      </Gate>
-    </MoneyScreen>
+    <RuleForm
+      title={title}
+      rule={rule}
+      categories={categories.data ?? []}
+      businesses={scope.live}
+      startOwner={rule ? ownerOf(rule) : ownerForView(scope.view)}
+    />
   );
 }
 
 function RuleForm({
+  title,
   rule,
   categories,
   businesses,
   startOwner,
 }: {
+  title: string;
   rule?: Rule;
   categories: Category[];
   businesses: Business[];
@@ -108,7 +119,18 @@ function RuleForm({
   };
 
   return (
-    <>
+    <MoneyScreen
+      id="money-rule"
+      title={title}
+      trailing={
+        <PrimaryButton
+          label="Save"
+          size="compact"
+          onPress={submit}
+          disabled={save.isPending}
+          testID="money-rule-save"
+        />
+      }>
       <SegmentedControl
         options={kindOptions}
         value={kind}
@@ -174,15 +196,7 @@ function RuleForm({
             type="footnote"
             themeColor="textTertiary">{`Every ${weekdayName(Number(day))}`}</ThemedText>
         ) : null}
-        <Field
-          label="Starts"
-          value={start}
-          onChangeText={setStart}
-          placeholder="YYYY-MM-DD"
-          autoCapitalize="none"
-          maxLength={10}
-          testID="money-rule-start"
-        />
+        <DateField label="Starts" value={start} onChange={setStart} testID="money-rule-start" />
       </Group>
       <Group title="Note">
         <Field
@@ -198,7 +212,6 @@ function RuleForm({
           {error}
         </ThemedText>
       ) : null}
-      <PrimaryButton label="Save" onPress={submit} testID="money-rule-save" />
-    </>
+    </MoneyScreen>
   );
 }

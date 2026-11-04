@@ -34,6 +34,7 @@ import { addDays, isIsoDate } from '../../domain/dates';
 import { checkItems } from '../../domain/items';
 import { type Business, ownerForView, ownerOf, spaceOfOwner } from '../../domain/owners';
 import { pickRate } from '../../domain/rates';
+import { DateField } from '../components/date-field';
 import { Chips, Field, Group } from '../components/fields';
 import { Gate } from '../components/gate';
 import { MoneyScreen } from '../components/money-screen';
@@ -57,27 +58,32 @@ export function MoneyEntry({ id }: { id?: string }) {
   const queries = [entries, items, categories, rates, ...scope.queries];
   const entry = id ? entries.data?.find((row) => row.id === id) : undefined;
 
-  return (
-    <MoneyScreen id="money-entry" title={id ? 'Edit entry' : 'New entry'}>
-      <Gate queries={queries} id="money-entry">
-        {id && !entry ? (
+  const title = id ? 'Edit entry' : 'New entry';
+
+  if (queries.some((query) => query.data === undefined) || (id && !entry)) {
+    return (
+      <MoneyScreen id="money-entry" title={title}>
+        <Gate queries={queries} id="money-entry">
           <ThemedText testID="money-entry-missing">This entry no longer exists.</ThemedText>
-        ) : (
-          <EntryForm
-            entry={entry}
-            entryItems={items.data?.filter((item) => item.entryId === id) ?? []}
-            categories={categories.data ?? []}
-            rates={rates.data ?? []}
-            businesses={scope.businesses}
-            startOwner={entry ? ownerOf(entry) : ownerForView(scope.view)}
-          />
-        )}
-      </Gate>
-    </MoneyScreen>
+        </Gate>
+      </MoneyScreen>
+    );
+  }
+  return (
+    <EntryForm
+      title={title}
+      entry={entry}
+      entryItems={items.data?.filter((item) => item.entryId === id) ?? []}
+      categories={categories.data ?? []}
+      rates={rates.data ?? []}
+      businesses={scope.businesses}
+      startOwner={entry ? ownerOf(entry) : ownerForView(scope.view)}
+    />
   );
 }
 
 type FormProps = {
+  title: string;
   entry: Entry | undefined;
   entryItems: Item[];
   categories: Category[];
@@ -88,7 +94,15 @@ type FormProps = {
 };
 
 // The form owns its fields from the first render, so it mounts only once the data is in.
-function EntryForm({ entry, entryItems, categories, rates, businesses, startOwner }: FormProps) {
+function EntryForm({
+  title,
+  entry,
+  entryItems,
+  categories,
+  rates,
+  businesses,
+  startOwner,
+}: FormProps) {
   const today = useToday();
   const save = useSaveEntry();
   const remove = useDeleteEntry();
@@ -203,7 +217,18 @@ function EntryForm({ entry, entryItems, categories, rates, businesses, startOwne
     setRows(rows.map((row) => (row.key === key ? { ...row, ...patch } : row)));
 
   return (
-    <>
+    <MoneyScreen
+      id="money-entry"
+      title={title}
+      trailing={
+        <PrimaryButton
+          label="Save"
+          size="compact"
+          onPress={submit}
+          disabled={save.isPending}
+          testID="money-entry-save"
+        />
+      }>
       <SegmentedControl
         options={kindOptions}
         value={kind}
@@ -262,14 +287,16 @@ function EntryForm({ entry, entryItems, categories, rates, businesses, startOwne
         />
         {foreign ? (
           <>
-            <Field
-              label={`Rate, RSD per ${currency}`}
-              value={shownRate}
-              onChangeText={setRateText}
-              placeholder={`RSD per 1 ${currency}`}
-              keyboardType="decimal-pad"
-              testID="money-entry-rate"
-            />
+            {suggestion === null ? (
+              <Field
+                label={`Rate, RSD per ${currency}`}
+                value={shownRate}
+                onChangeText={setRateText}
+                placeholder={`RSD per 1 ${currency}`}
+                keyboardType="decimal-pad"
+                testID="money-entry-rate"
+              />
+            ) : null}
             <ThemedText type="footnote" themeColor="textTertiary" testID="money-entry-rsd">
               {rsd !== null
                 ? `= ${formatMinor(rsd)} at ${shownRate}${rateText === null && nbs.data ? ' (NBS middle rate)' : ''}`
@@ -281,15 +308,7 @@ function EntryForm({ entry, entryItems, categories, rates, businesses, startOwne
         ) : null}
       </Group>
       <Group title="Date">
-        <Field
-          label="Date"
-          value={date}
-          onChangeText={setDate}
-          placeholder="YYYY-MM-DD"
-          autoCapitalize="none"
-          maxLength={10}
-          testID="money-entry-date"
-        />
+        <DateField label="Date" value={date} onChange={setDate} testID="money-entry-date" />
         <Chips
           options={[
             { value: 'today', label: 'Today' },
@@ -375,7 +394,6 @@ function EntryForm({ entry, entryItems, categories, rates, businesses, startOwne
           {error}
         </ThemedText>
       ) : null}
-      <PrimaryButton label="Save" onPress={submit} testID="money-entry-save" />
       {entry ? (
         <Pressable
           role="button"
@@ -386,7 +404,7 @@ function EntryForm({ entry, entryItems, categories, rates, businesses, startOwne
           <ThemedText themeColor="danger">Delete entry</ThemedText>
         </Pressable>
       ) : null}
-    </>
+    </MoneyScreen>
   );
 }
 

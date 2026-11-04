@@ -214,6 +214,17 @@ function YearView({ bars }: { bars: MonthBar[] }) {
               );
             })}
           </Svg>
+          <View style={styles.months} aria-hidden>
+            {'JFMAMJJASOND'.split('').map((letter, index) => (
+              <ThemedText
+                key={index}
+                type="footnote"
+                themeColor="textTertiary"
+                style={styles.month}>
+                {letter}
+              </ThemedText>
+            ))}
+          </View>
         </View>
         <View style={styles.legend}>
           <ThemedText type="footnote" themeColor="accentText">
@@ -253,5 +264,7 @@ const styles = StyleSheet.create({
   },
   track: { height: 6, borderRadius: 3, overflow: 'hidden' },
   fill: { height: 6, borderRadius: 3 },
+  months: { flexDirection: 'row', paddingTop: Spacing.one },
+  month: { flex: 1, textAlign: 'center' },
   legend: { flexDirection: 'row', gap: Spacing.three, paddingTop: Spacing.two },
 });
