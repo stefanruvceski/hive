@@ -222,7 +222,7 @@ function Month({
         testID="money-totals">
         <Total label="Income" value={totals.income} testID="money-total-income" />
         <Total label="Spent" value={totals.expense} testID="money-total-expense" />
-        <Total label="Balance" value={totals.balance} testID="money-total-balance" signed />
+        <Total label="Balance" value={totals.balance} testID="money-total-balance" />
       </GlassSurface>
       <ThemedText type="footnote" themeColor="textTertiary" testID="money-totals-note">
         Totals in RSD
@@ -253,23 +253,19 @@ function Month({
   );
 }
 
-function Total({
-  label,
-  value,
-  testID,
-  signed,
-}: {
-  label: string;
-  value: number;
-  testID: string;
-  signed?: boolean;
-}) {
+function Total({ label, value, testID }: { label: string; value: number; testID: string }) {
   return (
     <View style={styles.total} testID={testID}>
       <ThemedText type="footnote" themeColor="textTertiary">
         {label}
       </ThemedText>
-      <ThemedText type="headline">{`${signed && value > 0 ? '+' : ''}${formatWhole(value)}`}</ThemedText>
+      <ThemedText
+        type="headline"
+        themeColor={value < 0 ? 'danger' : 'text'}
+        numberOfLines={1}
+        adjustsFontSizeToFit>
+        {formatWhole(value)}
+      </ThemedText>
     </View>
   );
 }

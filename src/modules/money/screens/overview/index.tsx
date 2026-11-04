@@ -1,6 +1,6 @@
 import { Fragment, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Svg, { Rect } from 'react-native-svg';
+import Svg, { Line, Rect, Text as SvgText } from 'react-native-svg';
 
 import { ThemedText } from '@/components/themed-text';
 import { GlassSurface } from '@/components/ui/glass-surface';
@@ -12,7 +12,13 @@ import { useToday } from '@/hooks/use-today';
 import { useCategories, useEntries, useItems } from '../../data/queries';
 import { formatMinor } from '../../domain/amount';
 import { monthLabel, monthOf, shiftMonth } from '../../domain/dates';
-import { type MonthBar, monthSummary, yearSeries } from '../../domain/overview';
+import {
+  axisLabel,
+  axisTicks,
+  type MonthBar,
+  monthSummary,
+  yearSeries,
+} from '../../domain/overview';
 import { categoryLabel, inView } from '../../domain/owners';
 import { Group } from '../components/fields';
 import { Gate } from '../components/gate';
@@ -164,13 +170,16 @@ function MonthView({
   );
 }
 
-const chart = { width: 336, height: 140, gap: 4 };
+// Left gutter for the axis labels; the plot is the rest. Months are letters under the plot.
+const chart = { width: 336, top: 8, plotHeight: 140, labelHeight: 18, gutter: 40, gap: 4 };
+const monthLetters = 'JFMAMJJASOND'.split('');
 
 function YearView({ bars }: { bars: MonthBar[] }) {
   const theme = useTheme();
-  const max = Math.max(1, ...bars.flatMap((bar) => [bar.income, bar.expense]));
-  const slot = chart.width / 12;
-  const barWidth = (slot - chart.gap) / 2;
+  const ticks = axisTicks(Math.max(0, ...bars.flatMap((bar) => [bar.income, bar.expense])));
+  const top = ticks[ticks.length - 1] ?? 1;
+  const slot = (chart.width - chart.gutter) / 12;
+  const height = (value: number) => (value / top) * chart.plotHeight;
   const total = bars.reduce(
     (acc, bar) => ({ income: acc.income + bar.income, expense: acc.expense + bar.expense }),
     { income: 0, expense: 0 },
@@ -187,44 +196,65 @@ function YearView({ bars }: { bars: MonthBar[] }) {
     <>
       <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.card}>
         <View accessible aria-label={`Year chart. ${summary}`} testID="money-overview-chart">
-          <Svg width="100%" height={chart.height} viewBox={`0 0 ${chart.width} ${chart.height}`}>
+          <Svg
+            width="100%"
+            height={chart.top + chart.plotHeight + chart.labelHeight}
+            viewBox={`0 0 ${chart.width} ${chart.top + chart.plotHeight + chart.labelHeight}`}>
+            {ticks.map((tick) => {
+              const y = chart.top + chart.plotHeight - height(tick);
+              return (
+                <Fragment key={tick}>
+                  <Line
+                    x1={chart.gutter}
+                    x2={chart.width}
+                    y1={y}
+                    y2={y}
+                    stroke={theme.controlBorder}
+                    strokeWidth={1}
+                  />
+                  <SvgText
+                    x={chart.gutter - 6}
+                    y={y + 4}
+                    fontSize={10}
+                    textAnchor="end"
+                    fill={theme.textTertiary}>
+                    {axisLabel(tick)}
+                  </SvgText>
+                </Fragment>
+              );
+            })}
             {bars.map((bar, index) => {
-              const x = index * slot;
-              const income = (bar.income / max) * (chart.height - 4);
-              const expense = (bar.expense / max) * (chart.height - 4);
+              const x = chart.gutter + index * slot + chart.gap / 2;
+              // The bars share a month's slot; the smaller one is drawn over the bigger one.
+              const parts = [
+                { value: bar.income, fill: theme.accent },
+                { value: bar.expense, fill: theme.danger },
+              ].sort((p, q) => q.value - p.value);
               return (
                 <Fragment key={bar.month}>
-                  <Rect
-                    x={x}
-                    y={chart.height - income}
-                    width={barWidth}
-                    height={income}
-                    rx={2}
-                    fill={theme.accent}
-                  />
-                  <Rect
-                    x={x + barWidth}
-                    y={chart.height - expense}
-                    width={barWidth}
-                    height={expense}
-                    rx={2}
-                    fill={theme.danger}
-                  />
+                  {parts.map((part) => (
+                    <Rect
+                      key={part.fill}
+                      x={x}
+                      y={chart.top + chart.plotHeight - height(part.value)}
+                      width={slot - chart.gap}
+                      height={height(part.value)}
+                      rx={2}
+                      fill={part.fill}
+                    />
+                  ))}
+                  <SvgText
+                    x={x + (slot - chart.gap) / 2}
+                    y={chart.top + chart.plotHeight + 14}
+                    fontSize={11}
+                    textAnchor="middle"
+                    fill={theme.textTertiary}>
+                    {monthLetters[index]}
+                  </SvgText>
                 </Fragment>
               );
             })}
           </Svg>
-          <View style={styles.months} aria-hidden>
-            {'JFMAMJJASOND'.split('').map((letter, index) => (
-              <ThemedText
-                key={index}
-                type="footnote"
-                themeColor="textTertiary"
-                style={styles.month}>
-                {letter}
-              </ThemedText>
-            ))}
-          </View>
         </View>
         <View style={styles.legend}>
           <ThemedText type="footnote" themeColor="accentText">
@@ -264,7 +294,5 @@ const styles = StyleSheet.create({
   },
   track: { height: 6, borderRadius: 3, overflow: 'hidden' },
   fill: { height: 6, borderRadius: 3 },
-  months: { flexDirection: 'row', paddingTop: Spacing.one },
-  month: { flex: 1, textAlign: 'center' },
   legend: { flexDirection: 'row', gap: Spacing.three, paddingTop: Spacing.two },
 });

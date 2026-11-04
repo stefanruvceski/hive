@@ -48,3 +48,25 @@ export function yearSeries(entries: readonly EntryLike[], year: number): MonthBa
     return { month, income, expense };
   });
 }
+
+/**
+ * Horizontal grid lines for a chart whose tallest bar is `maxMinor`: up to four evenly spaced,
+ * round values (250K, 500K, …); the last one is the top of the chart.
+ */
+export function axisTicks(maxMinor: number): number[] {
+  const max = Math.max(maxMinor / 100, 1);
+  const raw = max / 4;
+  const magnitude = 10 ** Math.floor(Math.log10(raw));
+  const nice = [1, 2, 2.5, 5, 10].find((m) => m * magnitude >= raw) ?? 10;
+  const step = Math.max(1, nice * magnitude);
+  return Array.from({ length: Math.ceil(max / step) }, (_, i) => (i + 1) * step * 100);
+}
+
+/** A short axis label for an amount in minor units: 250000 → "250K", 1500000 → "1.5M". */
+export function axisLabel(minor: number): string {
+  const whole = minor / 100;
+  const short = (value: number, unit: string) => `${Number(value.toFixed(1))}${unit}`;
+  if (whole >= 1_000_000) return short(whole / 1_000_000, 'M');
+  if (whole >= 1_000) return short(whole / 1_000, 'K');
+  return String(whole);
+}

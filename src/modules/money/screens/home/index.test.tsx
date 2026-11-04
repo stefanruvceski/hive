@@ -1,6 +1,8 @@
-import { render, screen, userEvent } from '@testing-library/react-native';
+import { render, screen, userEvent, within } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+import { Colors } from '@/constants/theme';
 
 import { MoneyHome } from './index';
 import { useBusinesses } from '../../data/business-queries';
@@ -40,6 +42,15 @@ const renderHome = () =>
   );
 
 describe('MoneyHome', () => {
+  it('shows a negative balance in red with a minus and no plus on a positive one', async () => {
+    show(loaded([entry('a', { amountMinor: 120000, amountRsdMinor: 120000 })]));
+    await renderHome();
+
+    const balance = screen.getByTestId('money-total-balance');
+    expect(balance).toHaveTextContent(/−1,200/);
+    expect(within(balance).getByText('−1,200')).toHaveStyle({ color: Colors.light.danger });
+  });
+
   it('lists the month of the open space, newest day first, with totals', async () => {
     show(
       loaded([
@@ -59,7 +70,7 @@ describe('MoneyHome', () => {
     expect(screen.getByTestId('money-month-label')).toHaveTextContent('November 2026');
     expect(screen.getByTestId('money-total-income')).toHaveTextContent(/5,000/);
     expect(screen.getByTestId('money-total-expense')).toHaveTextContent(/1,200/);
-    expect(screen.getByTestId('money-total-balance')).toHaveTextContent(/\+3,800/);
+    expect(screen.getByTestId('money-total-balance')).toHaveTextContent(/3,800/);
     expect(screen.getByTestId('money-entry-a')).toBeOnTheScreen();
     expect(screen.queryByTestId('money-entry-c')).not.toBeOnTheScreen();
     expect(screen.queryByTestId('money-entry-d')).not.toBeOnTheScreen();

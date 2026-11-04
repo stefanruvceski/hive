@@ -1,5 +1,5 @@
 import type { EntryLike } from './entries';
-import { monthSummary, yearSeries } from './overview';
+import { axisLabel, axisTicks, monthSummary, yearSeries } from './overview';
 
 const entry = (over: Partial<EntryLike> & { id: string }): EntryLike => ({
   space: 'private',
@@ -49,5 +49,29 @@ describe('yearSeries', () => {
     expect(series).toHaveLength(12);
     expect(series[1]).toEqual({ month: '2026-02', income: 2000, expense: 500 });
     expect(series[0]).toEqual({ month: '2026-01', income: 0, expense: 0 });
+  });
+});
+
+describe('axisTicks', () => {
+  it('splits the tallest bar into round steps', () => {
+    expect(axisTicks(100_000_000)).toEqual([25_000_000, 50_000_000, 75_000_000, 100_000_000]);
+    expect(axisTicks(64_804_474)).toEqual([20_000_000, 40_000_000, 60_000_000, 80_000_000]);
+  });
+
+  it('never returns more than four lines and always covers the tallest bar', () => {
+    for (const max of [1, 99, 12_345, 7_000_000, 987_654_321]) {
+      const ticks = axisTicks(max);
+      expect(ticks.length).toBeGreaterThan(0);
+      expect(ticks.length).toBeLessThanOrEqual(4);
+      expect(ticks[ticks.length - 1]).toBeGreaterThanOrEqual(max);
+    }
+  });
+});
+
+describe('axisLabel', () => {
+  it('shortens thousands and millions', () => {
+    expect(axisLabel(25_000_000)).toBe('250K');
+    expect(axisLabel(150_000_000)).toBe('1.5M');
+    expect(axisLabel(50_000)).toBe('500');
   });
 });
