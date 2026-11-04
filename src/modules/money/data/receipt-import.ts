@@ -2,10 +2,11 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/r
 import { and, eq, isNull, like } from 'drizzle-orm';
 import { useEffect } from 'react';
 
+import { businessKeys, ensureBusiness } from '@/hooks/use-businesses';
 import { consume, type DbTx, type HiveEvent, onEvents, pending } from '@/lib/events';
 
 import { moneyKeys, seedCategories } from './queries';
-import { moneyBusinesses, moneyCategories, moneyEntries, moneyItems, type Space } from './schema';
+import { moneyCategories, moneyEntries, moneyItems, type Space } from './schema';
 import { newId } from '../domain/ids';
 import {
   categoryNameFor,
@@ -19,25 +20,6 @@ import {
 
 const CONSUMER = 'money';
 const SOURCE = 'wallet';
-
-/** The business with this PIB, made if it is new; a returning one is brought back if archived. */
-function ensureBusiness(tx: DbTx, pib: string): string {
-  const existing = tx.select().from(moneyBusinesses).where(eq(moneyBusinesses.pib, pib)).get();
-  if (existing) {
-    if (existing.archivedAt) {
-      tx.update(moneyBusinesses)
-        .set({ archivedAt: null })
-        .where(eq(moneyBusinesses.id, existing.id))
-        .run();
-    }
-    return existing.id;
-  }
-  const id = newId();
-  tx.insert(moneyBusinesses)
-    .values({ id, name: `Business ${pib}`, pib, createdAt: new Date().toISOString() })
-    .run();
-  return id;
-}
 
 /** A live expense category of `space` called `name`, else "Other", else the first one. */
 function categoryFor(tx: DbTx, space: Space, name: string): string | null {
@@ -74,7 +56,7 @@ function write(tx: DbTx, receiptId: string, entries: readonly ReceiptEntry[]) {
     const space: Space = e.pib ? 'business' : 'private';
     const row = {
       space,
-      businessId: e.pib ? ensureBusiness(tx, e.pib) : null,
+      businessId: e.pib ? ensureBusiness(tx, e.pib, `Business ${e.pib}`) : null,
       kind: 'expense' as const,
       amountMinor: e.amountMinor,
       currency: 'RSD',
@@ -122,12 +104,9 @@ function useRefresh() {
   const queryClient = useQueryClient();
   return () =>
     Promise.all(
-      [
-        moneyKeys.receipts(),
-        moneyKeys.entries(),
-        moneyKeys.businesses(),
-        moneyKeys.categories(),
-      ].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
+      [moneyKeys.receipts(), moneyKeys.entries(), businessKeys.all, moneyKeys.categories()].map(
+        (queryKey) => queryClient.invalidateQueries({ queryKey }),
+      ),
     );
 }
 

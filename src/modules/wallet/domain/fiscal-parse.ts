@@ -212,6 +212,16 @@ const LETTERS =
 const ITEM_NUMBERS =
   /^\s*(-?[\d.]+,\d+|-?\d+(?:\.\d+)?)\s+(-?[\d.]+(?:,\d+)?)\s+(-?[\d.]+,\d+|-?\d+(?:\.\d+)?)\s*$/;
 
+/** The product code some shops print after the name ("EVRO PREMIJUM BMB-95,2710124500"). */
+export const cleanItemName = (name: string): string =>
+  name.replace(/\s*[,;]\s*\d{6,14}\s*$/, '').trim() || name.trim();
+
+const UNITS: Record<string, string> = { LIT: 'L', LTR: 'L', LITAR: 'L', L: 'L' };
+
+/** A unit as people write it: litres are "L" however the tax office spells them. */
+export const unitLabel = (unit: string | null): string | null =>
+  unit === null ? null : (UNITS[unit.trim().toUpperCase()] ?? unit);
+
 /** Drops a leading GTIN ("8600…/") and splits off a trailing unit ("/KOM", "/L"). */
 function splitName(raw: string): [string, string | null] {
   let s = raw
@@ -222,9 +232,9 @@ function splitName(raw: string): [string, string | null] {
   const m = new RegExp(`\\s*/\\s*([${LETTERS}]{1,4})\\s*$`).exec(s);
   if (m) {
     s = s.slice(0, m.index);
-    unit = latin(m[1])?.toUpperCase() ?? null;
+    unit = unitLabel(latin(m[1])?.toUpperCase() ?? null);
   }
-  return [latin(s.trim()) ?? s.trim(), unit];
+  return [cleanItemName(latin(s.trim()) ?? s.trim()), unit];
 }
 
 /** The items between the "Назив Цена Кол. Укупно" header and the next dashed line: name line(s), then price, quantity, total. */

@@ -28,7 +28,6 @@ export type Item = typeof moneyItems.$inferSelect;
 export const moneyKeys = {
   all: ['money'] as const,
   view: () => [...moneyKeys.all, 'view'] as const,
-  businesses: () => [...moneyKeys.all, 'businesses'] as const,
   categories: () => [...moneyKeys.all, 'categories'] as const,
   entries: () => [...moneyKeys.all, 'entries'] as const,
   items: () => [...moneyKeys.all, 'items'] as const,
