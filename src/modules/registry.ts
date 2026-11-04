@@ -51,4 +51,13 @@ export const hiveModules: readonly HiveModule[] = [
     href: '/habits',
     useHomeSummary: useHabitsHomeSummary,
   },
+  {
+    id: 'money',
+    title: 'Money',
+    description: 'Income, spending and budgets for you and your business.',
+    icon: { ios: 'dollarsign.circle', android: 'paid', web: 'paid' },
+    tint: 'money',
+    group: 'money',
+    href: '/money',
+  },
 ];

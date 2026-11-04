@@ -1,0 +1,24 @@
+# Money: opens from its Home card, adds an expense and sees it in the month.
+appId: com.ruvceski.hive.dev
+tags:
+  - money
+---
+- launchApp
+- tapOn:
+    id: 'home-open-money'
+- assertVisible:
+    id: 'money-screen'
+- tapOn:
+    id: 'money-add'
+- tapOn:
+    id: 'money-entry-amount'
+- inputText: '12.50'
+- tapOn:
+    id: 'money-entry-note'
+- inputText: 'Maestro lunch'
+- hideKeyboard
+- tapOn:
+    id: 'money-entry-category-.*'
+- tapOn:
+    id: 'money-entry-save'
+- assertVisible: 'Maestro lunch'

@@ -45,3 +45,16 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
 
   return (await response.json()) as T;
 }
+
+/**
+ * GET JSON from a public, keyless third-party URL (never one that needs a secret: nothing in the
+ * bundle is secret). Wrap in a query hook like `api()`.
+ */
+export async function publicJson<T>(url: string, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<T> {
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(timeoutMs),
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) throw new ApiError(response.status, `GET ${url} failed`);
+  return (await response.json()) as T;
+}
