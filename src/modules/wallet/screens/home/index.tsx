@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -7,12 +8,16 @@ import { ErrorState } from '@/components/ui/error-state';
 import { GlassSurface } from '@/components/ui/glass-surface';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PrimaryButton } from '@/components/ui/primary-button';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Wallpaper } from '@/components/ui/wallpaper';
 import { Layout, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useThemeName } from '@/hooks/use-theme';
 
+import { ReceiptsTab } from './receipts-tab';
 import { rememberDeletedCard, useDeletedCard } from '../../data/deleted-card';
+import { rememberDeletedReceipt, useDeletedReceipt } from '../../data/deleted-receipt';
 import { type WalletCard, useCards, useRestoreCard } from '../../data/queries';
+import { useRestoreReceipt } from '../../data/receipt-queries';
 import { spaced } from '../../domain/barcodes';
 import { cardColor } from '../../domain/card-colors';
 import { type CardFormat } from '../../domain/card-format';
@@ -20,21 +25,49 @@ import { UndoBar } from '../components/undo-bar';
 
 const addCard = () => router.push('/wallet/card-new');
 
-/** Wallet's entry screen: the loyalty cards. The Stack header shows the title (src/app/wallet/index.tsx). */
+type Tab = 'cards' | 'receipts';
+const tabs = [
+  { value: 'cards', label: 'Cards' },
+  { value: 'receipts', label: 'Receipts' },
+] as const;
+
+/** Wallet's entry screen: loyalty cards and fiscal receipts. The Stack header shows the title (src/app/wallet/index.tsx). */
 export function WalletHome() {
-  const deleted = useDeletedCard();
-  const restore = useRestoreCard();
+  const [tab, setTab] = useState<Tab>('cards');
+  const deletedCard = useDeletedCard();
+  const deletedReceipt = useDeletedReceipt();
+  const restoreCard = useRestoreCard();
+  const restoreReceipt = useRestoreReceipt();
   return (
     <Wallpaper style={styles.container} testID="wallet-screen">
-      <WalletContent />
-      {deleted ? (
+      <View style={styles.tabs}>
+        <SegmentedControl
+          label="Wallet"
+          options={tabs}
+          value={tab}
+          onChange={setTab}
+          testID="wallet-tab"
+        />
+      </View>
+      {tab === 'cards' ? <WalletContent /> : <ReceiptsTab />}
+      {deletedCard ? (
         <UndoBar
-          message={`${deleted.name} deleted`}
+          message={`${deletedCard.name} deleted`}
           onUndo={() => {
-            restore.mutate(deleted);
+            restoreCard.mutate(deletedCard);
             rememberDeletedCard(null);
           }}
           onDismiss={() => rememberDeletedCard(null)}
+        />
+      ) : null}
+      {deletedReceipt ? (
+        <UndoBar
+          message="Receipt deleted"
+          onUndo={() => {
+            restoreReceipt.mutate(deletedReceipt);
+            rememberDeletedReceipt(null);
+          }}
+          onDismiss={() => rememberDeletedReceipt(null)}
         />
       ) : null}
     </Wallpaper>
@@ -108,6 +141,13 @@ function CardRow({ card }: { card: WalletCard }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  tabs: {
+    width: '100%',
+    maxWidth: MaxContentWidth,
+    alignSelf: 'center',
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.three,
+  },
   list: {
     width: '100%',
     maxWidth: MaxContentWidth,

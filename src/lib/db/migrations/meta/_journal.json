@@ -120,6 +120,13 @@
       "when": 1793787200931,
       "tag": "0016_tranquil_franklin_storm",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1793788098499,
+      "tag": "0017_light_serpent_society",
+      "breakpoints": true
     }
   ]
 }

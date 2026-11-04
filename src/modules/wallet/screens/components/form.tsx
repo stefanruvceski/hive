@@ -7,7 +7,13 @@ import { useTheme } from '@/hooks/use-theme';
 
 type FieldProps = Pick<
   TextInputProps,
-  'value' | 'onChangeText' | 'placeholder' | 'keyboardType' | 'autoCapitalize' | 'maxLength'
+  | 'value'
+  | 'onChangeText'
+  | 'onEndEditing'
+  | 'placeholder'
+  | 'keyboardType'
+  | 'autoCapitalize'
+  | 'maxLength'
 > & { label: string; testID: string };
 
 /** A labelled single-line field in a glass row. */
