@@ -19,6 +19,7 @@ import { rememberDeletedCard, useDeletedCard } from '../../data/deleted-card';
 import { rememberDeletedReceipt, useDeletedReceipt } from '../../data/deleted-receipt';
 import { type WalletCard, useCards, useRestoreCard } from '../../data/queries';
 import { useRestoreReceipt } from '../../data/receipt-queries';
+import { readable } from '../../domain/barcodes';
 import { cardLook, maskedNumber } from '../../domain/card-brands';
 import { cardColor } from '../../domain/card-colors';
 import { CardFace } from '../components/card-face';
@@ -143,7 +144,7 @@ function CardTile({ card }: { card: WalletCard }) {
       <CardFace
         look={cardLook(card.name, cardColor(card.color, scheme))}
         name={card.name}
-        detail={`${card.pinned ? '★ ' : ''}${maskedNumber(card.number)}`.trim()}
+        detail={`${card.pinned ? '★ ' : ''}${readable(card.number) ? maskedNumber(card.number) : ''}`.trim()}
       />
     </Pressable>
   );

@@ -6,6 +6,7 @@ import {
   findBrand,
   hex,
   maskedNumber,
+  recognizeCard,
   shade,
 } from './card-brands';
 
@@ -107,5 +108,24 @@ describe('shortName', () => {
     expect(shortName('  Lidl   Plus ')).toBe('Lidl Plus');
     expect(shortName('Idea')).toBe('Idea');
     expect(shortName('')).toBe('');
+  });
+});
+
+describe('recognizeCard', () => {
+  it('knows a program by the address in its QR code', () => {
+    expect(recognizeCard('https://www.lidl.rs/plus?c=3e3c9a')?.name).toBe('Lidl Plus');
+    expect(recognizeCard('https://superkartica.rs/k/12345')?.name).toBe('SuperKartica');
+    expect(recognizeCard('HTTPS://DM.RS/moj-dm/1')?.name).toBe('moj dm');
+  });
+
+  it('knows a program by a word in the scanned content', () => {
+    expect(recognizeCard('VULKAN-98765')?.name).toBe('Vulkan klub');
+  });
+
+  it('says nothing about digits, random tokens and empty scans', () => {
+    expect(recognizeCard('2200123456789')).toBeNull();
+    expect(recognizeCard('3e3c')).toBeNull();
+    expect(recognizeCard('jw==')).toBeNull();
+    expect(recognizeCard('   ')).toBeNull();
   });
 });

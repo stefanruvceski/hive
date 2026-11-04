@@ -4,11 +4,12 @@ import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { PrimaryButton } from '@/components/ui/primary-button';
+import { SaveButton } from '@/components/ui/save-button';
 import { useThemeName } from '@/hooks/use-theme';
 
 import { useCreateCard } from '../../data/queries';
 import { guess, problem } from '../../domain/barcodes';
-import { cardLook, suggestBrands } from '../../domain/card-brands';
+import { type CardBrand, cardLook, recognizeCard, suggestBrands } from '../../domain/card-brands';
 import { cardColor, cardColorKeys, defaultCardColor } from '../../domain/card-colors';
 import {
   type CardFormat,
@@ -21,7 +22,10 @@ import { CardScanner } from '../components/card-scanner';
 import { Chips, Field } from '../components/form';
 import { WalletScreen } from '../components/wallet-screen';
 
-const formatOptions = drawableFormats.map((value) => ({ value, label: formatLabel(value) }));
+const formatOptions = (qrFirst: boolean) =>
+  [...drawableFormats]
+    .sort((a, b) => Number(qrFirst && b === 'QR_CODE') - Number(qrFirst && a === 'QR_CODE'))
+    .map((value) => ({ value, label: formatLabel(value) }));
 
 /** Add a card: scan it with the camera or type the number, name it, pick a color and save. */
 export function WalletCardNew() {
@@ -33,6 +37,9 @@ export function WalletCardNew() {
   const [name, setName] = useState('');
   const [color, setColor] = useState<string>(defaultCardColor);
   const [note, setNote] = useState('');
+  // The program the scan pointed at: it brings its own face, so the color does not apply.
+  const [recognised, setRecognised] = useState<CardBrand | null>(null);
+  const [scannedQr, setScannedQr] = useState(false);
 
   const format = chosen ?? guess(number);
   const issue = number.trim() ? problem(number, format) : null;
@@ -48,20 +55,16 @@ export function WalletCardNew() {
     <WalletScreen
       id="wallet-card-new"
       title="New card"
-      trailing={
-        <PrimaryButton
-          label="Save"
-          size="compact"
-          disabled={!canSave}
-          onPress={save}
-          testID="wallet-card-save"
-        />
-      }>
+      trailing={<SaveButton disabled={!canSave} onPress={save} testID="wallet-card-save" />}>
       {scanning ? (
         <CardScanner
           onScanned={(data, scanned) => {
             setNumber(data);
             setChosen(scanned && isDrawable(scanned) ? scanned : null);
+            setScannedQr(scanned === 'QR_CODE');
+            const brand = recognizeCard(data);
+            setRecognised(brand);
+            if (brand) setName(brand.name);
             setScanning(false);
           }}
           onClose={() => setScanning(false)}
@@ -79,6 +82,8 @@ export function WalletCardNew() {
         onChangeText={(text) => {
           setNumber(text);
           setChosen(null);
+          setScannedQr(false);
+          setRecognised(null);
         }}
         autoCapitalize="characters"
         placeholder="Number under the barcode"
@@ -108,11 +113,10 @@ export function WalletCardNew() {
       ) : null}
       <Chips
         label="Barcode type"
-        options={formatOptions}
+        options={formatOptions(scannedQr)}
         value={format}
         onChange={setChosen}
         testID="wallet-card-format"
-        rows={1}
       />
       <Chips
         label="Color"
@@ -120,11 +124,16 @@ export function WalletCardNew() {
         value={color as (typeof cardColorKeys)[number]}
         onChange={setColor}
         testID="wallet-card-color"
-        rows={2}
+        disabled={recognised !== null}
       />
+      {recognised ? (
+        <ThemedText type="hint" testID="wallet-card-recognised">
+          {`Recognised: ${recognised.name}. It uses its own colors.`}
+        </ThemedText>
+      ) : null}
       <View style={styles.preview}>
         <CardFace
-          look={cardLook(name, cardColor(color, scheme))}
+          look={cardLook(recognised?.name ?? name, cardColor(color, scheme))}
           name={name.trim() || 'Card name'}
           testID="wallet-card-preview"
         />

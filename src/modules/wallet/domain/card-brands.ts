@@ -112,6 +112,81 @@ export function findBrand(name: string): CardBrand | null {
   return rules.find((rule) => rule.pattern.test(text))?.brand ?? null;
 }
 
+/** Web addresses printed in a program's QR codes (ported from hive-poc), by program name. */
+const scanHosts: readonly (readonly [string, string])[] = [
+  ['superkartica.rs', 'SuperKartica'],
+  ['lidl.rs', 'Lidl Plus'],
+  ['drmax.rs', 'Dr. Max'],
+  ['maxi.rs', 'Moj Maxi'],
+  ['dis.rs', 'DIS Naša kartica'],
+  ['idea.rs', 'Idea'],
+  ['vero.rs', 'Vero klub'],
+  ['univerexport.rs', 'Univerexport bonus kartica'],
+  ['metro.rs', 'Metro klub prijatelja'],
+  ['dm.rs', 'moj dm'],
+  ['lilly.rs', 'Lilly Drogerie'],
+  ['benu.rs', 'Benu Plus'],
+  ['apotekacvejic.rs', 'Cvejić Apoteka'],
+  ['fillyfarm.rs', 'Apoteka Filly Farm'],
+  ['galenpharm.rs', 'Galen Pharm'],
+  ['apotekajankovic.rs', 'Apoteka Janković'],
+  ['thebodyshop.com', 'The Body Shop Love Your Body'],
+  ['loccitane.com', "L'Occitane"],
+  ['knjizare-vulkan.rs', 'Vulkan klub'],
+  ['laguna.rs', 'Laguna klub čitalaca'],
+  ['ciciban.rs', 'Ciciban klub'],
+  ['games.rs', 'GameS Privilege'],
+  ['gamecentar.rs', 'Game Centar Klan'],
+  ['crafter.rs', 'Crafter Craftica'],
+  ['sportvision.rs', 'Sport Vision'],
+  ['sportina.rs', 'Sportina club'],
+  ['trefsport.com', 'Tref Sport VIP klub'],
+  ['underarmour.com', 'Under Armour Kvantum Plus'],
+  ['officeshoes.rs', 'Office Shoes'],
+  ['shoestar.rs', 'Shoestar'],
+  ['planika.rs', 'Planika club'],
+  ['lindex.com', 'Lindex More'],
+  ['terranovastyle.com', 'Terranova WE'],
+  ['hm.com', 'H&M Member'],
+  ['peek-cloppenburg.rs', 'Peek&Cloppenburg'],
+  ['ovsfashion.com', 'OVS'],
+  ['orsay.com', 'Orsay club'],
+  ['psfashion.rs', 'P.S. Fashion Premium Club'],
+  ['extremeintimo.com', 'Extreme Intimo'],
+  ['gigatron.rs', 'Gigatron baš tvoja'],
+  ['ikea.com', 'IKEA Family'],
+  ['emmezeta.rs', 'Emmezeta klub'],
+  ['simpo.rs', 'Simpo'],
+  ['lesnina.rs', 'Lesnina XXXL'],
+  ['wobyhaus.co.rs', 'Woby kartica'],
+  ['okov.rs', 'OKOV posto kartica'],
+  ['formaideale.rs', 'Forma Ideale'],
+  ['optiplaza.rs', 'Optiplaza klub'],
+  ['sanioptik.rs', 'Sani Optik'],
+  ['mol.rs', 'MOL Move'],
+  ['omv.rs', 'OMV MyStation'],
+  ['lukoil.rs', 'Lukoil'],
+  ['knezpetrol.com', 'Knez Petrol'],
+  ['petrol.rs', 'Petrol zlatna kartica'],
+  ['nis.rs', 'NIS Sa nama'],
+  ['adamall.rs', 'Ada Mall Loyalty Club'],
+  ['galerijabelgrade.com', 'Galerija Beograd'],
+  ['mcdonalds.rs', "My McDonald's Rewards"],
+  ['srbijavoz.rs', 'Srbija Voz SRB PLUS'],
+];
+
+/**
+ * The program a scan points at, or null: an address of a known program inside the scanned
+ * content, else a program word in it. Pure digits say nothing (no number ranges are known).
+ */
+export function recognizeCard(scanned: string): CardBrand | null {
+  const text = scanned.trim().toLowerCase();
+  if (text.length < 3 || /^[\d\s-]+$/.test(text)) return null;
+  const host = scanHosts.find(([domain]) => text.includes(domain));
+  if (host) return findBrand(host[1]);
+  return findBrand(text);
+}
+
 /** `0xRRGGBB` as `#rrggbb`. */
 export const hex = (color: number): string => `#${color.toString(16).padStart(6, '0')}`;
 

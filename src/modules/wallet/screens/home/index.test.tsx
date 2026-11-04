@@ -53,6 +53,19 @@ describe('WalletHome', () => {
     expect(screen.getByText('Card b')).toBeOnTheScreen();
   });
 
+  it('shows no number line for a code that is random characters', async () => {
+    jest
+      .mocked(useCards)
+      .mockReturnValue(
+        loaded([
+          card('a', { number: 'https://x.test/q?t=3e3cjw==' }),
+          card('b', { number: '3e3c' }),
+        ]),
+      );
+    await renderHome();
+    expect(screen.queryByText(/••••/)).not.toBeOnTheScreen();
+  });
+
   it('cuts a long card name to its first two words, but shows all of it at accessibility text sizes', async () => {
     jest
       .mocked(useCards)

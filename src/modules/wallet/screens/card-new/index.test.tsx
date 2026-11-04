@@ -10,15 +10,13 @@ jest.mock('../../data/queries');
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
 
 const mockPermission = jest.fn();
+const mockScan = jest.fn(() => ({ type: 'ean13', data: '4006381333931' }));
 jest.mock('expo-camera', () => {
   const { Pressable } = jest.requireActual<typeof import('react-native')>('react-native');
   return {
     useCameraPermissions: () => mockPermission(),
     CameraView: ({ onBarcodeScanned }: { onBarcodeScanned: (r: object) => void }) => (
-      <Pressable
-        testID="fake-camera"
-        onPress={() => onBarcodeScanned({ type: 'ean13', data: '4006381333931' })}
-      />
+      <Pressable testID="fake-camera" onPress={() => onBarcodeScanned(mockScan())} />
     ),
   };
 });
@@ -37,6 +35,7 @@ const renderScreen = () =>
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockScan.mockReturnValue({ type: 'ean13', data: '4006381333931' });
   mockPermission.mockReturnValue([{ granted: true, canAskAgain: true }, jest.fn()]);
   jest.mocked(useCreateCard).mockReturnValue({ mutate, isPending: false } as never);
 });
@@ -139,5 +138,37 @@ describe('WalletCardNew', () => {
     await user.press(screen.getByTestId('wallet-card-save'));
 
     expect(router.back).toHaveBeenCalled();
+  });
+
+  it('names a recognised program from the scan, puts QR first and locks the color', async () => {
+    mockScan.mockReturnValue({ type: 'qr', data: 'https://www.lidl.rs/plus?c=3e3c9a' });
+    await renderScreen();
+    const user = userEvent.setup();
+    await user.press(screen.getByTestId('wallet-card-scan'));
+    await user.press(screen.getByTestId('fake-camera'));
+
+    expect(screen.getByTestId('wallet-card-name')).toHaveProp('value', 'Lidl Plus');
+    expect(screen.getByTestId('wallet-card-format-QR_CODE')).toBeChecked();
+    const ids = screen.getAllByTestId(/^wallet-card-format-/).map((node) => node.props.testID);
+    expect(ids[0]).toBe('wallet-card-format-QR_CODE');
+    expect(screen.getByTestId('wallet-card-recognised')).toBeOnTheScreen();
+    expect(screen.getByTestId('wallet-card-color-rose')).toBeDisabled();
+  });
+
+  it('leaves the name and color alone for a code that is not a known program', async () => {
+    await renderScreen();
+    const user = userEvent.setup();
+    await user.press(screen.getByTestId('wallet-card-scan'));
+    await user.press(screen.getByTestId('fake-camera'));
+
+    expect(screen.getByTestId('wallet-card-name')).toHaveProp('value', '');
+    expect(screen.queryByTestId('wallet-card-recognised')).not.toBeOnTheScreen();
+    expect(screen.getByTestId('wallet-card-color-rose')).toBeEnabled();
+  });
+
+  it('wraps the type and color chips instead of scrolling them sideways', async () => {
+    await renderScreen();
+    expect(screen.queryByTestId('wallet-card-format-scroll')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('wallet-card-color-scroll')).not.toBeOnTheScreen();
   });
 });

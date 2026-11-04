@@ -58,6 +58,7 @@ export function Chips<T extends string>({
   onChange,
   testID,
   rows,
+  disabled,
 }: {
   label: string;
   options: readonly ChipOption<T>[];
@@ -65,6 +66,8 @@ export function Chips<T extends string>({
   onChange: (value: T) => void;
   testID: string;
   rows?: 1 | 2;
+  /** Shown dimmed and not pressable (a choice that does not apply). */
+  disabled?: boolean;
 }) {
   const theme = useTheme();
   const chip = (option: ChipOption<T>) => {
@@ -76,9 +79,14 @@ export function Chips<T extends string>({
         aria-checked={selected}
         aria-label={option.label}
         testID={`${testID}-${option.value}`}
-        onPress={() => onChange(option.value)}
+        aria-disabled={disabled}
+        onPress={disabled ? undefined : () => onChange(option.value)}
         hitSlop={4}
-        style={[styles.chip, { backgroundColor: selected ? theme.accent : theme.segmentTrack }]}>
+        style={[
+          styles.chip,
+          { backgroundColor: selected ? theme.accent : theme.segmentTrack },
+          disabled && styles.disabled,
+        ]}>
         <ThemedText themeColor={selected ? 'onAccent' : 'text'}>{option.label}</ThemedText>
       </Pressable>
     );
@@ -112,6 +120,7 @@ const styles = StyleSheet.create({
   rows: { gap: Spacing.two },
   line: { flexDirection: 'row', gap: Spacing.two },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+  disabled: { opacity: 0.4 },
   chip: {
     minHeight: Layout.minTouch,
     paddingHorizontal: Spacing.three,
