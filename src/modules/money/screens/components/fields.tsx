@@ -126,7 +126,7 @@ export function LinkRow({
 }
 
 const styles = StyleSheet.create({
-  group: { gap: Spacing.two },
+  group: { gap: Layout.labelGap },
   surface: { paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
   input: {
     minHeight: Layout.minTouchAndroid,

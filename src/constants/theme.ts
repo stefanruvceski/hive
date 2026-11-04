@@ -225,6 +225,10 @@ export const Spacing = {
 /** Sizes from the design. 13 · 65 · 13 · 65 · 13 = 169. */
 export const Layout = {
   screenMargin: 20,
+  /** Between the blocks of a screen: cards, groups, a day's list. */
+  sectionGap: Spacing.three,
+  /** Between a block's title and its card. */
+  labelGap: Spacing.two,
   card: 169,
   /** Card padding = gap between icons in a card. */
   cardPadding: 13,

@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   actions: { flexDirection: 'row', gap: Spacing.two },
-  content: { gap: Spacing.three },
+  content: { gap: Layout.sectionGap },
   switcher: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   totalsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.two },
   note: { textAlign: 'right' },
   total: { flex: 1, gap: Spacing.one },
-  day: { gap: Spacing.two },
+  day: { gap: Layout.labelGap },
   rows: { paddingHorizontal: Spacing.three },
   entry: {
     minHeight: Layout.minTouchAndroid,

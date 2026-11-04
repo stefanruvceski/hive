@@ -53,5 +53,5 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: Layout.screenMargin,
   },
-  content: { gap: Spacing.three },
+  content: { gap: Layout.sectionGap },
 });
