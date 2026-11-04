@@ -8,7 +8,6 @@ import { Spacing } from '@/constants/theme';
 
 import {
   type Category,
-  useActiveSpace,
   useArchiveCategory,
   useCategories,
   useSaveCategory,
@@ -18,6 +17,7 @@ import { nameTaken, normalizeName } from '../../domain/categories';
 import { Field, Group } from '../components/fields';
 import { Gate } from '../components/gate';
 import { MoneyScreen } from '../components/money-screen';
+import { useMoneyView } from '../components/use-money-view';
 
 const kindOptions = [
   { value: 'expense', label: 'Expense' },
@@ -27,16 +27,48 @@ const kindOptions = [
 /** Manage the categories of the open space: add, rename, archive. */
 export function MoneyCategories() {
   const categories = useCategories();
-  const space = useActiveSpace();
+  const scope = useMoneyView();
   return (
     <MoneyScreen id="money-categories" title="Categories">
-      <Gate queries={[categories, space]} id="money-categories">
-        <CategoryList
-          categories={(categories.data ?? []).filter((c) => c.space === (space.data ?? 'private'))}
-          space={space.data ?? 'private'}
+      <Gate queries={[categories, ...scope.queries]} id="money-categories">
+        <CategoryLists
+          categories={categories.data ?? []}
+          startSpace={scope.view === 'all' || scope.view === 'private' ? 'private' : 'business'}
         />
       </Gate>
     </MoneyScreen>
+  );
+}
+
+const spaceOptions = [
+  { value: 'private', label: 'Private' },
+  { value: 'business', label: 'Business' },
+] as const;
+
+// Private has its own list; every business shares the Business one.
+function CategoryLists({
+  categories,
+  startSpace,
+}: {
+  categories: Category[];
+  startSpace: Category['space'];
+}) {
+  const [space, setSpace] = useState(startSpace);
+  return (
+    <>
+      <SegmentedControl
+        options={spaceOptions}
+        value={space}
+        onChange={setSpace}
+        label="Category list"
+        testID="money-categories-space"
+      />
+      <CategoryList
+        key={space}
+        categories={categories.filter((c) => c.space === space)}
+        space={space}
+      />
+    </>
   );
 }
 

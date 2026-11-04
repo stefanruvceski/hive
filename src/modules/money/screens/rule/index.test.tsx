@@ -2,11 +2,13 @@ import { render, screen, userEvent } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { MoneyRule } from './index';
-import { useActiveSpace, useCategories } from '../../data/queries';
+import { useBusinesses } from '../../data/business-queries';
+import { useActiveView, useSetView, useCategories } from '../../data/queries';
 import { useRecurring, useSaveRule } from '../../data/recurring-queries';
 import { category, loaded, metrics } from '../test-data';
 
 jest.mock('../../data/queries');
+jest.mock('../../data/business-queries');
 jest.mock('../../data/recurring-queries');
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
 // Monday 2 November 2026.
@@ -25,7 +27,9 @@ beforeEach(() => {
         category('salary', { name: 'Salary', kind: 'income' }),
       ]),
     );
-  jest.mocked(useActiveSpace).mockReturnValue(loaded('private'));
+  jest.mocked(useActiveView).mockReturnValue(loaded('private'));
+  jest.mocked(useBusinesses).mockReturnValue(loaded([]));
+  jest.mocked(useSetView).mockReturnValue({ mutate: jest.fn() } as never);
   jest.mocked(useSaveRule).mockReturnValue({ mutate: save } as never);
 });
 
@@ -52,6 +56,7 @@ describe('MoneyRule', () => {
       {
         id: undefined,
         space: 'private',
+        businessId: null,
         kind: 'income',
         amountMinor: 8000000,
         currency: 'RSD',

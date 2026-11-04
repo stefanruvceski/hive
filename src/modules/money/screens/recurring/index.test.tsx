@@ -3,11 +3,13 @@ import { router } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { MoneyRecurring } from './index';
-import { useCategories } from '../../data/queries';
+import { useBusinesses } from '../../data/business-queries';
+import { useActiveView, useCategories, useSetView } from '../../data/queries';
 import { type Rule, useRecurring, useStopRule } from '../../data/recurring-queries';
 import { category, loaded, metrics } from '../test-data';
 
 jest.mock('../../data/queries');
+jest.mock('../../data/business-queries');
 jest.mock('../../data/recurring-queries');
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
 jest.mock('@/hooks/use-today', () => ({ useToday: () => '2026-11-02' }));
@@ -34,6 +36,9 @@ beforeEach(() => {
   jest
     .mocked(useCategories)
     .mockReturnValue(loaded([category('salary', { name: 'Salary', kind: 'income', emoji: '💼' })]));
+  jest.mocked(useActiveView).mockReturnValue(loaded('private'));
+  jest.mocked(useBusinesses).mockReturnValue(loaded([]));
+  jest.mocked(useSetView).mockReturnValue({ mutate: jest.fn() } as never);
   jest.mocked(useStopRule).mockReturnValue({ mutate: stop } as never);
 });
 

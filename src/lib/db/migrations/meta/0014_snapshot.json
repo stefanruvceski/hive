@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "1d933166-fe49-4b97-bcfc-41422e58709d",
+  "id": "d6bbb694-a92d-468d-9149-e2867e688bea",
   "prevId": "9360efb2-d4b7-4857-9eba-9e09e9c2a02d",
   "tables": {
     "home_app_usage": {
@@ -529,6 +529,59 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "money_businesses": {
+      "name": "money_businesses",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "pib": {
+          "name": "pib",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "money_businesses_pib_unique": {
+          "name": "money_businesses_pib_unique",
+          "columns": [
+            "pib"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "money_categories": {
       "name": "money_categories",
       "columns": {
@@ -603,6 +656,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "business_id": {
+          "name": "business_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "kind": {
@@ -704,6 +764,19 @@
         }
       },
       "foreignKeys": {
+        "money_entries_business_id_money_businesses_id_fk": {
+          "name": "money_entries_business_id_money_businesses_id_fk",
+          "tableFrom": "money_entries",
+          "tableTo": "money_businesses",
+          "columnsFrom": [
+            "business_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
         "money_entries_category_id_money_categories_id_fk": {
           "name": "money_entries_category_id_money_categories_id_fk",
           "tableFrom": "money_entries",
@@ -896,6 +969,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "business_id": {
+          "name": "business_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "kind": {
           "name": "kind",
           "type": "text",
@@ -963,6 +1043,19 @@
       },
       "indexes": {},
       "foreignKeys": {
+        "money_recurring_business_id_money_businesses_id_fk": {
+          "name": "money_recurring_business_id_money_businesses_id_fk",
+          "tableFrom": "money_recurring",
+          "tableTo": "money_businesses",
+          "columnsFrom": [
+            "business_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
         "money_recurring_category_id_money_categories_id_fk": {
           "name": "money_recurring_category_id_money_categories_id_fk",
           "tableFrom": "money_recurring",

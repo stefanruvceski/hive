@@ -3,10 +3,12 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { MoneyBudgets } from './index';
 import { useBudgets, useSetBudget } from '../../data/budget-queries';
-import { useActiveSpace, useCategories, useEntries, useItems } from '../../data/queries';
+import { useBusinesses } from '../../data/business-queries';
+import { useActiveView, useSetView, useCategories, useEntries, useItems } from '../../data/queries';
 import { category, entry, loaded, metrics } from '../test-data';
 
 jest.mock('../../data/queries');
+jest.mock('../../data/business-queries');
 jest.mock('../../data/budget-queries');
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
 jest.mock('@/hooks/use-today', () => ({ useToday: () => '2026-11-02' }));
@@ -32,7 +34,9 @@ beforeEach(() => {
   jest
     .mocked(useBudgets)
     .mockReturnValue(loaded([{ categoryId: 'food', fromMonth: '2026-09', limitMinor: 10000 }]));
-  jest.mocked(useActiveSpace).mockReturnValue(loaded('private'));
+  jest.mocked(useActiveView).mockReturnValue(loaded('private'));
+  jest.mocked(useBusinesses).mockReturnValue(loaded([]));
+  jest.mocked(useSetView).mockReturnValue({ mutate: jest.fn() } as never);
   jest.mocked(useSetBudget).mockReturnValue({ mutate: setBudget } as never);
 });
 

@@ -2,6 +2,7 @@ import { emptyFilter, filterEntries, isFiltering, toCsv, type SearchEntry } from
 
 const entry = (over: Partial<SearchEntry> & { id: string }): SearchEntry => ({
   space: 'private',
+  businessId: null,
   kind: 'expense',
   amountMinor: 1000,
   currency: 'RSD',
@@ -71,11 +72,21 @@ describe('toCsv', () => {
     );
     const lines = csv.replace('﻿', '').trim().split('\r\n');
 
-    expect(lines[0]).toBe('date,space,kind,category,item,amount,currency,rate,amount_rsd,note');
+    expect(lines[0]).toBe('date,owner,kind,category,item,amount,currency,rate,amount_rsd,note');
     expect(lines[1]).toBe(
-      '2026-11-03,private,expense,Food,,5.00,EUR,117.2,586.00,"Bread, ""fresh"""',
+      '2026-11-03,Private,expense,Food,,5.00,EUR,117.2,586.00,"Bread, ""fresh"""',
     );
     expect(csv.startsWith('﻿')).toBe(true);
+  });
+
+  it('names the business of a business entry', () => {
+    const csv = toCsv(
+      [entry({ id: 'f', space: 'business', businessId: 'b1' })],
+      [],
+      names,
+      new Map([['b1', 'Shop']]),
+    );
+    expect(csv.trim().split('\r\n')[1]).toContain(',Shop,expense,');
   });
 
   it('writes one row per item for a split entry, the RSD parts adding up', () => {

@@ -8,20 +8,17 @@ import { Spacing } from '@/constants/theme';
 import { useToday } from '@/hooks/use-today';
 
 import { shareCsv } from '../../data/csv-file';
-import {
-  type Entry,
-  useActiveSpace,
-  useCategories,
-  useEntries,
-  useItems,
-} from '../../data/queries';
+import { type Entry, useCategories, useEntries, useItems } from '../../data/queries';
 import type { EntryKind } from '../../data/schema';
 import { formatMinor } from '../../domain/amount';
 import { isIsoDate } from '../../domain/dates';
+import { categoryLabel, inView } from '../../domain/owners';
 import { emptyFilter, type Filter, filterEntries, isFiltering, toCsv } from '../../domain/search';
 import { Chips, Field, Group } from '../components/fields';
 import { Gate } from '../components/gate';
 import { MoneyScreen } from '../components/money-screen';
+import { useMoneyView } from '../components/use-money-view';
+import { ViewChips } from '../components/view-chips';
 
 const kinds = [
   { value: 'expense', label: 'Expense' },
@@ -29,21 +26,23 @@ const kinds = [
   { value: 'payout', label: 'Payout' },
 ] as const;
 
-/** Find entries of the open space by text, category, type or dates, and export them as CSV. */
+/** Find entries of the open view by text, category, type or dates, and export them as CSV. */
 export function MoneySearch() {
   const entries = useEntries();
   const items = useItems();
   const categories = useCategories();
-  const space = useActiveSpace();
+  const scope = useMoneyView();
   return (
     <MoneyScreen id="money-search" title="Search">
-      <Gate queries={[entries, items, categories, space]} id="money-search">
+      <Gate queries={[entries, items, categories, ...scope.queries]} id="money-search">
+        <ViewChips view={scope.view} businesses={scope.live} onChange={scope.setView} />
         <SearchForm
-          entries={(entries.data ?? []).filter(
-            (entry) => entry.space === (space.data ?? 'private'),
-          )}
+          entries={(entries.data ?? []).filter((entry) => inView(entry, scope.view))}
           items={items.data ?? []}
-          categories={(categories.data ?? []).filter((c) => c.space === (space.data ?? 'private'))}
+          businesses={scope.businesses}
+          categories={(categories.data ?? [])
+            .filter((c) => scope.categorySpaces.includes(c.space))
+            .map((c) => ({ id: c.id, label: categoryLabel(c, scope.view === 'all') }))}
         />
       </Gate>
     </MoneyScreen>
@@ -54,17 +53,20 @@ function SearchForm({
   entries,
   items,
   categories,
+  businesses,
 }: {
   entries: Entry[];
   items: { entryId: string; name: string; amountMinor: number; categoryId: string }[];
-  categories: { id: string; emoji: string; name: string }[];
+  categories: { id: string; label: string }[];
+  businesses: { id: string; name: string }[];
 }) {
   const today = useToday();
   const [filter, setFilter] = useState<Filter>(emptyFilter);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const names = new Map(categories.map((c) => [c.id, `${c.emoji} ${c.name}`]));
+  const names = new Map(categories.map((c) => [c.id, c.label]));
+  const businessNames = new Map(businesses.map((b) => [b.id, b.name]));
   // Dates apply once they are complete valid dates, so a half-typed one never filters.
   const effective: Filter = {
     ...filter,
@@ -77,7 +79,9 @@ function SearchForm({
 
   const exportCsv = () => {
     setError(null);
-    shareCsv(toCsv(found, items, names), today).catch(() => setError('Could not export the file.'));
+    shareCsv(toCsv(found, items, names, businessNames), today).catch(() =>
+      setError('Could not export the file.'),
+    );
   };
   const reset = () => {
     setFilter(emptyFilter);
@@ -106,7 +110,7 @@ function SearchForm({
       </Group>
       <Group title="Category">
         <Chips
-          options={categories.map((c) => ({ value: c.id, label: `${c.emoji} ${c.name}` }))}
+          options={categories.map((c) => ({ value: c.id, label: c.label }))}
           value={filter.categoryId}
           onChange={(id) =>
             setFilter({ ...filter, categoryId: filter.categoryId === id ? null : id })

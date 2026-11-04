@@ -6,6 +6,15 @@ CREATE TABLE `money_budgets` (
 	FOREIGN KEY (`category_id`) REFERENCES `money_categories`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE TABLE `money_businesses` (
+	`id` text PRIMARY KEY NOT NULL,
+	`name` text NOT NULL,
+	`pib` text NOT NULL,
+	`archived_at` text,
+	`created_at` text NOT NULL
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `money_businesses_pib_unique` ON `money_businesses` (`pib`);--> statement-breakpoint
 CREATE TABLE `money_categories` (
 	`id` text PRIMARY KEY NOT NULL,
 	`space` text NOT NULL,
@@ -19,6 +28,7 @@ CREATE TABLE `money_categories` (
 CREATE TABLE `money_entries` (
 	`id` text PRIMARY KEY NOT NULL,
 	`space` text NOT NULL,
+	`business_id` text,
 	`kind` text NOT NULL,
 	`amount_minor` integer NOT NULL,
 	`currency` text NOT NULL,
@@ -30,6 +40,7 @@ CREATE TABLE `money_entries` (
 	`pair_id` text,
 	`recurring_id` text,
 	`created_at` text NOT NULL,
+	FOREIGN KEY (`business_id`) REFERENCES `money_businesses`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`category_id`) REFERENCES `money_categories`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
@@ -63,6 +74,7 @@ CREATE TABLE `money_rates` (
 CREATE TABLE `money_recurring` (
 	`id` text PRIMARY KEY NOT NULL,
 	`space` text NOT NULL,
+	`business_id` text,
 	`kind` text NOT NULL,
 	`amount_minor` integer NOT NULL,
 	`currency` text NOT NULL,
@@ -72,5 +84,6 @@ CREATE TABLE `money_recurring` (
 	`day` integer NOT NULL,
 	`start_date` text NOT NULL,
 	`end_date` text,
+	FOREIGN KEY (`business_id`) REFERENCES `money_businesses`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`category_id`) REFERENCES `money_categories`(`id`) ON UPDATE no action ON DELETE no action
 );

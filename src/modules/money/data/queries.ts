@@ -26,7 +26,8 @@ export type Item = typeof moneyItems.$inferSelect;
 // Hierarchical key factory — every key for this module comes from here (07 §1).
 export const moneyKeys = {
   all: ['money'] as const,
-  space: () => [...moneyKeys.all, 'space'] as const,
+  view: () => [...moneyKeys.all, 'view'] as const,
+  businesses: () => [...moneyKeys.all, 'businesses'] as const,
   categories: () => [...moneyKeys.all, 'categories'] as const,
   entries: () => [...moneyKeys.all, 'entries'] as const,
   items: () => [...moneyKeys.all, 'items'] as const,
@@ -35,34 +36,32 @@ export const moneyKeys = {
   recurring: () => [...moneyKeys.all, 'recurring'] as const,
 };
 
-const spaceKey = 'space';
+const viewKey = 'view';
 
-/** The space (Private/Firma) the module shows; remembered between launches. */
-export const activeSpaceQuery = () =>
+/** The saved view choice (`all`, `private` or a business id), or null when none; see resolveView. */
+export const activeViewQuery = () =>
   queryOptions({
-    queryKey: moneyKeys.space(),
-    queryFn: async (): Promise<Space> => {
-      const row = getDb().select().from(moneyPrefs).where(eq(moneyPrefs.key, spaceKey)).get();
-      return spaces.find((space) => space === row?.value) ?? 'private';
-    },
+    queryKey: moneyKeys.view(),
+    queryFn: async (): Promise<string | null> =>
+      getDb().select().from(moneyPrefs).where(eq(moneyPrefs.key, viewKey)).get()?.value ?? null,
   });
 
-export function useActiveSpace() {
-  return useQuery(activeSpaceQuery());
+export function useActiveView() {
+  return useQuery(activeViewQuery());
 }
 
-export function useSetSpace() {
+export function useSetView() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (space: Space) => {
+    mutationFn: async (view: string) => {
       getDb()
         .insert(moneyPrefs)
-        .values({ key: spaceKey, value: space })
-        .onConflictDoUpdate({ target: moneyPrefs.key, set: { value: space } })
+        .values({ key: viewKey, value: view })
+        .onConflictDoUpdate({ target: moneyPrefs.key, set: { value: view } })
         .run();
     },
-    onMutate: (space) => queryClient.setQueryData(moneyKeys.space(), space),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: moneyKeys.space() }),
+    onMutate: (view) => queryClient.setQueryData(moneyKeys.view(), view),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: moneyKeys.view() }),
   });
 }
 
@@ -168,6 +167,8 @@ export type EntryDraft = {
   /** Set when editing. */
   id?: string;
   space: Space;
+  /** The business of a `business` entry; both halves of a payout carry the business it comes from. */
+  businessId: string | null;
   kind: EntryKind;
   amountMinor: number;
   currency: string;
@@ -225,13 +226,17 @@ export function useSaveEntry() {
               ...base,
               id,
               space,
+              businessId: draft.businessId,
               categoryId: null,
               pairId,
               createdAt: new Date().toISOString(),
             };
             tx.insert(moneyEntries)
               .values(row)
-              .onConflictDoUpdate({ target: moneyEntries.id, set: base })
+              .onConflictDoUpdate({
+                target: moneyEntries.id,
+                set: { ...base, businessId: row.businessId },
+              })
               .run();
           }
         } else {
@@ -240,6 +245,7 @@ export function useSaveEntry() {
             ...base,
             id,
             space: draft.space,
+            businessId: draft.space === 'business' ? draft.businessId : null,
             categoryId: draft.items.length > 0 ? null : draft.categoryId,
             createdAt: new Date().toISOString(),
           };
@@ -247,7 +253,12 @@ export function useSaveEntry() {
             .values(row)
             .onConflictDoUpdate({
               target: moneyEntries.id,
-              set: { ...base, categoryId: row.categoryId },
+              set: {
+                ...base,
+                space: row.space,
+                businessId: row.businessId,
+                categoryId: row.categoryId,
+              },
             })
             .run();
           tx.delete(moneyItems).where(eq(moneyItems.entryId, id)).run();
@@ -266,10 +277,7 @@ export function useSaveEntry() {
               rate: draft.rate,
               source: 'manual',
             })
-            .onConflictDoUpdate({
-              target: [moneyRates.currency, moneyRates.date],
-              set: { rate: draft.rate, source: 'manual' },
-            })
+            .onConflictDoNothing()
             .run();
         }
       });

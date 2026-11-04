@@ -16,7 +16,7 @@ import {
 export const spaces = ['private', 'business'] as const;
 export type Space = (typeof spaces)[number];
 
-/** `payout` moves money from Firma to Private; it exists once in each space (see pairId). */
+/** `payout` moves money from Business to Private; it exists once in each space (see pairId). */
 export const entryKinds = ['expense', 'income', 'payout'] as const;
 export type EntryKind = (typeof entryKinds)[number];
 
@@ -26,10 +26,20 @@ export type CategoryKind = (typeof categoryKinds)[number];
 export const frequencies = ['weekly', 'monthly'] as const;
 export type Frequency = (typeof frequencies)[number];
 
-/** Small key/value store for this module's own choices (the active space, …). */
+/** Small key/value store for this module's own choices (the open view, …). */
 export const moneyPrefs = sqliteTable('money_prefs', {
   key: text('key').primaryKey(),
   value: text('value').notNull(),
+});
+
+/** A business the user runs; its PIB (Serbian tax number) is what tells two apart. */
+export const moneyBusinesses = sqliteTable('money_businesses', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  pib: text('pib').notNull().unique(),
+  /** Hidden from new entries but kept on old ones. */
+  archivedAt: text('archived_at'),
+  createdAt: text('created_at').notNull(),
 });
 
 export const moneyCategories = sqliteTable('money_categories', {
@@ -47,7 +57,9 @@ export const moneyEntries = sqliteTable(
   'money_entries',
   {
     id: text('id').primaryKey(),
+    /** Which category list the entry uses; `business` entries also have a `businessId`. */
     space: text('space', { enum: spaces }).notNull(),
+    businessId: text('business_id').references(() => moneyBusinesses.id),
     kind: text('kind', { enum: entryKinds }).notNull(),
     /** In the entry's own currency, minor units. */
     amountMinor: integer('amount_minor').notNull(),
@@ -123,6 +135,7 @@ export const moneyBudgets = sqliteTable(
 export const moneyRecurring = sqliteTable('money_recurring', {
   id: text('id').primaryKey(),
   space: text('space', { enum: spaces }).notNull(),
+  businessId: text('business_id').references(() => moneyBusinesses.id),
   kind: text('kind', { enum: categoryKinds }).notNull(),
   amountMinor: integer('amount_minor').notNull(),
   currency: text('currency').notNull(),

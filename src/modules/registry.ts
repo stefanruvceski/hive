@@ -55,7 +55,7 @@ export const hiveModules: readonly HiveModule[] = [
     id: 'money',
     title: 'Money',
     description: 'Income, spending and budgets for you and your business.',
-    icon: { ios: 'banknote', android: 'payments', web: 'payments' },
+    icon: { ios: 'dollarsign.circle', android: 'paid', web: 'paid' },
     tint: 'money',
     group: 'money',
     href: '/money',

@@ -4,8 +4,10 @@ import { Alert } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { MoneyEntry } from './index';
+import { useBusinesses } from '../../data/business-queries';
 import {
-  useActiveSpace,
+  useActiveView,
+  useSetView,
   useCategories,
   useDeleteEntry,
   useEntries,
@@ -13,9 +15,12 @@ import {
   useRates,
   useSaveEntry,
 } from '../../data/queries';
-import { category, entry, failed, loaded, metrics } from '../test-data';
+import { useNbsRate } from '../../data/rate-queries';
+import { business, category, entry, failed, loaded, metrics } from '../test-data';
 
 jest.mock('../../data/queries');
+jest.mock('../../data/business-queries');
+jest.mock('../../data/rate-queries');
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
 // Monday 2 November 2026.
 jest.mock('@/hooks/use-today', () => ({ useToday: () => '2026-11-02' }));
@@ -43,7 +48,10 @@ beforeEach(() => {
     .mockReturnValue(
       loaded([{ currency: 'EUR', date: '2026-10-20', rate: 117.2, source: 'manual' }]),
     );
-  jest.mocked(useActiveSpace).mockReturnValue(loaded('private'));
+  jest.mocked(useActiveView).mockReturnValue(loaded('private'));
+  jest.mocked(useBusinesses).mockReturnValue(loaded([]));
+  jest.mocked(useSetView).mockReturnValue({ mutate: jest.fn() } as never);
+  jest.mocked(useNbsRate).mockReturnValue({ data: null, isFetching: false } as never);
   jest.mocked(useSaveEntry).mockReturnValue({ mutate: save } as never);
   jest.mocked(useDeleteEntry).mockReturnValue({ mutate: remove } as never);
 });
@@ -69,6 +77,7 @@ describe('MoneyEntry', () => {
       {
         id: undefined,
         space: 'private',
+        businessId: null,
         kind: 'expense',
         amountMinor: 1250,
         currency: 'RSD',
@@ -115,6 +124,39 @@ describe('MoneyEntry', () => {
     expect(screen.getByTestId('money-entry-rsd')).toHaveTextContent(/1,172\.00 RSD/);
   });
 
+  it("prefers the bank's rate for the day and says so", async () => {
+    jest.mocked(useNbsRate).mockReturnValue({ data: 117.4, isFetching: false } as never);
+    await renderEntry();
+    const user = userEvent.setup();
+
+    await user.type(screen.getByTestId('money-entry-amount'), '10');
+    await user.press(screen.getByTestId('money-entry-currency-EUR'));
+    expect(screen.getByTestId('money-entry-rate').props.value).toBe('117.4');
+    expect(screen.getByTestId('money-entry-rsd')).toHaveTextContent(/NBS middle rate/);
+  });
+
+  it('lets the user overwrite the fetched rate', async () => {
+    jest.mocked(useNbsRate).mockReturnValue({ data: 117.4, isFetching: false } as never);
+    await renderEntry();
+    const user = userEvent.setup();
+
+    await user.type(screen.getByTestId('money-entry-amount'), '10');
+    await user.press(screen.getByTestId('money-entry-currency-EUR'));
+    await user.clear(screen.getByTestId('money-entry-rate'));
+    await user.type(screen.getByTestId('money-entry-rate'), '118');
+    expect(screen.getByTestId('money-entry-rsd')).toHaveTextContent(/1,180\.00 RSD at 118$/);
+  });
+
+  it('says when the bank rate is being fetched', async () => {
+    jest.mocked(useNbsRate).mockReturnValue({ data: undefined, isFetching: true } as never);
+    await renderEntry();
+    const user = userEvent.setup();
+
+    await user.type(screen.getByTestId('money-entry-amount'), '10');
+    await user.press(screen.getByTestId('money-entry-currency-USD'));
+    expect(screen.getByTestId('money-entry-rsd')).toHaveTextContent(/Getting the NBS rate/);
+  });
+
   it('needs a rate for a currency without one', async () => {
     await renderEntry();
     const user = userEvent.setup();
@@ -126,19 +168,63 @@ describe('MoneyEntry', () => {
     expect(screen.getByTestId('money-entry-error')).toHaveTextContent(/rate/);
   });
 
-  it('saves a payout without a category and says what it does', async () => {
+  it('saves a payout from a business, without a category', async () => {
+    jest.mocked(useBusinesses).mockReturnValue(loaded([business('b1', { name: 'Shop' })]));
     await renderEntry();
     const user = userEvent.setup();
 
     await user.press(screen.getByTestId('money-entry-kind-payout'));
     expect(screen.getByTestId('money-entry-payout-hint')).toBeOnTheScreen();
     expect(screen.queryByTestId('money-entry-category-food')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('money-entry-owner-private')).not.toBeOnTheScreen();
     await user.type(screen.getByTestId('money-entry-amount'), '1000');
     await user.press(screen.getByTestId('money-entry-save'));
     expect(save).toHaveBeenCalledWith(
-      expect.objectContaining({ kind: 'payout', categoryId: null, amountMinor: 100000 }),
+      expect.objectContaining({
+        kind: 'payout',
+        space: 'business',
+        businessId: 'b1',
+        categoryId: null,
+        amountMinor: 100000,
+      }),
       expect.anything(),
     );
+  });
+
+  it('asks for a business before a payout', async () => {
+    await renderEntry();
+    const user = userEvent.setup();
+
+    await user.press(screen.getByTestId('money-entry-kind-payout'));
+    expect(screen.getByTestId('money-entry-no-business')).toBeOnTheScreen();
+    await user.type(screen.getByTestId('money-entry-amount'), '1000');
+    await user.press(screen.getByTestId('money-entry-save'));
+    expect(screen.getByTestId('money-entry-error')).toHaveTextContent(/business/);
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it('tags an entry with a business and offers that list of categories', async () => {
+    jest.mocked(useBusinesses).mockReturnValue(loaded([business('b1', { name: 'Shop' })]));
+    await renderEntry();
+    const user = userEvent.setup();
+
+    expect(screen.getByTestId('money-entry-category-food')).toBeOnTheScreen();
+    await user.press(screen.getByTestId('money-entry-owner-b1'));
+    expect(screen.queryByTestId('money-entry-category-food')).not.toBeOnTheScreen();
+    await user.type(screen.getByTestId('money-entry-amount'), '40');
+    await user.press(screen.getByTestId('money-entry-category-fuel'));
+    await user.press(screen.getByTestId('money-entry-save'));
+    expect(save).toHaveBeenCalledWith(
+      expect.objectContaining({ space: 'business', businessId: 'b1', categoryId: 'fuel' }),
+      expect.anything(),
+    );
+  });
+
+  it('starts in the business that is open', async () => {
+    jest.mocked(useActiveView).mockReturnValue(loaded('b1'));
+    jest.mocked(useBusinesses).mockReturnValue(loaded([business('b1', { name: 'Shop' })]));
+    await renderEntry();
+    expect(screen.getByTestId('money-entry-category-fuel')).toBeOnTheScreen();
   });
 
   it('splits an entry into items that must add up to the total', async () => {

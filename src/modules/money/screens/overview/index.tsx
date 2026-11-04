@@ -9,34 +9,37 @@ import { Layout, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useToday } from '@/hooks/use-today';
 
-import { useActiveSpace, useCategories, useEntries, useItems } from '../../data/queries';
+import { useCategories, useEntries, useItems } from '../../data/queries';
 import { formatMinor } from '../../domain/amount';
 import { monthLabel, monthOf, shiftMonth } from '../../domain/dates';
 import { type MonthBar, monthSummary, yearSeries } from '../../domain/overview';
+import { categoryLabel, inView } from '../../domain/owners';
 import { Group } from '../components/fields';
 import { Gate } from '../components/gate';
 import { MoneyScreen } from '../components/money-screen';
+import { useMoneyView } from '../components/use-money-view';
+import { ViewChips } from '../components/view-chips';
 
 const modes = [
   { value: 'month', label: 'Month' },
   { value: 'year', label: 'Year' },
 ] as const;
 
-/** Where the money went (month) and how the year moved (year), for the open space. */
+/** Where the money went (month) and how the year moved (year), for the open view. */
 export function MoneyOverview() {
   const today = useToday();
   const entries = useEntries();
   const items = useItems();
   const categories = useCategories();
-  const space = useActiveSpace();
+  const scope = useMoneyView();
   const [mode, setMode] = useState<'month' | 'year'>('month');
   const [month, setMonth] = useState(monthOf(today));
-  const current = space.data ?? 'private';
-  const mine = (entries.data ?? []).filter((entry) => entry.space === current);
+  const mine = (entries.data ?? []).filter((entry) => inView(entry, scope.view));
   const year = Number(month.slice(0, 4));
 
   return (
     <MoneyScreen id="money-overview" title="Overview">
+      <ViewChips view={scope.view} businesses={scope.live} onChange={scope.setView} />
       <SegmentedControl
         options={modes}
         value={mode}
@@ -74,12 +77,16 @@ export function MoneyOverview() {
           </ThemedText>
         </Pressable>
       </View>
-      <Gate queries={[entries, items, categories, space]} id="money-overview">
+      <Gate queries={[entries, items, categories, ...scope.queries]} id="money-overview">
         {mode === 'month' ? (
           <MonthView
             entries={mine.filter((entry) => monthOf(entry.date) === month)}
             items={items.data ?? []}
-            names={new Map((categories.data ?? []).map((c) => [c.id, `${c.emoji} ${c.name}`]))}
+            names={
+              new Map(
+                (categories.data ?? []).map((c) => [c.id, categoryLabel(c, scope.view === 'all')]),
+              )
+            }
           />
         ) : (
           <YearView bars={yearSeries(mine, year)} />

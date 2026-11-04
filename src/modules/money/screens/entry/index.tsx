@@ -12,7 +12,6 @@ import {
   type Category,
   type Entry,
   type Item,
-  useActiveSpace,
   useCategories,
   useDeleteEntry,
   useEntries,
@@ -20,7 +19,8 @@ import {
   useRates,
   useSaveEntry,
 } from '../../data/queries';
-import type { EntryKind, Space } from '../../data/schema';
+import { useNbsRate } from '../../data/rate-queries';
+import type { EntryKind } from '../../data/schema';
 import {
   baseCurrency,
   currencies,
@@ -32,10 +32,12 @@ import {
 } from '../../domain/amount';
 import { addDays, isIsoDate } from '../../domain/dates';
 import { checkItems } from '../../domain/items';
+import { type Business, ownerForView, ownerOf, spaceOfOwner } from '../../domain/owners';
 import { pickRate } from '../../domain/rates';
 import { Chips, Field, Group } from '../components/fields';
 import { Gate } from '../components/gate';
 import { MoneyScreen } from '../components/money-screen';
+import { useMoneyView } from '../components/use-money-view';
 
 const kindOptions = [
   { value: 'expense', label: 'Expense' },
@@ -51,8 +53,8 @@ export function MoneyEntry({ id }: { id?: string }) {
   const items = useItems();
   const categories = useCategories();
   const rates = useRates();
-  const space = useActiveSpace();
-  const queries = [entries, items, categories, rates, space];
+  const scope = useMoneyView();
+  const queries = [entries, items, categories, rates, ...scope.queries];
   const entry = id ? entries.data?.find((row) => row.id === id) : undefined;
 
   return (
@@ -66,7 +68,8 @@ export function MoneyEntry({ id }: { id?: string }) {
             entryItems={items.data?.filter((item) => item.entryId === id) ?? []}
             categories={categories.data ?? []}
             rates={rates.data ?? []}
-            space={entry?.space ?? space.data ?? 'private'}
+            businesses={scope.businesses}
+            startOwner={entry ? ownerOf(entry) : ownerForView(scope.view)}
           />
         )}
       </Gate>
@@ -79,11 +82,13 @@ type FormProps = {
   entryItems: Item[];
   categories: Category[];
   rates: { currency: string; date: string; rate: number; source: 'nbs' | 'manual' }[];
-  space: Space;
+  businesses: Business[];
+  /** `private` or a business id. */
+  startOwner: string;
 };
 
 // The form owns its fields from the first render, so it mounts only once the data is in.
-function EntryForm({ entry, entryItems, categories, rates, space }: FormProps) {
+function EntryForm({ entry, entryItems, categories, rates, businesses, startOwner }: FormProps) {
   const today = useToday();
   const save = useSaveEntry();
   const remove = useDeleteEntry();
@@ -107,6 +112,13 @@ function EntryForm({ entry, entryItems, categories, rates, space }: FormProps) {
   );
   const [nextKey, setNextKey] = useState(entryItems.length);
   const [error, setError] = useState<string | null>(null);
+  // Who the entry belongs to, and for a payout the business it comes from.
+  const live = businesses.filter((b) => !b.archivedAt || b.id === entry?.businessId);
+  const [owner, setOwner] = useState(startOwner);
+  const [from, setFrom] = useState<string | null>(
+    entry?.businessId ?? (startOwner === 'private' ? (live[0]?.id ?? null) : startOwner),
+  );
+  const space = spaceOfOwner(owner);
 
   const choices = categories.filter(
     (category) =>
@@ -121,8 +133,10 @@ function EntryForm({ entry, entryItems, categories, rates, space }: FormProps) {
   const chosenCategory = choices.some((c) => c.id === categoryId) ? categoryId : null;
 
   const foreign = currency !== baseCurrency;
-  const suggestion = pickRate(rates, currency, date);
-  const shownRate = rateText ?? (suggestion ? String(suggestion.rate) : '');
+  const nbs = useNbsRate(foreign && isIsoDate(date) ? currency : null, date, today);
+  // The bank's rate for that day, else the latest one already known.
+  const suggestion = nbs.data ?? pickRate(rates, currency, date)?.rate ?? null;
+  const shownRate = rateText ?? (suggestion === null ? '' : String(suggestion));
   const minor = parseAmount(amount);
   const rate = foreign ? parseRate(shownRate) : 1;
   const rsd = minor !== null && rate !== null ? toRsdMinor(minor, rate) : null;
@@ -132,6 +146,7 @@ function EntryForm({ entry, entryItems, categories, rates, space }: FormProps) {
     if (minor === null) return setError('Enter an amount greater than zero.');
     if (rate === null) return setError('Enter the exchange rate for this currency.');
     if (!isIsoDate(date)) return setError('Enter the date as YYYY-MM-DD.');
+    if (isPayout && !from) return setError('Add a business first (Money › Businesses).');
     const draftItems = rows.map((row) => ({
       name: row.name.trim(),
       amountMinor: parseAmount(row.amount) ?? 0,
@@ -153,7 +168,8 @@ function EntryForm({ entry, entryItems, categories, rates, space }: FormProps) {
     save.mutate(
       {
         id: entry?.id,
-        space,
+        space: isPayout ? 'business' : space,
+        businessId: isPayout ? from : owner === 'private' ? null : owner,
         kind,
         amountMinor: minor,
         currency,
@@ -197,8 +213,37 @@ function EntryForm({ entry, entryItems, categories, rates, space }: FormProps) {
       />
       {isPayout ? (
         <ThemedText type="footnote" themeColor="textTertiary" testID="money-entry-payout-hint">
-          Moves money from Firma to Private. It counts once in each space and is never income.
+          Moves money from a business to Private. It counts once on each side and is never income.
         </ThemedText>
+      ) : null}
+      {live.length > 0 && !isPayout ? (
+        <Group title="Owner">
+          <Chips
+            options={[
+              { value: 'private', label: 'Private' },
+              ...live.map((b) => ({ value: b.id, label: b.name })),
+            ]}
+            value={owner}
+            onChange={setOwner}
+            idPrefix="money-entry-owner"
+          />
+        </Group>
+      ) : null}
+      {isPayout ? (
+        <Group title="From business">
+          {live.length === 0 ? (
+            <ThemedText themeColor="textTertiary" testID="money-entry-no-business">
+              Add a business first (Money › Businesses).
+            </ThemedText>
+          ) : (
+            <Chips
+              options={live.map((b) => ({ value: b.id, label: b.name }))}
+              value={from}
+              onChange={setFrom}
+              idPrefix="money-entry-from"
+            />
+          )}
+        </Group>
       ) : null}
       <Group title="Amount">
         <Field
@@ -227,8 +272,10 @@ function EntryForm({ entry, entryItems, categories, rates, space }: FormProps) {
             />
             <ThemedText type="footnote" themeColor="textTertiary" testID="money-entry-rsd">
               {rsd !== null
-                ? `= ${formatMinor(rsd)} at ${shownRate}`
-                : 'Enter a rate; add rates in Money › Rates.'}
+                ? `= ${formatMinor(rsd)} at ${shownRate}${rateText === null && nbs.data ? ' (NBS middle rate)' : ''}`
+                : nbs.isFetching
+                  ? 'Getting the NBS rate…'
+                  : 'Could not get the NBS rate. Enter one.'}
             </ThemedText>
           </>
         ) : null}

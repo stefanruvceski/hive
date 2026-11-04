@@ -8,31 +8,20 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { GlassButton } from '@/components/ui/glass-button';
 import { GlassSurface } from '@/components/ui/glass-surface';
 import { PrimaryButton } from '@/components/ui/primary-button';
-import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Wallpaper } from '@/components/ui/wallpaper';
 import { Layout, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useToday } from '@/hooks/use-today';
 
-import {
-  type Category,
-  type Entry,
-  useActiveSpace,
-  useCategories,
-  useEntries,
-  useSetSpace,
-} from '../../data/queries';
+import { type Category, type Entry, useCategories, useEntries } from '../../data/queries';
 import { useGenerateRecurring } from '../../data/recurring-queries';
-import type { Space } from '../../data/schema';
 import { formatMinor } from '../../domain/amount';
 import { monthLabel, monthOf, shiftMonth } from '../../domain/dates';
 import { groupByDay, totalsOf } from '../../domain/entries';
+import { categoryLabel, inView, type Business } from '../../domain/owners';
 import { Group, LinkRow } from '../components/fields';
 import { Gate } from '../components/gate';
-
-const spaceOptions = [
-  { value: 'private', label: 'Private' },
-  { value: 'business', label: 'Firma' },
-] as const;
+import { useMoneyView } from '../components/use-money-view';
+import { ViewChips } from '../components/view-chips';
 
 const openEntry = (id?: string) =>
   router.push(id ? { pathname: '/money/entry', params: { id } } : '/money/entry');
@@ -90,10 +79,8 @@ function MoneyContent({ today }: { today: string }) {
   const insets = useSafeAreaInsets();
   const entries = useEntries();
   const categories = useCategories();
-  const space = useActiveSpace();
-  const setSpace = useSetSpace();
+  const scope = useMoneyView();
   const [month, setMonth] = useState(monthOf(today));
-  const current = space.data ?? 'private';
 
   return (
     <ScrollView
@@ -106,24 +93,20 @@ function MoneyContent({ today }: { today: string }) {
       <ThemedText type="title" role="heading" testID="money-title">
         Money
       </ThemedText>
-      <SegmentedControl
-        options={spaceOptions}
-        value={current}
-        onChange={(value: Space) => setSpace.mutate(value)}
-        label="Space"
-        testID="money-space"
-      />
+      <ViewChips view={scope.view} businesses={scope.live} onChange={scope.setView} />
       <MonthSwitcher
         month={month}
         onPrevious={() => setMonth(shiftMonth(month, -1))}
         onNext={month < monthOf(today) ? () => setMonth(shiftMonth(month, 1)) : undefined}
       />
-      <Gate queries={[entries, categories, space]} id="money">
+      <Gate queries={[entries, categories, ...scope.queries]} id="money">
         <Month
           entries={(entries.data ?? []).filter(
-            (entry) => entry.space === current && monthOf(entry.date) === month,
+            (entry) => inView(entry, scope.view) && monthOf(entry.date) === month,
           )}
           categories={categories.data ?? []}
+          businesses={scope.businesses}
+          showOwner={scope.view === 'all' && scope.live.length > 0}
         />
       </Gate>
       <Group title="Manage">
@@ -136,6 +119,11 @@ function MoneyContent({ today }: { today: string }) {
           title="Recurring"
           onPress={() => router.push('/money/recurring')}
           testID="money-recurring-open"
+        />
+        <LinkRow
+          title="Businesses"
+          onPress={() => router.push('/money/businesses')}
+          testID="money-businesses-open"
         />
         <LinkRow
           title="Categories"
@@ -199,8 +187,19 @@ function Arrow({
   );
 }
 
-function Month({ entries, categories }: { entries: Entry[]; categories: Category[] }) {
-  const names = new Map(categories.map((c) => [c.id, `${c.emoji} ${c.name}`]));
+function Month({
+  entries,
+  categories,
+  businesses,
+  showOwner,
+}: {
+  entries: Entry[];
+  categories: Category[];
+  businesses: Business[];
+  showOwner: boolean;
+}) {
+  const names = new Map(categories.map((c) => [c.id, categoryLabel(c, showOwner)]));
+  const owners = new Map(businesses.map((b) => [b.id, b.name]));
   if (entries.length === 0) {
     return (
       <EmptyState
@@ -230,7 +229,19 @@ function Month({ entries, categories }: { entries: Entry[]; categories: Category
           <ThemedText type="listHeader">{day.date}</ThemedText>
           <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.rows}>
             {day.entries.map((entry) => (
-              <EntryRow key={entry.id} entry={entry} names={names} />
+              <EntryRow
+                key={entry.id}
+                entry={entry}
+                names={names}
+                owner={
+                  showOwner
+                    ? entry.space === 'private'
+                      ? 'Private'
+                      : (owners.get(entry.businessId ?? '') ?? 'Business')
+                    : null
+                }
+                source={owners.get(entry.businessId ?? '') ?? 'Business'}
+              />
             ))}
           </GlassSurface>
         </View>
@@ -260,12 +271,23 @@ function Total({
   );
 }
 
-function EntryRow({ entry, names }: { entry: Entry; names: Map<string, string> }) {
+function EntryRow({
+  entry,
+  names,
+  owner,
+  source,
+}: {
+  entry: Entry;
+  names: Map<string, string>;
+  owner: string | null;
+  /** The business a payout comes from. */
+  source: string;
+}) {
   const title =
     entry.kind === 'payout'
-      ? 'Payout Firma → Private'
+      ? `Payout ${source} → Private`
       : (names.get(entry.categoryId ?? '') ?? 'Split');
-  // A payout is an inflow in Private and an outflow of Firma.
+  // A payout is an inflow in Private and an outflow of Business.
   const outflow =
     entry.kind === 'expense' || (entry.kind === 'payout' && entry.space === 'business');
   const amount = `${outflow ? '−' : '+'}${formatMinor(entry.amountMinor, entry.currency)}`;
@@ -278,9 +300,9 @@ function EntryRow({ entry, names }: { entry: Entry; names: Map<string, string> }
       style={styles.entry}>
       <View style={styles.entryText}>
         <ThemedText>{title}</ThemedText>
-        {entry.note ? (
+        {owner || entry.note ? (
           <ThemedText type="footnote" themeColor="textTertiary">
-            {entry.note}
+            {[owner, entry.note].filter(Boolean).join(' · ')}
           </ThemedText>
         ) : null}
       </View>

@@ -6,15 +6,17 @@ import { PrimaryButton } from '@/components/ui/primary-button';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { useToday } from '@/hooks/use-today';
 
-import { type Category, useActiveSpace, useCategories } from '../../data/queries';
+import { type Category, useCategories } from '../../data/queries';
 import { type Rule, useRecurring, useSaveRule } from '../../data/recurring-queries';
 import type { CategoryKind, Frequency } from '../../data/schema';
 import { baseCurrency, currencies, minorToText, parseAmount } from '../../domain/amount';
 import { isIsoDate } from '../../domain/dates';
+import { type Business, ownerForView, ownerOf, spaceOfOwner } from '../../domain/owners';
 import { weekdayName } from '../../domain/recurring';
 import { Chips, Field, Group } from '../components/fields';
 import { Gate } from '../components/gate';
 import { MoneyScreen } from '../components/money-screen';
+import { useMoneyView } from '../components/use-money-view';
 
 const kindOptions = [
   { value: 'expense', label: 'Expense' },
@@ -29,15 +31,16 @@ const frequencyOptions = [
 export function MoneyRule({ id }: { id?: string }) {
   const rules = useRecurring();
   const categories = useCategories();
-  const space = useActiveSpace();
+  const scope = useMoneyView();
   const rule = id ? rules.data?.find((row) => row.id === id) : undefined;
   return (
     <MoneyScreen id="money-rule" title={id ? 'Edit rule' : 'New rule'}>
-      <Gate queries={[rules, categories, space]} id="money-rule">
+      <Gate queries={[rules, categories, ...scope.queries]} id="money-rule">
         <RuleForm
           rule={rule}
           categories={categories.data ?? []}
-          space={rule?.space ?? space.data ?? 'private'}
+          businesses={scope.live}
+          startOwner={rule ? ownerOf(rule) : ownerForView(scope.view)}
         />
       </Gate>
     </MoneyScreen>
@@ -47,11 +50,13 @@ export function MoneyRule({ id }: { id?: string }) {
 function RuleForm({
   rule,
   categories,
-  space,
+  businesses,
+  startOwner,
 }: {
   rule?: Rule;
   categories: Category[];
-  space: Category['space'];
+  businesses: Business[];
+  startOwner: string;
 }) {
   const today = useToday();
   const save = useSaveRule();
@@ -63,6 +68,8 @@ function RuleForm({
   const [frequency, setFrequency] = useState<Frequency>(rule?.frequency ?? 'monthly');
   const [day, setDay] = useState(String(rule?.day ?? Number(today.slice(8))));
   const [start, setStart] = useState(rule?.startDate ?? today);
+  const [owner, setOwner] = useState(startOwner);
+  const space = spaceOfOwner(owner);
   const [error, setError] = useState<string | null>(null);
 
   const choices = categories.filter((c) => c.space === space && c.kind === kind && !c.archivedAt);
@@ -86,6 +93,7 @@ function RuleForm({
       {
         id: rule?.id,
         space,
+        businessId: owner === 'private' ? null : owner,
         kind,
         amountMinor: minor,
         currency,
@@ -108,6 +116,19 @@ function RuleForm({
         label="Rule type"
         testID="money-rule-kind"
       />
+      {businesses.length > 0 ? (
+        <Group title="Owner">
+          <Chips
+            options={[
+              { value: 'private', label: 'Private' },
+              ...businesses.map((b) => ({ value: b.id, label: b.name })),
+            ]}
+            value={owner}
+            onChange={setOwner}
+            idPrefix="money-rule-owner"
+          />
+        </Group>
+      ) : null}
       <Group title="Amount">
         <Field
           label="Amount"

@@ -2,8 +2,10 @@ import { render, screen, userEvent } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { MoneyCategories } from './index';
+import { useBusinesses } from '../../data/business-queries';
 import {
-  useActiveSpace,
+  useActiveView,
+  useSetView,
   useArchiveCategory,
   useCategories,
   useSaveCategory,
@@ -11,6 +13,7 @@ import {
 import { category, loaded, metrics } from '../test-data';
 
 jest.mock('../../data/queries');
+jest.mock('../../data/business-queries');
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
 
 const save = jest.fn();
@@ -28,7 +31,9 @@ beforeEach(() => {
         category('fuel', { name: 'Fuel', space: 'business' }),
       ]),
     );
-  jest.mocked(useActiveSpace).mockReturnValue(loaded('private'));
+  jest.mocked(useActiveView).mockReturnValue(loaded('private'));
+  jest.mocked(useBusinesses).mockReturnValue(loaded([]));
+  jest.mocked(useSetView).mockReturnValue({ mutate: jest.fn() } as never);
   jest.mocked(useSaveCategory).mockReturnValue({ mutate: save } as never);
   jest.mocked(useArchiveCategory).mockReturnValue({ mutate: archive } as never);
 });

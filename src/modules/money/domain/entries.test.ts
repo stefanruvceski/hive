@@ -16,7 +16,7 @@ describe('signedRsd', () => {
     expect(signedRsd(entry({ id: 'a', kind: 'income' }))).toBe(1000);
   });
 
-  it('moves a payout out of Firma and into Private', () => {
+  it('moves a payout out of Business and into Private', () => {
     expect(signedRsd(entry({ id: 'a', kind: 'payout', space: 'business' }))).toBe(-1000);
     expect(signedRsd(entry({ id: 'a', kind: 'payout', space: 'private' }))).toBe(1000);
   });

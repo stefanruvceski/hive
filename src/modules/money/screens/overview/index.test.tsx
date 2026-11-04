@@ -2,10 +2,12 @@ import { render, screen, userEvent } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { MoneyOverview } from './index';
-import { useActiveSpace, useCategories, useEntries, useItems } from '../../data/queries';
+import { useBusinesses } from '../../data/business-queries';
+import { useActiveView, useSetView, useCategories, useEntries, useItems } from '../../data/queries';
 import { category, entry, loaded, metrics } from '../test-data';
 
 jest.mock('../../data/queries');
+jest.mock('../../data/business-queries');
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
 jest.mock('@/hooks/use-today', () => ({ useToday: () => '2026-11-02' }));
 
@@ -17,7 +19,9 @@ const show = (entries: unknown[]) => {
     .mockReturnValue(
       loaded([category('food', { name: 'Food' }), category('fun', { name: 'Fun' })]),
     );
-  jest.mocked(useActiveSpace).mockReturnValue(loaded('private'));
+  jest.mocked(useActiveView).mockReturnValue(loaded('private'));
+  jest.mocked(useBusinesses).mockReturnValue(loaded([]));
+  jest.mocked(useSetView).mockReturnValue({ mutate: jest.fn() } as never);
 };
 
 const renderScreen = () =>

@@ -15,7 +15,7 @@ export type EntryLike = {
 };
 
 /**
- * The effect on the space's balance, in RSD minor units. A payout leaves Firma and arrives in
+ * The effect on the space's balance, in RSD minor units. A payout leaves Business and arrives in
  * Private, so it is a minus in one space and a plus in the other — and never "income".
  */
 export function signedRsd(entry: Pick<EntryLike, 'space' | 'kind' | 'amountRsdMinor'>): number {

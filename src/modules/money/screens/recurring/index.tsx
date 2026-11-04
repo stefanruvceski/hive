@@ -14,6 +14,7 @@ import { weekdayName } from '../../domain/recurring';
 import { Group } from '../components/fields';
 import { Gate } from '../components/gate';
 import { MoneyScreen } from '../components/money-screen';
+import { useMoneyView } from '../components/use-money-view';
 
 const describe = (rule: Rule) =>
   rule.frequency === 'weekly' ? `Every ${weekdayName(rule.day)}` : `Monthly on day ${rule.day}`;
@@ -22,6 +23,7 @@ const describe = (rule: Rule) =>
 export function MoneyRecurring() {
   const rules = useRecurring();
   const categories = useCategories();
+  const scope = useMoneyView();
   return (
     <MoneyScreen
       id="money-recurring"
@@ -34,7 +36,7 @@ export function MoneyRecurring() {
           testID="money-recurring-add"
         />
       }>
-      <Gate queries={[rules, categories]} id="money-recurring">
+      <Gate queries={[rules, categories, ...scope.queries]} id="money-recurring">
         {(rules.data ?? []).length === 0 ? (
           <EmptyState
             title="No recurring entries"
@@ -48,6 +50,11 @@ export function MoneyRecurring() {
                 key={rule.id}
                 rule={rule}
                 category={(categories.data ?? []).find((c) => c.id === rule.categoryId)}
+                owner={
+                  rule.space === 'private'
+                    ? 'Private'
+                    : (scope.businesses.find((b) => b.id === rule.businessId)?.name ?? 'Business')
+                }
               />
             ))}
           </Group>
@@ -57,7 +64,15 @@ export function MoneyRecurring() {
   );
 }
 
-function RuleRow({ rule, category }: { rule: Rule; category?: { emoji: string; name: string } }) {
+function RuleRow({
+  rule,
+  category,
+  owner,
+}: {
+  rule: Rule;
+  category?: { emoji: string; name: string };
+  owner: string;
+}) {
   const today = useToday();
   const stop = useStopRule();
   const active = !rule.endDate || rule.endDate >= today;
@@ -71,7 +86,7 @@ function RuleRow({ rule, category }: { rule: Rule; category?: { emoji: string; n
         style={styles.text}>
         <ThemedText>{`${category ? `${category.emoji} ${category.name}` : 'Rule'} · ${formatMinor(rule.amountMinor, rule.currency)}`}</ThemedText>
         <ThemedText type="footnote" themeColor="textTertiary">
-          {`${describe(rule)} · ${rule.space === 'business' ? 'Firma' : 'Private'}${active ? '' : ' · stopped'}`}
+          {`${describe(rule)} · ${owner}${active ? '' : ' · stopped'}`}
         </ThemedText>
       </Pressable>
       <Pressable

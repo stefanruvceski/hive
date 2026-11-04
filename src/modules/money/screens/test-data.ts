@@ -1,5 +1,6 @@
 // Fixtures shared by the Money screen tests.
 import type { Category, Entry } from '../data/queries';
+import type { Business } from '../domain/owners';
 
 export const category = (id: string, extra: Partial<Category> = {}) =>
   ({
@@ -17,6 +18,7 @@ export const entry = (id: string, extra: Partial<Entry> = {}) =>
   ({
     id,
     space: 'private',
+    businessId: null,
     kind: 'expense',
     amountMinor: 10000,
     currency: 'RSD',
@@ -30,6 +32,14 @@ export const entry = (id: string, extra: Partial<Entry> = {}) =>
     createdAt: '2026-11-02T10:00:00Z',
     ...extra,
   }) as Entry;
+
+export const business = (id: string, extra: Partial<Business> = {}): Business => ({
+  id,
+  name: id,
+  pib: '101134702',
+  archivedAt: null,
+  ...extra,
+});
 
 /** A query result that has its data. */
 export const loaded = (data: unknown) =>

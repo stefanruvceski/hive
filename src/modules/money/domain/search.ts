@@ -5,6 +5,7 @@ import type { EntryLike } from './entries';
 import type { EntryKind } from '../data/schema';
 
 export type SearchEntry = EntryLike & {
+  businessId: string | null;
   kind: EntryKind;
   amountMinor: number;
   currency: string;
@@ -73,7 +74,7 @@ const quote = (cell: string) => (/[",\r\n;]/.test(cell) ? `"${cell.replace(/"/g,
 
 export const csvHeader = [
   'date',
-  'space',
+  'owner',
   'kind',
   'category',
   'item',
@@ -92,6 +93,7 @@ export function toCsv(
   entries: readonly SearchEntry[],
   items: readonly SearchItem[],
   categoryNames: ReadonlyMap<string, string>,
+  businessNames: ReadonlyMap<string, string> = new Map(),
 ): string {
   const itemsOf = new Map<string, SearchItem[]>();
   for (const item of items) itemsOf.set(item.entryId, [...(itemsOf.get(item.entryId) ?? []), item]);
@@ -99,7 +101,9 @@ export function toCsv(
   for (const entry of entries) {
     const base = (category: string, item: string, amountMinor: number, rsdMinor: number) => [
       entry.date,
-      entry.space,
+      entry.space === 'private'
+        ? 'Private'
+        : (businessNames.get(entry.businessId ?? '') ?? 'Business'),
       entry.kind,
       category,
       item,

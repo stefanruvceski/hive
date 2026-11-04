@@ -1,7 +1,7 @@
-# ADR 0002 — Money: two spaces, per-entry rates, manual rates first
+# ADR 0002 — Money: owners (Private and businesses), per-entry rates, NBS rates
 
 - **Date:** 2026-11-03
-- **Status:** Accepted (rates source open — see below)
+- **Status:** Accepted
 - **Decided by:** the maintainer; details marked "agent" were decided while building and are listed in the PR
 
 ## Context
@@ -10,18 +10,18 @@ Money tracks income and spending for one person who also runs a business: salary
 
 ## Decision
 
-1. **Two spaces, Private and Firma**, with a switch on the Money home. Every entry, category, budget and recurring rule lives in one space. There are no accounts or wallets.
-2. **Three kinds of entry:** expense, income and _payout_. A payout moves money from Firma to Private. It is stored as two rows (one per space) sharing a `pair_id`, so each space's balance is right, and it is never counted as income, so money is not counted twice.
+1. **One owner per entry: Private or one business.** A business has a name and a PIB (the Serbian tax number, checked with its check digit); there can be any number of them, and a PIB is added once (`useEnsureBusiness` finds or creates the business for a PIB, which is what a scanned receipt will call). The Money screens show a view: **All**, **Private** or one business, chosen with chips at the top (shown once a business exists). Categories come in two lists: Private, and one Business list shared by all businesses. Every entry, budget and recurring rule belongs to one owner. There are no accounts or wallets.
+2. **Three kinds of entry:** expense, income and _payout_. A payout moves money from Business to Private. It is stored as two rows (one per space) sharing a `pair_id`, so each space's balance is right, and it is never counted as income, so money is not counted twice.
 3. **Integer minor units.** Amounts are stored in para/cents. Each entry keeps its currency, the rate used (RSD per unit) and its RSD value, fixed at save time. Changing a rate later never moves old totals.
 4. **Base currency RSD.** Totals, budgets and charts are in RSD.
 5. **Entries may have line items** (name, amount, category). Their sum must equal the entry's amount; the entry then has no category of its own. Overview and budgets count spending per item category, sharing the RSD value by largest remainder. Receipt scanning is out of scope here and will fill these items later.
-6. **Rates are typed by hand for now** (`money_rates`: currency, date, rate, source). The latest rate on or before the entry's date is suggested; using a foreign rate remembers it as that day's rate. `domain/rates.ts` is the seam for an automatic provider.
+6. **Rates come from the NBS middle rate** (keyless, via `kurs.resenje.org`, as in hive-poc), fetched for the entry's day when a foreign currency is picked and kept in `money_rates` (`source = 'nbs'`) for offline use. The user can overwrite it on the entry; if the bank cannot be reached, the latest known rate is suggested or one is typed.
 7. **Recurring rules** create entries when Money opens, up to today. The unique index `(recurring_id, date)` makes this idempotent. A foreign-currency rule waits until a rate is known instead of guessing.
 8. **Charts use `react-native-svg`** (new native dependency ⇒ store release).
 
-## Open: automatic NBS rates
+## Rates source
 
-The National Bank of Serbia publishes the official middle rate, but no keyless, documented JSON API was found that is safe to call from the client. The decision is deferred; the options are a small proxy that reads the NBS list (no secret in the app), or a free third-party rates API. Either would only add `source = 'nbs'` rows to `money_rates`. A rate API key must never ship in an `EXPO_PUBLIC_*` variable.
+`kurs.resenje.org` republishes the official NBS list as JSON without a key, so nothing secret is in the app. It is a third-party mirror: if it goes away, `domain/fx.ts` and `data/fx-client.ts` are the only places to change, and manual rates keep working.
 
 ## Consequences
 

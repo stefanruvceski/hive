@@ -32,6 +32,8 @@ export function useRecurring() {
 export type RuleDraft = {
   id?: string;
   space: Space;
+  /** The business of a `business` rule. */
+  businessId: string | null;
   kind: CategoryKind;
   amountMinor: number;
   currency: string;
@@ -103,6 +105,7 @@ export function useGenerateRecurring() {
               .values({
                 id: newId(),
                 space: rule.space,
+                businessId: rule.businessId,
                 kind: rule.kind,
                 amountMinor: rule.amountMinor,
                 currency: rule.currency,

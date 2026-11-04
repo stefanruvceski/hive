@@ -7,44 +7,50 @@ import { useTheme } from '@/hooks/use-theme';
 import { useToday } from '@/hooks/use-today';
 
 import { useBudgets, useSetBudget } from '../../data/budget-queries';
-import { useActiveSpace, useCategories, useEntries, useItems } from '../../data/queries';
+import { useCategories, useEntries, useItems } from '../../data/queries';
 import { formatMinor, minorToText, parseAmount } from '../../domain/amount';
 import { budgetStatus, effectiveLimit } from '../../domain/budgets';
 import { monthLabel, monthOf } from '../../domain/dates';
 import { spendingByCategory } from '../../domain/entries';
+import { categoryLabel, inView } from '../../domain/owners';
 import { Field, Group } from '../components/fields';
 import { Gate } from '../components/gate';
 import { MoneyScreen } from '../components/money-screen';
+import { useMoneyView } from '../components/use-money-view';
+import { ViewChips } from '../components/view-chips';
 
-/** Monthly limits per expense category of the open space, with this month's spending against them. */
+/** Monthly limits per expense category of the open view, with this month's spending against them. */
 export function MoneyBudgets() {
   const today = useToday();
   const entries = useEntries();
   const items = useItems();
   const categories = useCategories();
   const budgets = useBudgets();
-  const space = useActiveSpace();
+  const scope = useMoneyView();
   const month = monthOf(today);
-  const current = space.data ?? 'private';
   const monthEntries = (entries.data ?? []).filter(
-    (entry) => entry.space === current && monthOf(entry.date) === month,
+    (entry) => inView(entry, scope.view) && monthOf(entry.date) === month,
   );
   const spent = spendingByCategory(monthEntries, items.data ?? []);
 
   return (
     <MoneyScreen id="money-budgets" title="Budgets">
-      <Gate queries={[entries, items, categories, budgets, space]} id="money-budgets">
+      <Gate queries={[entries, items, categories, budgets, ...scope.queries]} id="money-budgets">
+        <ViewChips view={scope.view} businesses={scope.live} onChange={scope.setView} />
         <ThemedText type="footnote" themeColor="textTertiary">
           {`Limits for ${monthLabel(month)} on. Past months keep the limit they had.`}
         </ThemedText>
         <Group>
           {(categories.data ?? [])
-            .filter((c) => c.space === current && c.kind === 'expense' && !c.archivedAt)
+            .filter(
+              (c) =>
+                scope.categorySpaces.includes(c.space) && c.kind === 'expense' && !c.archivedAt,
+            )
             .map((c) => (
               <BudgetRow
                 key={c.id}
                 id={c.id}
-                label={`${c.emoji} ${c.name}`}
+                label={categoryLabel(c, scope.view === 'all')}
                 month={month}
                 limit={effectiveLimit(budgets.data ?? [], c.id, month)}
                 spent={spent.get(c.id) ?? 0}
