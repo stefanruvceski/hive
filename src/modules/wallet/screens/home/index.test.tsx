@@ -7,6 +7,7 @@ import { ApiError } from '@/lib/api';
 import { WalletHome } from './index';
 import { rememberDeletedCard } from '../../data/deleted-card';
 import { rememberDeletedReceipt } from '../../data/deleted-receipt';
+import { useShopGroups } from '../../data/price-queries';
 import { useCards, useRestoreCard } from '../../data/queries';
 import { useReceipts, useRestoreReceipt, useSyncReceipts } from '../../data/receipt-queries';
 import { useStackedRow } from '../components/use-stacked-row';
@@ -18,7 +19,15 @@ jest.mock('../components/use-stacked-row', () => ({
   useStackedRow: jest.fn(() => false),
 }));
 jest.mock('../../data/receipt-queries');
-jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
+jest.mock('../../data/price-queries');
+jest.mock('expo-camera', () => ({
+  useCameraPermissions: () => [{ granted: true, canAskAgain: true }, jest.fn()],
+  CameraView: () => null,
+}));
+jest.mock('expo-router', () => ({
+  router: { push: jest.fn(), back: jest.fn() },
+  useLocalSearchParams: () => ({}),
+}));
 
 const restore = jest.fn();
 const restoreReceipt = jest.fn();
@@ -41,6 +50,7 @@ beforeEach(() => {
   jest.mocked(useRestoreReceipt).mockReturnValue({ mutate: restoreReceipt } as never);
   jest.mocked(useSyncReceipts).mockReturnValue({ refresh: jest.fn(), isRefreshing: false });
   jest.mocked(useReceipts).mockReturnValue(loaded([]));
+  jest.mocked(useShopGroups).mockReturnValue(loaded([]));
 });
 
 describe('WalletHome', () => {
@@ -139,6 +149,20 @@ describe('WalletHome', () => {
 
     expect(screen.getByTestId('wallet-receipts-list')).toBeOnTheScreen();
     expect(screen.queryByTestId('wallet-card-a')).not.toBeOnTheScreen();
+  });
+
+  it('puts Scan receipt in the header of the receipts tab and opens the camera from it', async () => {
+    jest.mocked(useCards).mockReturnValue(loaded([card('a')]));
+    jest.mocked(useReceipts).mockReturnValue(loaded([receipt('r1')]));
+    await renderHome();
+    const user = userEvent.setup();
+
+    expect(screen.queryByTestId('wallet-receipt-scan')).not.toBeOnTheScreen();
+    await user.press(screen.getByTestId('wallet-tab-receipts'));
+    await user.press(screen.getByTestId('wallet-receipt-scan'));
+
+    expect(screen.getByTestId('wallet-scanner')).toBeOnTheScreen();
+    expect(screen.queryByTestId('wallet-add')).not.toBeOnTheScreen();
   });
 
   it('offers Undo for a deleted receipt and brings it back', async () => {

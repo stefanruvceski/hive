@@ -197,7 +197,7 @@ function useInvalidating<TVars, TResult>(fn: (vars: TVars) => TResult) {
   });
 }
 
-/** The note and the star: not part of what other modules read. */
+/** The note: not part of what other modules read. */
 export const useEditReceiptNote = () =>
   useInvalidating(({ id, note }: { id: string; note: string }) => {
     getDb()
@@ -205,11 +205,6 @@ export const useEditReceiptNote = () =>
       .set({ note: note.trim() })
       .where(eq(walletReceipts.id, id))
       .run();
-  });
-
-export const useStarReceipt = () =>
-  useInvalidating(({ id, starred }: { id: string; starred: boolean }) => {
-    getDb().update(walletReceipts).set({ starred }).where(eq(walletReceipts.id, id)).run();
   });
 
 /** Who the receipt belongs to: a PIB, or null for personal. The choice survives a refetch. */

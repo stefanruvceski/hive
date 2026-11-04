@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -35,7 +35,11 @@ const tabs = [
 
 /** Wallet's entry screen: loyalty cards and fiscal receipts, under the same header as the detail screens. */
 export function WalletHome() {
-  const [tab, setTab] = useState<Tab>('cards');
+  const params = useLocalSearchParams<{ tab?: string; pib?: string }>();
+  const [tab, setTab] = useState<Tab>(params.tab === 'receipts' ? 'receipts' : 'cards');
+  const [scanning, setScanning] = useState(false);
+  // The company whose receipts are shown (from the receipt screen); cleared with "Show all".
+  const [pib, setPib] = useState<string | undefined>(params.pib);
   const deletedCard = useDeletedCard();
   const deletedReceipt = useDeletedReceipt();
   const restoreCard = useRestoreCard();
@@ -57,7 +61,18 @@ export function WalletHome() {
                   onPress={addCard}
                   testID="wallet-add"
                 />
-              ) : undefined
+              ) : (
+                <GlassButton
+                  icon={{
+                    ios: 'qrcode.viewfinder',
+                    android: 'qr_code_scanner',
+                    web: 'qr_code_scanner',
+                  }}
+                  label="Scan receipt"
+                  onPress={() => setScanning((on) => !on)}
+                  testID="wallet-receipt-scan"
+                />
+              )
             }
           />
           <SegmentedControl
@@ -68,7 +83,16 @@ export function WalletHome() {
             testID="wallet-tab"
           />
         </View>
-        {tab === 'cards' ? <WalletContent /> : <ReceiptsTab />}
+        {tab === 'cards' ? (
+          <WalletContent />
+        ) : (
+          <ReceiptsTab
+            scanning={scanning}
+            onScanningChange={setScanning}
+            pib={pib}
+            onClearPib={() => setPib(undefined)}
+          />
+        )}
       </SafeAreaView>
       {deletedCard ? (
         <UndoBar

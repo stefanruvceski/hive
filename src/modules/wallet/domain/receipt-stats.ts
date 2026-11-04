@@ -1,4 +1,6 @@
+import type { AliasGroup } from './aliases';
 import { latin } from './fiscal-parse';
+import { shopOf } from './shop-brands';
 
 // Totals, grouping and search for the Receipts tab (pure, unit tested). Ported from hive-poc
 // ReceiptStats.kt. Money is in minor units (para); `time` is Belgrade local time.
@@ -75,11 +77,16 @@ export const titleOf = (r: Pick<StatsReceipt, 'shop' | 'company'>) =>
   r.shop ?? r.company ?? 'Receipt';
 
 /** Free-text search over shop, company, address, items and note; Cyrillic input matches Latin text. */
-export function searchReceipts<T extends StatsReceipt>(rs: readonly T[], query: string): T[] {
+export function searchReceipts<T extends StatsReceipt & { tin?: string | null }>(
+  rs: readonly T[],
+  query: string,
+  groups: readonly AliasGroup[] = [],
+): T[] {
   const q = (latin(query) ?? query).trim().toLowerCase();
   if (q === '') return [...rs];
   return rs.filter((r) =>
     [
+      shopOf(r, groups)[1],
       titleOf(r),
       r.shop,
       r.company,
