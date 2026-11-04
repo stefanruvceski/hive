@@ -1,0 +1,16 @@
+# Wallet prices: reachable from the Receipts tab; with no receipts yet it explains how prices appear.
+appId: com.ruvceski.hive.dev
+tags:
+  - wallet
+---
+- launchApp
+- tapOn:
+    id: 'home-open-wallet'
+- tapOn:
+    id: 'wallet-tab-receipts'
+- tapOn:
+    id: 'wallet-open-prices'
+- assertVisible:
+    id: 'wallet-prices-screen'
+- assertVisible:
+    id: 'wallet-prices-empty'

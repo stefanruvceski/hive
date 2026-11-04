@@ -127,6 +127,13 @@
       "when": 1793788098499,
       "tag": "0017_light_serpent_society",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1793808169233,
+      "tag": "0018_clumsy_exodus",
+      "breakpoints": true
     }
   ]
 }

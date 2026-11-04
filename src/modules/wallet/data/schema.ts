@@ -71,3 +71,28 @@ export const walletReceiptItems = sqliteTable(
   },
   (table) => [index('wallet_receipt_items_receipt_idx').on(table.receiptId)],
 );
+
+/**
+ * Products merged by hand (Prices): one row per spelling (`key`, the normalized item name), rows of
+ * one merge share a `group_id`, `position` 0 is the key everything is filed under. `name` is the
+ * group's chosen name (the same on each of its rows), null = the most used spelling.
+ */
+export const walletProductAliases = sqliteTable('wallet_product_aliases', {
+  key: text('key').primaryKey(),
+  groupId: text('group_id').notNull(),
+  position: integer('position').notNull(),
+  name: text('name'),
+});
+
+/** The same for shops (`pib:<tin>` or a chain name), e.g. one chain under two PIBs. */
+export const walletShopAliases = sqliteTable('wallet_shop_aliases', {
+  key: text('key').primaryKey(),
+  groupId: text('group_id').notNull(),
+  position: integer('position').notNull(),
+  name: text('name'),
+});
+
+/** Pairs of product keys the user said are not the same, so they are not suggested again (`pair()`). */
+export const walletNotSame = sqliteTable('wallet_not_same', {
+  pair: text('pair').primaryKey(),
+});

@@ -25,6 +25,7 @@ import {
   titleOf,
 } from '../../domain/receipt-stats';
 import { CardScanner } from '../components/card-scanner';
+import { TextButton } from '../components/text-button';
 
 type Row = { kind: 'month'; month: string } | { kind: 'receipt'; receipt: Receipt };
 
@@ -130,6 +131,11 @@ export function ReceiptsTab() {
           style={[styles.input, { color: theme.text }]}
         />
       </GlassSurface>
+      <TextButton
+        label="Prices by shop"
+        onPress={() => router.push('/wallet/prices')}
+        testID="wallet-open-prices"
+      />
       <Pressable
         role="switch"
         aria-checked={starredOnly}
