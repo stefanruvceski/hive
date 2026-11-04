@@ -62,4 +62,13 @@ export const hiveModules: readonly HiveModule[] = [
     href: '/money',
     useHomeSummary: useMoneyHomeSummary,
   },
+  {
+    id: 'wallet',
+    title: 'Wallet',
+    description: 'Loyalty cards and receipts, always in your pocket.',
+    icon: { ios: 'creditcard', android: 'credit_card', web: 'credit_card' },
+    tint: 'wallet',
+    group: 'money',
+    href: '/wallet',
+  },
 ];

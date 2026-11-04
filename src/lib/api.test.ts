@@ -1,4 +1,11 @@
-import { api, ApiError, ApiNotConfiguredError, isApiConfigured, publicJson } from './api';
+import {
+  api,
+  ApiError,
+  ApiNotConfiguredError,
+  isApiConfigured,
+  publicJson,
+  publicText,
+} from './api';
 
 // No API URL, as in an EAS Update bundle (#18).
 jest.mock('./env', () => ({ env: { apiUrl: undefined } }));
@@ -30,5 +37,25 @@ describe('publicJson', () => {
   it('rejects with ApiError on a bad status', async () => {
     jest.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: false, status: 503 } as Response);
     await expect(publicJson('https://example.test/x')).rejects.toBeInstanceOf(ApiError);
+  });
+});
+
+describe('publicText', () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it('asks for JSON and returns the body as text', async () => {
+    const spy = jest
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue({ ok: true, text: async () => '<html></html>' } as Response);
+    await expect(publicText('https://example.test/x')).resolves.toBe('<html></html>');
+    expect(spy).toHaveBeenCalledWith(
+      'https://example.test/x',
+      expect.objectContaining({ headers: { Accept: 'application/json' } }),
+    );
+  });
+
+  it('rejects with ApiError on a bad status', async () => {
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: false, status: 404 } as Response);
+    await expect(publicText('https://example.test/x')).rejects.toMatchObject({ status: 404 });
   });
 });

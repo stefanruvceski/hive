@@ -1,0 +1,17 @@
+# Wallet receipts: a pasted receipt link is saved at once and shows in the list (the office may be offline).
+appId: com.ruvceski.hive.dev
+tags:
+  - wallet
+---
+- launchApp
+- tapOn:
+    id: 'home-open-wallet'
+- tapOn:
+    id: 'wallet-tab-receipts'
+- tapOn:
+    id: 'wallet-receipt-link'
+- inputText: 'https://suf.purs.gov.rs/v/?vl=MaestroTestReceipt1'
+- hideKeyboard
+- tapOn:
+    id: 'wallet-receipt-add-link'
+- assertVisible: '.*(Pending|Failed).*'

@@ -58,3 +58,16 @@ export async function publicJson<T>(url: string, timeoutMs = DEFAULT_TIMEOUT_MS)
   if (!response.ok) throw new ApiError(response.status, `GET ${url} failed`);
   return (await response.json()) as T;
 }
+
+/**
+ * GET a public, keyless third-party URL as text (a server that answers JSON when asked, else an
+ * HTML page). Same rules as `publicJson`; wrap in a data function and classify the failures.
+ */
+export async function publicText(url: string, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<string> {
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(timeoutMs),
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) throw new ApiError(response.status, `GET ${url} failed`);
+  return await response.text();
+}

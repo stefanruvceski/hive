@@ -212,6 +212,9 @@ export const Fonts = Platform.select({
   },
 });
 
+/** Barcodes are always black on white, whatever the color scheme: scanners need the contrast. */
+export const BarcodeColors = { paper: '#FFFFFF', ink: '#000000' } as const;
+
 export const Spacing = {
   half: 2,
   one: 4,
