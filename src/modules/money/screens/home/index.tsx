@@ -14,7 +14,7 @@ import { useToday } from '@/hooks/use-today';
 
 import { type Category, type Entry, useCategories, useEntries } from '../../data/queries';
 import { useGenerateRecurring } from '../../data/recurring-queries';
-import { formatExact, formatMinor, formatWhole } from '../../domain/amount';
+import { formatExact, formatWhole } from '../../domain/amount';
 import { monthLabel, monthOf, shiftMonth } from '../../domain/dates';
 import { groupByDay, totalsOf } from '../../domain/entries';
 import { categoryLabel, inView, type Business } from '../../domain/owners';
