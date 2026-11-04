@@ -30,6 +30,8 @@ export const entry = (id: string, extra: Partial<Entry> = {}) =>
     pairId: null,
     recurringId: null,
     createdAt: '2026-11-02T10:00:00Z',
+    source: null,
+    sourceRef: null,
     ...extra,
   }) as Entry;
 

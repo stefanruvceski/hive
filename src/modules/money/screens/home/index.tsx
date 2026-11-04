@@ -18,13 +18,19 @@ import { formatMinor, formatWhole } from '../../domain/amount';
 import { monthLabel, monthOf, shiftMonth } from '../../domain/dates';
 import { groupByDay, totalsOf } from '../../domain/entries';
 import { categoryLabel, inView, type Business } from '../../domain/owners';
+import { receiptIdOf } from '../../domain/receipt-entries';
 import { Group, LinkRow } from '../components/fields';
 import { Gate } from '../components/gate';
+import { ReceiptImport } from '../components/receipt-import';
 import { useMoneyView } from '../components/use-money-view';
 import { ViewChips } from '../components/view-chips';
 
 const openEntry = (id?: string) =>
   router.push(id ? { pathname: '/money/entry', params: { id } } : '/money/entry');
+
+// An entry made from a receipt is read-only here: a tap opens the receipt it came from.
+const openReceipt = (id: string) =>
+  router.push({ pathname: '/wallet/receipt/[id]', params: { id } });
 
 /** Money's entry screen: the open space, one month at a time, newest day first. */
 export function MoneyHome() {
@@ -93,6 +99,7 @@ function MoneyContent({ today }: { today: string }) {
       <ThemedText type="title" role="heading" testID="money-title">
         Money
       </ThemedText>
+      <ReceiptImport />
       <ViewChips view={scope.view} businesses={scope.live} onChange={scope.setView} />
       <MonthSwitcher
         month={month}
@@ -295,19 +302,23 @@ function EntryRow({
   // A payout is an inflow in Private and an outflow of Business.
   const outflow =
     entry.kind === 'expense' || (entry.kind === 'payout' && entry.space === 'business');
-  const amount = `${outflow ? '−' : '+'}${formatMinor(entry.amountMinor, entry.currency)}`;
+  // A refund is a negative expense: money coming back.
+  const leaves = outflow ? entry.amountMinor >= 0 : entry.amountMinor < 0;
+  const amount = `${leaves ? '−' : '+'}${formatMinor(Math.abs(entry.amountMinor), entry.currency)}`;
+  const receiptId = receiptIdOf(entry.sourceRef);
+  const subtitle = [owner, receiptId ? 'Wallet' : null, entry.note].filter(Boolean).join(' · ');
   return (
     <Pressable
       role="button"
       aria-label={`${title}, ${amount}`}
-      onPress={() => openEntry(entry.id)}
+      onPress={() => (receiptId ? openReceipt(receiptId) : openEntry(entry.id))}
       testID={`money-entry-${entry.id}`}
       style={styles.entry}>
       <View style={styles.entryText}>
         <ThemedText>{title}</ThemedText>
-        {owner || entry.note ? (
+        {subtitle ? (
           <ThemedText type="footnote" themeColor="textTertiary">
-            {[owner, entry.note].filter(Boolean).join(' · ')}
+            {subtitle}
           </ThemedText>
         ) : null}
       </View>

@@ -2,6 +2,7 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/r
 import { asc, eq, inArray } from 'drizzle-orm';
 
 import { getDb } from '@/lib/db/client';
+import type { DbTx } from '@/lib/events';
 
 import {
   type CategoryKind,
@@ -34,6 +35,7 @@ export const moneyKeys = {
   rates: () => [...moneyKeys.all, 'rates'] as const,
   budgets: () => [...moneyKeys.all, 'budgets'] as const,
   recurring: () => [...moneyKeys.all, 'recurring'] as const,
+  receipts: () => [...moneyKeys.all, 'receipts'] as const,
 };
 
 const viewKey = 'view';
@@ -69,23 +71,26 @@ export function useSetView() {
  * Every category of both spaces, archived ones included, in list order. The first read of an empty
  * table also writes the defaults (once; the table is then never empty again).
  */
+/** Writes the default categories if the table is empty (once; it is then never empty again). */
+export function seedCategories(runner: ReturnType<typeof getDb> | DbTx) {
+  if (runner.select().from(moneyCategories).limit(1).get()) return;
+  let position = 0;
+  for (const space of spaces) {
+    for (const category of defaultCategories[space]) {
+      runner
+        .insert(moneyCategories)
+        .values({ id: newId(), space, position: position++, ...category })
+        .run();
+    }
+  }
+}
+
 export const categoriesQuery = () =>
   queryOptions({
     queryKey: moneyKeys.categories(),
     queryFn: async (): Promise<Category[]> => {
       const db = getDb();
-      if (!db.select().from(moneyCategories).limit(1).get()) {
-        db.transaction((tx) => {
-          let position = 0;
-          for (const space of spaces) {
-            for (const category of defaultCategories[space]) {
-              tx.insert(moneyCategories)
-                .values({ id: newId(), space, position: position++, ...category })
-                .run();
-            }
-          }
-        });
-      }
+      db.transaction((tx) => seedCategories(tx));
       return db.select().from(moneyCategories).orderBy(asc(moneyCategories.position)).all();
     },
   });

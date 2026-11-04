@@ -1,0 +1,13 @@
+# Money follows Wallet receipts: opening Money reads the events outbox without crashing and, with
+# no finished receipt scanned yet, offers no import.
+appId: com.ruvceski.hive.dev
+tags:
+  - money
+---
+- launchApp
+- tapOn:
+    id: 'home-open-money'
+- assertVisible:
+    id: 'money-screen'
+- assertNotVisible:
+    id: 'money-import'

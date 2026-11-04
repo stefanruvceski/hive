@@ -8,6 +8,7 @@ import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Spacing } from '@/constants/theme';
 import { useToday } from '@/hooks/use-today';
 
+import { ReceiptEntry } from './receipt-entry';
 import {
   type Category,
   type Entry,
@@ -34,6 +35,7 @@ import { addDays, isIsoDate } from '../../domain/dates';
 import { checkItems } from '../../domain/items';
 import { type Business, ownerForView, ownerOf, spaceOfOwner } from '../../domain/owners';
 import { pickRate } from '../../domain/rates';
+import { receiptIdOf } from '../../domain/receipt-entries';
 import { DateField } from '../components/date-field';
 import { Chips, Field, Group } from '../components/fields';
 import { Gate } from '../components/gate';
@@ -67,6 +69,14 @@ export function MoneyEntry({ id }: { id?: string }) {
           <ThemedText testID="money-entry-missing">This entry no longer exists.</ThemedText>
         </Gate>
       </MoneyScreen>
+    );
+  }
+  if (entry && receiptIdOf(entry.sourceRef)) {
+    return (
+      <ReceiptEntry
+        entry={entry}
+        category={categories.data?.find((c) => c.id === entry.categoryId)?.name ?? null}
+      />
     );
   }
   return (
