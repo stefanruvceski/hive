@@ -224,7 +224,7 @@ function Month({
     <>
       <GlassSurface
         kind="glass"
-        radius={Layout.radius.list}
+        radius={Layout.radius.row}
         style={styles.totals}
         testID="money-totals">
         <View style={styles.totalsRow}>
@@ -243,7 +243,7 @@ function Month({
       {groupByDay(entries).map((day) => (
         <View key={day.date} style={styles.day} testID={`money-day-${day.date}`}>
           <ThemedText type="listHeader">{day.date}</ThemedText>
-          <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.rows}>
+          <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.rows}>
             {day.entries.map((entry) => (
               <EntryRow
                 key={entry.id}

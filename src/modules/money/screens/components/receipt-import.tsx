@@ -15,11 +15,7 @@ export function ReceiptImport() {
   const { waiting, importNow, importing } = useReceiptSync();
   if (waiting === 0) return null;
   return (
-    <GlassSurface
-      kind="glass"
-      radius={Layout.radius.list}
-      style={styles.card}
-      testID="money-import">
+    <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.card} testID="money-import">
       <ThemedText>
         {waiting === 1 ? '1 scanned receipt is' : `${waiting} scanned receipts are`} waiting in
         Wallet.

@@ -26,6 +26,7 @@ import {
 } from '../../domain/receipt-stats';
 import { CardScanner } from '../components/card-scanner';
 import { TextButton } from '../components/text-button';
+import { rowLines, useStackedRow } from '../components/use-stacked-row';
 
 type Row = { kind: 'month'; month: string } | { kind: 'receipt'; receipt: Receipt };
 
@@ -94,7 +95,7 @@ export function ReceiptsTab() {
           testID="wallet-receipt-scan"
         />
       )}
-      <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.field}>
+      <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.field}>
         <TextInput
           aria-label="Receipt link"
           placeholder="Or paste the receipt link"
@@ -119,7 +120,7 @@ export function ReceiptsTab() {
           {message}
         </ThemedText>
       ) : null}
-      <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.field}>
+      <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.field}>
         <TextInput
           aria-label="Search receipts"
           placeholder="Search shop, item or note"
@@ -204,6 +205,8 @@ const keyOf = (row: Row) => (row.kind === 'month' ? `m-${row.month}` : row.recei
 const statusText = { pending: 'Pending', failed: 'Failed', ok: '' } as const;
 
 function ReceiptRow({ receipt }: { receipt: Receipt }) {
+  const stacked = useStackedRow();
+  const lines = rowLines(stacked);
   const status = statusText[receipt.status];
   const subtitle = [receiptDate(receipt), status].filter(Boolean).join(' · ');
   return (
@@ -212,13 +215,16 @@ function ReceiptRow({ receipt }: { receipt: Receipt }) {
       aria-label={titleOf(receipt)}
       testID={`wallet-receipt-${receipt.id}`}
       onPress={() => router.push({ pathname: '/wallet/receipt/[id]', params: { id: receipt.id } })}>
-      <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.row}>
-        <View style={styles.texts}>
-          <ThemedText numberOfLines={1}>
+      <GlassSurface
+        kind="glass"
+        radius={Layout.radius.row}
+        style={[styles.row, stacked && styles.stacked]}>
+        <View style={stacked ? undefined : styles.texts}>
+          <ThemedText numberOfLines={lines}>
             {receipt.starred ? '★ ' : ''}
             {titleOf(receipt)}
           </ThemedText>
-          <ThemedText type="footnote" numberOfLines={1}>
+          <ThemedText type="footnote" numberOfLines={lines}>
             {subtitle}
           </ThemedText>
         </View>
@@ -252,5 +258,6 @@ const styles = StyleSheet.create({
     minHeight: Layout.listRow.minHeight,
     paddingHorizontal: Layout.listRow.paddingHorizontal,
   },
+  stacked: { flexDirection: 'column', alignItems: 'flex-start', paddingVertical: Spacing.two },
   texts: { flex: 1 },
 });

@@ -24,7 +24,7 @@ export function Field({ label, testID, ...rest }: FieldProps) {
       <ThemedText type="listHeader" role="heading">
         {label}
       </ThemedText>
-      <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.surface}>
+      <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.surface}>
         <TextInput
           aria-label={label}
           placeholderTextColor={theme.textQuaternary}

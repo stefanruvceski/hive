@@ -9,9 +9,14 @@ import { rememberDeletedCard } from '../../data/deleted-card';
 import { rememberDeletedReceipt } from '../../data/deleted-receipt';
 import { useCards, useRestoreCard } from '../../data/queries';
 import { useReceipts, useRestoreReceipt, useSyncReceipts } from '../../data/receipt-queries';
+import { useStackedRow } from '../components/use-stacked-row';
 import { card, loaded, receipt } from '../test-data';
 
 jest.mock('../../data/queries');
+jest.mock('../components/use-stacked-row', () => ({
+  ...jest.requireActual('../components/use-stacked-row'),
+  useStackedRow: jest.fn(() => false),
+}));
 jest.mock('../../data/receipt-queries');
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
 
@@ -46,6 +51,21 @@ describe('WalletHome', () => {
     expect(screen.getByText('Card a')).toBeOnTheScreen();
     expect(screen.getByText(/Pinned · 4006 3813 3393 1/)).toBeOnTheScreen();
     expect(screen.getByText('Card b')).toBeOnTheScreen();
+  });
+
+  it('shortens a long card name to one line, but wraps it at accessibility text sizes', async () => {
+    jest
+      .mocked(useCards)
+      .mockReturnValue(loaded([card('a', { name: 'A very long loyalty card' })]));
+
+    jest.mocked(useStackedRow).mockReturnValue(false);
+    await renderHome();
+    expect(screen.getByText('A very long loyalty card').props.numberOfLines).toBe(1);
+    await screen.unmount();
+
+    jest.mocked(useStackedRow).mockReturnValue(true);
+    await renderHome();
+    expect(screen.getByText('A very long loyalty card').props.numberOfLines).toBeUndefined();
   });
 
   it('opens a card and the add screen', async () => {

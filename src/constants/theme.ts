@@ -386,7 +386,8 @@ export const Layout = {
     /** The small icons in a group card's fourth spot (2×2 in a 65 tile). */
     mini: { size: 30, radius: 8, glyph: 16 },
   },
-  radius: { card: 30, sheet: 38, list: 26, dock: 34 },
+  /** `row`: a mini-app's list rows and cards (Habits, Money, Wallet), squarer than Home's `list` so a one-line row reads as a card, not a pill. */
+  radius: { card: 30, sheet: 38, list: 26, row: 16, dock: 34 },
 } as const;
 
 /** expo-blur intensity matching the design's `blur(22px)` (cards) and `blur(24px)` (controls). */

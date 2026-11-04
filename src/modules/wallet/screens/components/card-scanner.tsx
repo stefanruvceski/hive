@@ -54,6 +54,6 @@ export function CardScanner({ barcodeTypes = scannerTypes, onScanned, onClose }:
 
 const styles = StyleSheet.create({
   box: { gap: Spacing.three, alignItems: 'stretch' },
-  camera: { height: 260, borderRadius: Layout.radius.list, overflow: 'hidden' },
+  camera: { height: 260, borderRadius: Layout.radius.row, overflow: 'hidden' },
   text: { textAlign: 'center' },
 });

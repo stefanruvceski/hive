@@ -148,7 +148,7 @@ function ReceiptView({ receipt }: { receipt: Receipt }) {
         <PrimaryButton label="Delete" onPress={confirmDelete} testID="wallet-receipt-delete" />
       </View>
       {printed && receipt.journal ? (
-        <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.printed}>
+        <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.printed}>
           <ThemedText type="code" style={{ color: theme.text }} testID="wallet-receipt-printed">
             {receipt.journal}
           </ThemedText>
@@ -210,7 +210,7 @@ function ItemRow({ receiptId, item }: { receiptId: string; item: ReceiptItem }) 
   const valid = q !== null && p !== null;
 
   return (
-    <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.item}>
+    <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.item}>
       <View style={styles.itemHead}>
         <ThemedText style={styles.itemName}>{item.name}</ThemedText>
         <ThemedText testID={`wallet-receipt-item-total-${item.id}`}>

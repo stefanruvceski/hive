@@ -24,6 +24,7 @@ import { slug } from '../../domain/price-chart';
 import { formatAmount } from '../../domain/receipt-stats';
 import { TextButton } from '../components/text-button';
 import { TextField } from '../components/text-field';
+import { rowLines, useStackedRow } from '../components/use-stacked-row';
 import { WalletScreen } from '../components/wallet-screen';
 
 type View_ = 'products' | 'shops';
@@ -75,6 +76,8 @@ function usePicks() {
 }
 
 function Products({ book }: { book: PriceBook }) {
+  const stacked = useStackedRow();
+  const lines = rowLines(stacked);
   const [query, setQuery] = useState('');
   const [merging, setMerging] = useState(false);
   const { picked, toggle, clear } = usePicks();
@@ -133,13 +136,16 @@ function Products({ book }: { book: PriceBook }) {
                 ? toggle(p.key)
                 : router.push({ pathname: '/wallet/prices/[product]', params: { product: p.key } })
             }>
-            <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.row}>
-              <View style={styles.texts}>
-                <ThemedText numberOfLines={2}>
+            <GlassSurface
+              kind="glass"
+              radius={Layout.radius.row}
+              style={[styles.row, stacked && styles.stacked]}>
+              <View style={stacked ? undefined : styles.texts}>
+                <ThemedText numberOfLines={lines}>
                   {merging ? (chosen ? '☑ ' : '☐ ') : ''}
                   {p.name}
                 </ThemedText>
-                <ThemedText type="footnote" numberOfLines={1}>
+                <ThemedText type="footnote" numberOfLines={lines}>
                   {p.count}× · {p.shops.length} {p.shops.length === 1 ? 'shop' : 'shops'}
                   {cheapest ? ` · cheapest ${cheapest.shop}` : ''}
                 </ThemedText>
@@ -159,6 +165,7 @@ function Products({ book }: { book: PriceBook }) {
 }
 
 function Shops({ book }: { book: PriceBook }) {
+  const lines = rowLines(useStackedRow());
   const [merging, setMerging] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -208,13 +215,13 @@ function Shops({ book }: { book: PriceBook }) {
                 setName(s.name);
                 setEditing(open ? null : s.key);
               }}>
-              <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.row}>
+              <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.row}>
                 <View style={styles.texts}>
-                  <ThemedText numberOfLines={1}>
+                  <ThemedText numberOfLines={lines}>
                     {merging ? (chosen ? '☑ ' : '☐ ') : ''}
                     {s.name}
                   </ThemedText>
-                  <ThemedText type="footnote">
+                  <ThemedText type="footnote" numberOfLines={lines}>
                     {s.count} {s.count === 1 ? 'receipt' : 'receipts'}
                     {merged ? ' · merged' : ''}
                   </ThemedText>
@@ -270,5 +277,6 @@ const styles = StyleSheet.create({
     minHeight: Layout.listRow.minHeight,
     paddingHorizontal: Layout.listRow.paddingHorizontal,
   },
+  stacked: { flexDirection: 'column', alignItems: 'flex-start', paddingVertical: Spacing.two },
   texts: { flex: 1 },
 });

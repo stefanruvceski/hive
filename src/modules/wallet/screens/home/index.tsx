@@ -24,6 +24,7 @@ import { spaced } from '../../domain/barcodes';
 import { cardColor } from '../../domain/card-colors';
 import { type CardFormat } from '../../domain/card-format';
 import { UndoBar } from '../components/undo-bar';
+import { rowLines, useStackedRow } from '../components/use-stacked-row';
 
 const addCard = () => router.push('/wallet/card-new');
 
@@ -127,6 +128,7 @@ const renderItem = ({ item }: { item: WalletCard }) => <CardRow card={item} />;
 
 function CardRow({ card }: { card: WalletCard }) {
   const scheme = useThemeName();
+  const lines = rowLines(useStackedRow());
   const subtitle = card.pinned
     ? `Pinned · ${spaced(card.number, card.format as CardFormat)}`
     : spaced(card.number, card.format as CardFormat);
@@ -136,11 +138,11 @@ function CardRow({ card }: { card: WalletCard }) {
       aria-label={card.name}
       testID={`wallet-card-${card.id}`}
       onPress={() => router.push({ pathname: '/wallet/card/[id]', params: { id: card.id } })}>
-      <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.row}>
+      <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.row}>
         <View style={[styles.swatch, { backgroundColor: cardColor(card.color, scheme) }]} />
         <View style={styles.texts}>
-          <ThemedText numberOfLines={1}>{card.name}</ThemedText>
-          <ThemedText type="footnote" numberOfLines={1}>
+          <ThemedText numberOfLines={lines}>{card.name}</ThemedText>
+          <ThemedText type="footnote" numberOfLines={lines}>
             {subtitle}
           </ThemedText>
         </View>

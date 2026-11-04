@@ -16,7 +16,7 @@ type Props = {
 export function TextField({ label, value, onChangeText, placeholder, testID }: Props) {
   const theme = useTheme();
   return (
-    <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.field}>
+    <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.field}>
       <TextInput
         aria-label={label}
         placeholder={placeholder ?? label}

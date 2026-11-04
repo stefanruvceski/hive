@@ -151,7 +151,7 @@ export function HabitSection({
   };
   // The lifted copy of a row: the row itself on a glass card.
   const ghost = (row: ReactNode) => (
-    <GlassSurface kind="glass" radius={Layout.radius.list}>
+    <GlassSurface kind="glass" radius={Layout.radius.row}>
       {row}
     </GlassSurface>
   );
@@ -191,7 +191,7 @@ export function HabitSection({
           )}
         </View>
         <View ref={cardRef} collapsable={false}>
-          <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.list}>
+          <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.list}>
             {items.length === 0 && moves && (
               <View style={styles.empty} testID={`habits-section-${id ?? timeOfDay}-empty`}>
                 <ThemedText type="footnote" themeColor="textTertiary">
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   pill: {
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.half,
-    borderRadius: Layout.radius.list,
+    borderRadius: Layout.radius.row,
   },
   inset: {
     marginHorizontal: Layout.listRow.paddingHorizontal,

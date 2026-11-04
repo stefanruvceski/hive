@@ -89,7 +89,7 @@ export function WalletProduct({ productKey }: { productKey: string }) {
           <GlassSurface
             key={s.shopKey}
             kind="glass"
-            radius={Layout.radius.list}
+            radius={Layout.radius.row}
             style={styles.card}
             testID={`wallet-product-shop-${slug(s.shopKey)}`}>
             <ThemedText>{s.shop}</ThemedText>
@@ -129,7 +129,7 @@ export function WalletProduct({ productKey }: { productKey: string }) {
               <GlassSurface
                 key={o.key}
                 kind="glass"
-                radius={Layout.radius.list}
+                radius={Layout.radius.row}
                 style={styles.card}
                 testID={`wallet-product-similar-${slug(o.key)}`}>
                 <ThemedText>{o.name}</ThemedText>

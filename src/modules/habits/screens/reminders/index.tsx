@@ -126,7 +126,7 @@ function ReminderRow({
   const part = setting.timeOfDay;
   const label = labelOf(part);
   return (
-    <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.card}>
+    <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.card}>
       <View style={styles.row}>
         <ThemedText type="headline">{label}</ThemedText>
         <ToggleSwitch
