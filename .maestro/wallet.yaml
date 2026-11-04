@@ -1,0 +1,33 @@
+# Wallet: opens from its Home card, adds a card by typing its number, opens it and deletes it with Undo.
+appId: com.ruvceski.hive.dev
+tags:
+  - wallet
+---
+- launchApp
+- tapOn:
+    id: 'home-open-wallet'
+- assertVisible:
+    id: 'wallet-screen'
+- tapOn:
+    id: 'wallet-empty-add|wallet-add'
+- tapOn:
+    id: 'wallet-card-number'
+- inputText: '4006381333931'
+- tapOn:
+    id: 'wallet-card-name'
+- inputText: 'Maestro card'
+- hideKeyboard
+- tapOn:
+    id: 'wallet-card-save'
+- assertVisible: 'Maestro card'
+- tapOn: 'Maestro card'
+- assertVisible:
+    id: 'wallet-card-barcode'
+- tapOn:
+    id: 'wallet-card-delete'
+- tapOn: 'Delete'
+- assertVisible:
+    id: 'wallet-undo'
+- tapOn:
+    id: 'wallet-undo'
+- assertVisible: 'Maestro card'

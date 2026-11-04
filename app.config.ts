@@ -68,6 +68,16 @@ export default ({ config: base }: ConfigContext): ExpoConfig => ({
     'expo-sqlite',
     // Local reminders only: no push token, no APNs entitlement.
     ['expo-notifications', { enableRemoteNotifications: false }],
+    // Wallet scans barcodes and receipt QR codes: camera only, no microphone.
+    [
+      'expo-camera',
+      {
+        cameraPermission:
+          'Hive uses the camera to scan loyalty card barcodes and receipt QR codes.',
+        microphonePermission: false,
+        recordAudioAndroid: false,
+      },
+    ],
     [
       'expo-splash-screen',
       {
