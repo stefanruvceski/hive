@@ -4,11 +4,11 @@ import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { PrimaryButton } from '@/components/ui/primary-button';
-import { Spacing } from '@/constants/theme';
 import { useThemeName } from '@/hooks/use-theme';
 
 import { useCreateCard } from '../../data/queries';
 import { guess, problem } from '../../domain/barcodes';
+import { cardLook, suggestBrands } from '../../domain/card-brands';
 import { cardColor, cardColorKeys, defaultCardColor } from '../../domain/card-colors';
 import {
   type CardFormat,
@@ -16,6 +16,7 @@ import {
   formatLabel,
   isDrawable,
 } from '../../domain/card-format';
+import { CardFace } from '../components/card-face';
 import { CardScanner } from '../components/card-scanner';
 import { Chips, Field } from '../components/form';
 import { WalletScreen } from '../components/wallet-screen';
@@ -35,6 +36,7 @@ export function WalletCardNew() {
 
   const format = chosen ?? guess(number);
   const issue = number.trim() ? problem(number, format) : null;
+  const suggestions = suggestBrands(name).filter((b) => b.name !== name.trim());
   const canSave = name.trim().length > 0 && number.trim().length > 0 && !issue && !create.isPending;
 
   const save = () => {
@@ -87,13 +89,6 @@ export function WalletCardNew() {
           {issue}
         </ThemedText>
       ) : null}
-      <Chips
-        label="Barcode type"
-        options={formatOptions}
-        value={format}
-        onChange={setChosen}
-        testID="wallet-card-format"
-      />
       <Field
         label="Name"
         value={name}
@@ -102,19 +97,43 @@ export function WalletCardNew() {
         maxLength={40}
         testID="wallet-card-name"
       />
+      {suggestions.length > 0 ? (
+        <Chips
+          label="Suggestions"
+          options={suggestions.map(({ name: value }) => ({ value, label: value }))}
+          value={name}
+          onChange={setName}
+          testID="wallet-card-suggestion"
+        />
+      ) : null}
+      <Chips
+        label="Barcode type"
+        options={formatOptions}
+        value={format}
+        onChange={setChosen}
+        testID="wallet-card-format"
+        rows={1}
+      />
       <Chips
         label="Color"
         options={cardColorKeys.map((value) => ({ value, label: value }))}
         value={color as (typeof cardColorKeys)[number]}
         onChange={setColor}
         testID="wallet-card-color"
+        rows={2}
       />
-      <View style={[styles.preview, { backgroundColor: cardColor(color, scheme) }]} />
+      <View style={styles.preview}>
+        <CardFace
+          look={cardLook(name, cardColor(color, scheme))}
+          name={name.trim() || 'Card name'}
+          testID="wallet-card-preview"
+        />
+      </View>
       <Field label="Note" value={note} onChangeText={setNote} testID="wallet-card-note" />
     </WalletScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  preview: { height: Spacing.two, borderRadius: Spacing.one },
+  preview: { width: '62%' },
 });

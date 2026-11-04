@@ -1,4 +1,11 @@
-import { Pressable, StyleSheet, TextInput, type TextInputProps, View } from 'react-native';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  type TextInputProps,
+  View,
+} from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { GlassSurface } from '@/components/ui/glass-surface';
@@ -40,47 +47,60 @@ export function Field({ label, testID, ...rest }: FieldProps) {
 
 export type ChipOption<T extends string> = { value: T; label: string };
 
-/** A wrapping row of choices; the chosen one is filled with the accent. */
+/**
+ * Choices as filled chips, the chosen one in the accent. They wrap, or with `rows` sit in
+ * that many rows that scroll sideways.
+ */
 export function Chips<T extends string>({
   label,
   options,
   value,
   onChange,
   testID,
+  rows,
 }: {
   label: string;
   options: readonly ChipOption<T>[];
   value: T;
   onChange: (value: T) => void;
   testID: string;
+  rows?: 1 | 2;
 }) {
   const theme = useTheme();
+  const chip = (option: ChipOption<T>) => {
+    const selected = option.value === value;
+    return (
+      <Pressable
+        key={option.value}
+        role="radio"
+        aria-checked={selected}
+        aria-label={option.label}
+        testID={`${testID}-${option.value}`}
+        onPress={() => onChange(option.value)}
+        hitSlop={4}
+        style={[styles.chip, { backgroundColor: selected ? theme.accent : theme.segmentTrack }]}>
+        <ThemedText themeColor={selected ? 'onAccent' : 'text'}>{option.label}</ThemedText>
+      </Pressable>
+    );
+  };
   return (
     <View style={styles.block}>
       <ThemedText type="listHeader" role="heading">
         {label}
       </ThemedText>
-      <View style={styles.chips}>
-        {options.map((option) => {
-          const selected = option.value === value;
-          return (
-            <Pressable
-              key={option.value}
-              role="radio"
-              aria-checked={selected}
-              aria-label={option.label}
-              testID={`${testID}-${option.value}`}
-              onPress={() => onChange(option.value)}
-              hitSlop={4}
-              style={[
-                styles.chip,
-                { backgroundColor: selected ? theme.accent : theme.segmentTrack },
-              ]}>
-              <ThemedText themeColor={selected ? 'onAccent' : 'text'}>{option.label}</ThemedText>
-            </Pressable>
-          );
-        })}
-      </View>
+      {rows ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} testID={`${testID}-scroll`}>
+          <View style={styles.rows}>
+            {Array.from({ length: rows }, (_, row) => (
+              <View key={row} style={styles.line}>
+                {options.filter((_, i) => i % rows === row).map(chip)}
+              </View>
+            ))}
+          </View>
+        </ScrollView>
+      ) : (
+        <View style={styles.chips}>{options.map(chip)}</View>
+      )}
     </View>
   );
 }
@@ -89,6 +109,8 @@ const styles = StyleSheet.create({
   block: { gap: Layout.labelGap },
   surface: { paddingHorizontal: Layout.listRow.paddingHorizontal },
   input: { minHeight: Layout.listRow.minHeight, fontSize: 17 },
+  rows: { gap: Spacing.two },
+  line: { flexDirection: 'row', gap: Spacing.two },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   chip: {
     minHeight: Layout.minTouch,

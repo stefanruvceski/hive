@@ -49,18 +49,18 @@ describe('WalletHome', () => {
     await renderHome();
 
     expect(screen.getByText('Card a')).toBeOnTheScreen();
-    expect(screen.getByText(/Pinned · 4006 3813 3393 1/)).toBeOnTheScreen();
+    expect(screen.getByText('★ •••• 3931')).toBeOnTheScreen();
     expect(screen.getByText('Card b')).toBeOnTheScreen();
   });
 
-  it('shortens a long card name to one line, but wraps it at accessibility text sizes', async () => {
+  it('shortens a long card name to two lines, but wraps it at accessibility text sizes', async () => {
     jest
       .mocked(useCards)
       .mockReturnValue(loaded([card('a', { name: 'A very long loyalty card' })]));
 
     jest.mocked(useStackedRow).mockReturnValue(false);
     await renderHome();
-    expect(screen.getByText('A very long loyalty card').props.numberOfLines).toBe(1);
+    expect(screen.getByText('A very long loyalty card').props.numberOfLines).toBe(2);
     await screen.unmount();
 
     jest.mocked(useStackedRow).mockReturnValue(true);

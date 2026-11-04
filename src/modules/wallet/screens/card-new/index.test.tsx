@@ -60,6 +60,17 @@ describe('WalletCardNew', () => {
     );
   });
 
+  it('suggests a known program while typing and fills in its name', async () => {
+    await renderScreen();
+    const user = userEvent.setup();
+
+    await user.type(screen.getByTestId('wallet-card-name'), 'ide');
+    await user.press(screen.getByTestId('wallet-card-suggestion-Idea'));
+
+    expect(screen.getByTestId('wallet-card-name').props.value).toBe('Idea');
+    expect(screen.queryByTestId('wallet-card-suggestion-Idea')).not.toBeOnTheScreen();
+  });
+
   it('saves a non-numeric number as Code 128', async () => {
     await renderScreen();
     const user = userEvent.setup();

@@ -3,10 +3,8 @@ import { useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ThemedText } from '@/components/themed-text';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
-import { GlassSurface } from '@/components/ui/glass-surface';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PrimaryButton } from '@/components/ui/primary-button';
 import { ScreenHeader } from '@/components/ui/screen-header';
@@ -20,11 +18,10 @@ import { rememberDeletedCard, useDeletedCard } from '../../data/deleted-card';
 import { rememberDeletedReceipt, useDeletedReceipt } from '../../data/deleted-receipt';
 import { type WalletCard, useCards, useRestoreCard } from '../../data/queries';
 import { useRestoreReceipt } from '../../data/receipt-queries';
-import { spaced } from '../../domain/barcodes';
+import { cardLook, maskedNumber } from '../../domain/card-brands';
 import { cardColor } from '../../domain/card-colors';
-import { type CardFormat } from '../../domain/card-format';
+import { CardFace } from '../components/card-face';
 import { UndoBar } from '../components/undo-bar';
-import { rowLines, useStackedRow } from '../components/use-stacked-row';
 
 const addCard = () => router.push('/wallet/card-new');
 
@@ -105,6 +102,8 @@ function WalletContent() {
         data={data}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
+        numColumns={2}
+        columnWrapperStyle={styles.columns}
         ListHeaderComponent={
           <View style={styles.add}>
             <PrimaryButton label="Add card" onPress={addCard} testID="wallet-add" />
@@ -124,29 +123,22 @@ function WalletContent() {
 
 const keyExtractor = (item: WalletCard) => item.id;
 
-const renderItem = ({ item }: { item: WalletCard }) => <CardRow card={item} />;
+const renderItem = ({ item }: { item: WalletCard }) => <CardTile card={item} />;
 
-function CardRow({ card }: { card: WalletCard }) {
+function CardTile({ card }: { card: WalletCard }) {
   const scheme = useThemeName();
-  const lines = rowLines(useStackedRow());
-  const subtitle = card.pinned
-    ? `Pinned · ${spaced(card.number, card.format as CardFormat)}`
-    : spaced(card.number, card.format as CardFormat);
   return (
     <Pressable
       role="button"
       aria-label={card.name}
       testID={`wallet-card-${card.id}`}
+      style={styles.tile}
       onPress={() => router.push({ pathname: '/wallet/card/[id]', params: { id: card.id } })}>
-      <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.row}>
-        <View style={[styles.swatch, { backgroundColor: cardColor(card.color, scheme) }]} />
-        <View style={styles.texts}>
-          <ThemedText numberOfLines={lines}>{card.name}</ThemedText>
-          <ThemedText type="footnote" numberOfLines={lines}>
-            {subtitle}
-          </ThemedText>
-        </View>
-      </GlassSurface>
+      <CardFace
+        look={cardLook(card.name, cardColor(card.color, scheme))}
+        name={card.name}
+        detail={`${card.pinned ? '★ ' : ''}${maskedNumber(card.number)}`.trim()}
+      />
     </Pressable>
   );
 }
@@ -168,13 +160,6 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   add: { alignItems: 'flex-start', paddingBottom: Spacing.two },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Layout.listRow.gap,
-    minHeight: Layout.listRow.minHeight,
-    paddingHorizontal: Layout.listRow.paddingHorizontal,
-  },
-  swatch: { width: Spacing.four, height: Spacing.four, borderRadius: Spacing.two },
-  texts: { flex: 1 },
+  columns: { gap: Spacing.two },
+  tile: { flex: 1 },
 });

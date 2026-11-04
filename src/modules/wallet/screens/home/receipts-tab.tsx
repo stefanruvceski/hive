@@ -54,14 +54,13 @@ function rowsOf(receipts: readonly Receipt[]): Row[] {
   ]);
 }
 
-/** The Receipts tab: scan or paste a fiscal receipt link, search, star and open receipts. */
+/** The Receipts tab: scan a fiscal receipt's QR code, search, star and open receipts. */
 export function ReceiptsTab() {
   const theme = useTheme();
   const { data, error, isError, refetch } = useReceipts();
   const { refresh, isRefreshing } = useSyncReceipts();
   const add = useAddReceipt();
   const [scanning, setScanning] = useState(false);
-  const [link, setLink] = useState('');
   const [query, setQuery] = useState('');
   const [starredOnly, setStarredOnly] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -70,7 +69,6 @@ export function ReceiptsTab() {
     setMessage(null);
     add.mutate(text, {
       onSuccess: ({ duplicate }) => {
-        setLink('');
         if (duplicate) setMessage('This receipt is already saved.');
       },
       onError: (e) => setMessage(e.message),
@@ -95,26 +93,6 @@ export function ReceiptsTab() {
           testID="wallet-receipt-scan"
         />
       )}
-      <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.field}>
-        <TextInput
-          aria-label="Receipt link"
-          placeholder="Or paste the receipt link"
-          placeholderTextColor={theme.textQuaternary}
-          selectionColor={theme.accent}
-          value={link}
-          onChangeText={setLink}
-          autoCapitalize="none"
-          autoCorrect={false}
-          testID="wallet-receipt-link"
-          style={[styles.input, { color: theme.text }]}
-        />
-      </GlassSurface>
-      <PrimaryButton
-        label="Add link"
-        disabled={link.trim() === '' || add.isPending}
-        onPress={() => addText(link)}
-        testID="wallet-receipt-add-link"
-      />
       {message ? (
         <ThemedText role="alert" themeColor="danger" testID="wallet-receipt-message">
           {message}

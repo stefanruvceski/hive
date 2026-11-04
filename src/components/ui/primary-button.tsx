@@ -53,14 +53,13 @@ const styles = StyleSheet.create({
   button: {
     minHeight: Layout.button.height,
     paddingHorizontal: Layout.button.paddingHorizontal,
-    borderRadius: Layout.button.height / 2,
+    borderRadius: Layout.radius.row,
     alignItems: 'center',
     justifyContent: 'center',
   },
   compact: {
     minHeight: Layout.button.compact.height,
     paddingHorizontal: Layout.button.compact.paddingHorizontal,
-    borderRadius: Layout.button.compact.height / 2,
   },
   label: {
     textAlign: 'center',
