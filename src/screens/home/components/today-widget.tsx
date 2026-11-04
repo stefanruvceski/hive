@@ -69,6 +69,14 @@ export function TodayWidget({ module, width, onOpen }: Props) {
                   </ThemedText>
                 </View>
               )}
+              {summary?.kind === 'message' && summary.ring && (
+                <View style={styles.count}>
+                  <ProgressRing done={summary.ring.share} total={1} tint={module.tint} />
+                  <ThemedText type="label" themeColor="textSecondary">
+                    {summary.ring.text}
+                  </ThemedText>
+                </View>
+              )}
             </View>
             {summary ? (
               <SummaryBody summary={summary} />
@@ -94,11 +102,25 @@ function Spinner() {
 function SummaryBody({ summary }: { summary: HomeSummary }) {
   if (summary.kind === 'message') {
     return (
-      <View style={styles.message}>
-        <ThemedText type="headline">{summary.headline}</ThemedText>
-        <ThemedText type="body" themeColor="textSecondary">
-          {summary.body}
-        </ThemedText>
+      <View style={styles.messageWrap}>
+        <View style={styles.message}>
+          {summary.caption ? (
+            <ThemedText type="footnote" themeColor="textTertiary">
+              {summary.caption}
+            </ThemedText>
+          ) : null}
+          <ThemedText type="headline" style={summary.caption ? styles.headline : undefined}>
+            {summary.headline}
+          </ThemedText>
+          <ThemedText type="body" themeColor="textSecondary">
+            {summary.body}
+          </ThemedText>
+        </View>
+        {summary.footnote ? (
+          <ThemedText type="footnote" themeColor="textTertiary" style={styles.footnote}>
+            {summary.footnote}
+          </ThemedText>
+        ) : null}
       </View>
     );
   }
@@ -164,8 +186,20 @@ const styles = StyleSheet.create({
   itemName: {
     flex: 1,
   },
+  messageWrap: {
+    flexGrow: 1,
+    justifyContent: 'space-between',
+  },
   message: {
     gap: Layout.today.messageGap,
+  },
+  // The caption stands apart from the number.
+  headline: {
+    marginTop: Layout.today.captionGap,
+  },
+  // The unit sits at the bottom end, small, not inside the number.
+  footnote: {
+    alignSelf: 'flex-end',
   },
   spinner: {
     alignSelf: 'flex-start',

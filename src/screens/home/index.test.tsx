@@ -240,6 +240,29 @@ const hiddenRow = (moduleId: string) => ({
 });
 
 describe('Home, Today', () => {
+  it('shows a message widget with a ring beside the name and a footnote at the bottom end', async () => {
+    mockModules.push(
+      provider('habits', {
+        status: 'success',
+        summary: {
+          kind: 'message',
+          caption: 'Private',
+          headline: '1,200',
+          body: '300 spent',
+          footnote: 'RSD',
+          ring: { share: 0.25, text: '25%' },
+          label: '1,200 RSD this month',
+        },
+      }),
+    );
+    await render(home);
+
+    expect(screen.getByText('Private', { includeHiddenElements: true })).toBeOnTheScreen();
+    expect(screen.getByText('25%', { includeHiddenElements: true })).toBeOnTheScreen();
+    expect(screen.getByText('1,200', { includeHiddenElements: true })).toBeOnTheScreen();
+    expect(screen.getByText('RSD', { includeHiddenElements: true })).toBeOnTheScreen();
+  });
+
   it('shows a widget per module with a summary, which opens the module and counts the open', async () => {
     mockModules.push(provider('habits', done(2, 2)), module('books', 'creative', 'books'));
     await render(home);
