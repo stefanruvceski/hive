@@ -220,13 +220,19 @@ function Month({
         radius={Layout.radius.list}
         style={styles.totals}
         testID="money-totals">
-        <Total label="Income" value={totals.income} testID="money-total-income" />
-        <Total label="Spent" value={totals.expense} testID="money-total-expense" />
-        <Total label="Balance" value={totals.balance} testID="money-total-balance" />
+        <View style={styles.totalsRow}>
+          <Total label="Income" value={totals.income} testID="money-total-income" />
+          <Total label="Spent" value={totals.expense} testID="money-total-expense" />
+          <Total label="Balance" value={totals.balance} testID="money-total-balance" />
+        </View>
+        <ThemedText
+          type="footnote"
+          themeColor="textTertiary"
+          style={styles.note}
+          testID="money-totals-note">
+          Totals in RSD
+        </ThemedText>
       </GlassSurface>
-      <ThemedText type="footnote" themeColor="textTertiary" testID="money-totals-note">
-        Totals in RSD
-      </ThemedText>
       {groupByDay(entries).map((day) => (
         <View key={day.date} style={styles.day} testID={`money-day-${day.date}`}>
           <ThemedText type="listHeader">{day.date}</ThemedText>
@@ -341,12 +347,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   disabled: { opacity: 0.35 },
-  totals: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: Spacing.three,
-    gap: Spacing.two,
-  },
+  totals: { padding: Spacing.three, gap: Spacing.two },
+  totalsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.two },
+  note: { textAlign: 'right' },
   total: { flex: 1, gap: Spacing.one },
   day: { gap: Spacing.two },
   rows: { paddingHorizontal: Spacing.three },
