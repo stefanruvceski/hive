@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { PrimaryButton } from '@/components/ui/primary-button';
+import { SaveButton } from '@/components/ui/save-button';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Spacing } from '@/constants/theme';
 import { useToday } from '@/hooks/use-today';
@@ -231,13 +231,7 @@ function EntryForm({
       id="money-entry"
       title={title}
       trailing={
-        <PrimaryButton
-          label="Save"
-          size="compact"
-          onPress={submit}
-          disabled={save.isPending}
-          testID="money-entry-save"
-        />
+        <SaveButton onPress={submit} disabled={save.isPending} testID="money-entry-save" />
       }>
       <SegmentedControl
         options={kindOptions}

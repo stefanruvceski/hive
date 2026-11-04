@@ -4,7 +4,7 @@ import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
-import { PrimaryButton } from '@/components/ui/primary-button';
+import { SaveButton } from '@/components/ui/save-button';
 import { ScreenHeader } from '@/components/ui/screen-header';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Wallpaper } from '@/components/ui/wallpaper';
@@ -99,13 +99,7 @@ export function HabitForm({ testID, title, initial, onSave, isPending, isError, 
             backTestID={`${testID}-back`}
             titleTestID={`${testID}-title`}
             trailing={
-              <PrimaryButton
-                label="Save"
-                size="compact"
-                onPress={save}
-                disabled={!valid || isPending}
-                testID={`${testID}-save`}
-              />
+              <SaveButton onPress={save} disabled={!valid || isPending} testID={`${testID}-save`} />
             }
           />
         </View>
