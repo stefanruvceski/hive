@@ -64,11 +64,24 @@ describe('WalletProduct', () => {
     await renderScreen();
     const user = userEvent.setup();
 
+    expect(screen.queryByTestId('wallet-product-name')).toBeNull();
+    await user.press(screen.getByTestId('wallet-product-rename-open'));
     expect(screen.getByTestId('wallet-product-rename')).toBeDisabled();
     await user.clear(screen.getByTestId('wallet-product-name'));
     await user.type(screen.getByTestId('wallet-product-name'), 'Mleko 1%');
     await user.press(screen.getByTestId('wallet-product-rename'));
     expect(fns.rename).toHaveBeenCalledWith({ key: 'ZBREGOV MLEKO 1%', name: 'Mleko 1%' });
+    expect(screen.queryByTestId('wallet-product-name')).toBeNull();
+  });
+
+  it('closes the rename field without saving', async () => {
+    await renderScreen();
+    const user = userEvent.setup();
+
+    await user.press(screen.getByTestId('wallet-product-rename-open'));
+    await user.press(screen.getByTestId('wallet-product-rename-cancel'));
+    expect(screen.queryByTestId('wallet-product-name')).toBeNull();
+    expect(fns.rename).not.toHaveBeenCalled();
   });
 
   it('unmerges a merged product and stops suggesting', async () => {

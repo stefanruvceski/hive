@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -8,6 +9,7 @@ import { ErrorState } from '@/components/ui/error-state';
 import { GlassSurface } from '@/components/ui/glass-surface';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PrimaryButton } from '@/components/ui/primary-button';
+import { ScreenHeader } from '@/components/ui/screen-header';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Wallpaper } from '@/components/ui/wallpaper';
 import { Layout, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -31,7 +33,7 @@ const tabs = [
   { value: 'receipts', label: 'Receipts' },
 ] as const;
 
-/** Wallet's entry screen: loyalty cards and fiscal receipts. The Stack header shows the title (src/app/wallet/index.tsx). */
+/** Wallet's entry screen: loyalty cards and fiscal receipts, under the same header as the detail screens. */
 export function WalletHome() {
   const [tab, setTab] = useState<Tab>('cards');
   const deletedCard = useDeletedCard();
@@ -40,16 +42,24 @@ export function WalletHome() {
   const restoreReceipt = useRestoreReceipt();
   return (
     <Wallpaper style={styles.container} testID="wallet-screen">
-      <View style={styles.tabs}>
-        <SegmentedControl
-          label="Wallet"
-          options={tabs}
-          value={tab}
-          onChange={setTab}
-          testID="wallet-tab"
-        />
-      </View>
-      {tab === 'cards' ? <WalletContent /> : <ReceiptsTab />}
+      <SafeAreaView edges={['top', 'right', 'left']} style={styles.container}>
+        <View style={styles.tabs}>
+          <ScreenHeader
+            title="Wallet"
+            onBack={() => router.back()}
+            backTestID="wallet-back"
+            titleTestID="wallet-title"
+          />
+          <SegmentedControl
+            label="Wallet"
+            options={tabs}
+            value={tab}
+            onChange={setTab}
+            testID="wallet-tab"
+          />
+        </View>
+        {tab === 'cards' ? <WalletContent /> : <ReceiptsTab />}
+      </SafeAreaView>
       {deletedCard ? (
         <UndoBar
           message={`${deletedCard.name} deleted`}
@@ -145,8 +155,8 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: MaxContentWidth,
     alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.three,
+    paddingHorizontal: Layout.screenMargin,
+    gap: Layout.sectionGap,
   },
   list: {
     width: '100%',

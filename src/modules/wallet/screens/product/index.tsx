@@ -39,37 +39,50 @@ export function WalletProduct({ productKey }: { productKey: string }) {
 
   let body;
   if (data && product) {
-    const edited = name ?? product.name;
     const likely = suggestions(product, data.products, data.notSame);
     body = (
       <>
-        <TextField
-          label="Product name"
-          value={edited}
-          onChangeText={setName}
-          testID="wallet-product-name"
-        />
-        <View style={styles.actions}>
-          <TextButton
-            label="Save name"
-            disabled={edited.trim() === '' || edited.trim() === product.name}
-            onPress={() => {
-              rename.mutate({ key: product.key, name: edited });
-              setName(null);
-            }}
-            testID="wallet-product-rename"
-          />
-          {product.named ? (
+        {name === null ? (
+          <View style={styles.actions}>
             <TextButton
-              label="Use the printed name"
-              onPress={() => {
-                rename.mutate({ key: product.key, name: null });
-                setName(null);
-              }}
-              testID="wallet-product-reset-name"
+              label="Rename"
+              onPress={() => setName(product.name)}
+              testID="wallet-product-rename-open"
             />
-          ) : null}
-        </View>
+            {product.named ? (
+              <TextButton
+                label="Use the printed name"
+                onPress={() => rename.mutate({ key: product.key, name: null })}
+                testID="wallet-product-reset-name"
+              />
+            ) : null}
+          </View>
+        ) : (
+          <>
+            <TextField
+              label="Product name"
+              value={name}
+              onChangeText={setName}
+              testID="wallet-product-name"
+            />
+            <View style={styles.actions}>
+              <TextButton
+                label="Cancel"
+                onPress={() => setName(null)}
+                testID="wallet-product-rename-cancel"
+              />
+              <TextButton
+                label="Save name"
+                disabled={name.trim() === '' || name.trim() === product.name}
+                onPress={() => {
+                  rename.mutate({ key: product.key, name });
+                  setName(null);
+                }}
+                testID="wallet-product-rename"
+              />
+            </View>
+          </>
+        )}
 
         <SectionLabel testID="wallet-product-shops-label">By shop</SectionLabel>
         {product.shops.map((s) => (
