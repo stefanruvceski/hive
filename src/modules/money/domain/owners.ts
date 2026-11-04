@@ -9,7 +9,7 @@ export type Business = { id: string; name: string; pib: string; archivedAt: stri
 /** What the screens show: everything, Private only, or one business (by its id). */
 export type View = 'all' | 'private' | (string & {});
 
-type Owned = { space: Space; businessId: string | null };
+export type Owned = { space: Space; businessId: string | null };
 
 /**
  * The view to show for a saved choice. Nothing saved, or a business that is gone or archived, falls

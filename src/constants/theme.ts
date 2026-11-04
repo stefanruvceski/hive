@@ -299,6 +299,8 @@ export const Layout = {
     listGap: 4,
     /** A message widget's headline and the line under it. */
     messageGap: 2,
+    /** Between a message widget's caption and its headline. */
+    captionGap: 12,
     endSpacer: 8,
     dot: { size: 6, activeWidth: 16, target: { width: 28, height: 20 }, gap: 2, slop: 14 },
     fullWidthAtFontScale: 1.3,
