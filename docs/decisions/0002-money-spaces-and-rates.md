@@ -21,7 +21,9 @@ Money tracks income and spending for one person who also runs a business: salary
 
 ## Rates source
 
-`kurs.resenje.org` republishes the official NBS list as JSON without a key, so nothing secret is in the app. It is a third-party mirror: if it goes away, `domain/fx.ts` and `data/fx-client.ts` are the only places to change, and manual rates keep working.
+`kurs.resenje.org` republishes the official NBS list as JSON without a key, so nothing secret is in the app. It is a third-party mirror and the first source. Since 2026-11-04 (amended with [ADR 0004](0004-shared-businesses.md)'s review) a failure is no longer silent: `getNbsRate` says **why** (`network`, `status` with the HTTP code, `shape` for an answer that is not a list of rates, `unlisted` for a currency the list lacks) and the entry screen shows it ("Could not get the NBS rate: the rate service answered with an error (HTTP 503). Enter one.").
+
+When the mirror fails (not for `unlisted`) and the day is today or later, the NBS's own middle-rate page (`www.nbs.rs/kursnaListaModul/srednjiKurs.faces`) is tried: its table row for the currency holds the parity and the middle rate (`parseNbsPage`). The page shows only the rates in force, so a past day has no fallback. That parser follows the page layout and could not be run against the live page when it was written; if the layout changes the user sees `shape` and types a rate. `domain/fx.ts` and `data/fx-client.ts` are the only places to change, and manual rates keep working.
 
 ## Consequences
 

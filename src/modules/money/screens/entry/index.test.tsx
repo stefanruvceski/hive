@@ -148,6 +148,23 @@ describe('MoneyEntry', () => {
     expect(screen.getByTestId('money-entry-rsd')).toHaveTextContent(/1,180 RSD at 118$/);
   });
 
+  it('says why the bank rate could not be had', async () => {
+    jest.mocked(useNbsRate).mockReturnValue({
+      data: null,
+      failure: 'the rate service answered with an error (HTTP 503)',
+      isFetching: false,
+    } as never);
+    await renderEntry();
+    const user = userEvent.setup();
+
+    await user.type(screen.getByTestId('money-entry-amount'), '10');
+    await user.press(screen.getByTestId('money-entry-currency-USD'));
+    expect(screen.getByTestId('money-entry-rsd')).toHaveTextContent(
+      'Could not get the NBS rate: the rate service answered with an error (HTTP 503). Enter one.',
+    );
+    expect(screen.getByTestId('money-entry-rate')).toBeOnTheScreen();
+  });
+
   it('says when the bank rate is being fetched', async () => {
     jest.mocked(useNbsRate).mockReturnValue({ data: undefined, isFetching: true } as never);
     await renderEntry();

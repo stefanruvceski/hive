@@ -306,7 +306,7 @@ function EntryForm({
                 ? `= ${formatMinor(rsd)} at ${shownRate}${rateText === null && nbs.data ? ' (NBS middle rate)' : ''}`
                 : nbs.isFetching
                   ? 'Getting the NBS rate…'
-                  : 'Could not get the NBS rate. Enter one.'}
+                  : `Could not get the NBS rate${nbs.failure ? `: ${nbs.failure}` : ''}. Enter one.`}
             </ThemedText>
           </>
         ) : null}
