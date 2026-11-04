@@ -10,8 +10,20 @@ import type { HomeRows } from './home-groups';
 export type HomeSummary =
   /** A small progress ring with `done`/`total`, and what is still to do today, in order. */
   | { kind: 'progress'; done: number; total: number; label: string; upNext: UpNextItem[] }
-  /** A headline and a line under it. */
-  | { kind: 'message'; headline: string; body: string; label: string };
+  /**
+   * A headline and a line under it. `caption` is a small line above the headline saying what it
+   * is. `ring` adds a small progress ring with `text` beside it (a share
+   * of 0..1 or more); `footnote` is a small note at the bottom end of the widget (a unit).
+   */
+  | {
+      kind: 'message';
+      caption?: string;
+      headline: string;
+      body: string;
+      label: string;
+      ring?: { share: number; text: string };
+      footnote?: string;
+    };
 
 /** One thing still to do today: `icon` is an emoji or a short symbol shown before its name. */
 export type UpNextItem = { id: string; icon: string; name: string };

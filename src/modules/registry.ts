@@ -5,6 +5,7 @@ import type { AppTint } from '@/constants/theme';
 import type { HomeSummaryResult } from '@/utils/home-summary';
 
 import { useHabitsHomeSummary } from './habits/data/home-summary';
+import { useMoneyHomeSummary } from './money/data/home-summary';
 
 /** The groups Home starts with (docs/design/canvas/Main.dc.html). Users rename and reorder them (#31). */
 export const defaultHomeGroups = [
@@ -59,5 +60,6 @@ export const hiveModules: readonly HiveModule[] = [
     tint: 'money',
     group: 'money',
     href: '/money',
+    useHomeSummary: useMoneyHomeSummary,
   },
 ];
