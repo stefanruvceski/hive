@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
+import { GlassButton } from '@/components/ui/glass-button';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PrimaryButton } from '@/components/ui/primary-button';
 import { ScreenHeader } from '@/components/ui/screen-header';
@@ -47,6 +48,16 @@ export function WalletHome() {
             onBack={() => router.back()}
             backTestID="wallet-back"
             titleTestID="wallet-title"
+            trailing={
+              tab === 'cards' ? (
+                <GlassButton
+                  icon={{ ios: 'plus', android: 'add', web: 'add' }}
+                  label="Add card"
+                  onPress={addCard}
+                  testID="wallet-add"
+                />
+              ) : undefined
+            }
           />
           <SegmentedControl
             label="Wallet"
@@ -104,11 +115,6 @@ function WalletContent() {
         renderItem={renderItem}
         numColumns={2}
         columnWrapperStyle={styles.columns}
-        ListHeaderComponent={
-          <View style={styles.add}>
-            <PrimaryButton label="Add card" onPress={addCard} testID="wallet-add" />
-          </View>
-        }
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.list}
         testID="wallet-list"
@@ -159,7 +165,6 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     gap: Spacing.two,
   },
-  add: { alignItems: 'flex-start', paddingBottom: Spacing.two },
   columns: { gap: Spacing.two },
   tile: { flex: 1 },
 });

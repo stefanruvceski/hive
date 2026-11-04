@@ -178,3 +178,7 @@ export function suggestBrands(query: string, limit = 5): CardBrand[] {
   );
   return hits.map((rule) => rule.brand).slice(0, limit);
 }
+
+/** A name cut to its first words, enough to tell cards apart: "Metro klub prijatelja" is "Metro klub". */
+export const shortName = (name: string, words = 2): string =>
+  name.trim().split(/\s+/).slice(0, words).join(' ');

@@ -1,4 +1,5 @@
 import {
+  shortName,
   suggestBrands,
   cardLook,
   initialsOf,
@@ -97,5 +98,14 @@ describe('suggestBrands', () => {
     expect(suggestBrands('i')).toEqual([]);
     expect(suggestBrands('zzzz')).toEqual([]);
     expect(suggestBrands('ar', 3).length).toBeLessThanOrEqual(3);
+  });
+});
+
+describe('shortName', () => {
+  it('keeps the first two words', () => {
+    expect(shortName('Metro klub prijatelja')).toBe('Metro klub');
+    expect(shortName('  Lidl   Plus ')).toBe('Lidl Plus');
+    expect(shortName('Idea')).toBe('Idea');
+    expect(shortName('')).toBe('');
   });
 });

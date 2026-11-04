@@ -7,7 +7,13 @@ import { Layout, Spacing } from '@/constants/theme';
 
 import { cardLogos } from './card-logos';
 import { rowLines, useStackedRow } from './use-stacked-row';
-import { type CardLook, type CardStyle, hex, initialsOf } from '../../domain/card-brands';
+import {
+  type CardLook,
+  type CardStyle,
+  hex,
+  initialsOf,
+  shortName,
+} from '../../domain/card-brands';
 
 const ASPECT = 1.586;
 const W = 160;
@@ -130,25 +136,25 @@ export function CardFace({ look, name, detail, testID }: Props) {
         <Motif style={look.style} ink={ink} />
         <Circle cx={0} cy={0} r={70} fill={hex(0xffffff)} fillOpacity={0.12} />
       </Svg>
-      <View style={[styles.badge, { backgroundColor: ink }]}>
-        {logo ? (
-          <Image source={logo} contentFit="contain" style={styles.logo} accessibilityLabel="" />
-        ) : (
-          <ThemedText style={[styles.initials, { color: from }]} maxFontSizeMultiplier={1}>
-            {initialsOf(name)}
-          </ThemedText>
-        )}
-      </View>
-      <View style={styles.bottom}>
+      <View style={styles.top}>
+        <View style={styles.badge}>
+          {logo ? (
+            <Image source={logo} contentFit="contain" style={styles.logo} accessibilityLabel="" />
+          ) : (
+            <ThemedText style={[styles.initials, { color: from }]} maxFontSizeMultiplier={1}>
+              {initialsOf(name)}
+            </ThemedText>
+          )}
+        </View>
         <ThemedText style={[styles.name, { color: ink }]} numberOfLines={rowLines(stacked) && 2}>
-          {name}
+          {stacked ? name : shortName(name)}
         </ThemedText>
-        {detail ? (
-          <ThemedText type="footnote" style={{ color: ink }}>
-            {detail}
-          </ThemedText>
-        ) : null}
       </View>
+      {detail ? (
+        <ThemedText type="footnote" style={[styles.detail, { color: ink }]}>
+          {detail}
+        </ThemedText>
+      ) : null}
     </View>
   );
 }
@@ -163,14 +169,21 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
   },
   badge: {
-    width: Spacing.six,
-    height: Spacing.six,
+    width: Spacing.five,
+    height: Spacing.five,
     borderRadius: Spacing.two,
+    backgroundColor: hex(0xffffff),
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logo: { width: Spacing.five, height: Spacing.five },
-  initials: { fontSize: 15, fontWeight: '700' },
-  bottom: { gap: Spacing.half },
-  name: { fontWeight: '700' },
+  logo: { width: '75%', height: '75%' },
+  initials: { fontSize: 12, fontWeight: '700' },
+  top: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  name: { flex: 1, fontWeight: '700', textAlign: 'right' },
+  detail: { textAlign: 'right' },
 });
