@@ -1,5 +1,6 @@
 import type { WalletCard } from '../data/queries';
 import { defaultCardColor } from '../domain/card-colors';
+import { pricePoints, products } from '../domain/price-book';
 
 export const card = (id: string, over: Partial<WalletCard> = {}): WalletCard => ({
   id,
@@ -58,3 +59,50 @@ export const receipt = (
   ],
   ...over,
 });
+
+/** A price book built the real way, from two shops and a few spellings of milk. */
+export function samplePriceBook(): import('../data/price-queries').PriceBook {
+  const line = (name: string, price: number) => ({
+    name,
+    quantity: 1,
+    unitPrice: price,
+    unit: 'kom',
+  });
+  const base = { status: 'ok' as const, refund: false, addedAt: 1, tin: null };
+  const receipts = [
+    {
+      ...base,
+      id: 'a',
+      company: 'Delhaize Serbia doo',
+      shop: '1-Maxi',
+      time: '2026-10-01T10:00:00',
+      items: [line('ZBREGOV MLEKO 1%', 15900), line('HLEB', 7000)],
+    },
+    {
+      ...base,
+      id: 'b',
+      company: 'Mercator-S doo',
+      shop: '2-Idea',
+      time: '2026-10-02T10:00:00',
+      items: [line('ZBREGOV 1% MLEKO', 14900)],
+    },
+    {
+      ...base,
+      id: 'c',
+      company: 'Delhaize Serbia doo',
+      shop: '1-Maxi',
+      time: '2026-10-09T10:00:00',
+      items: [line('ZBREGOV MLEKO 1%', 16900)],
+    },
+  ];
+  return {
+    products: products(pricePoints(receipts), []),
+    productGroups: [],
+    shopGroups: [],
+    shops: [
+      { key: 'Maxi', name: 'Maxi', count: 2 },
+      { key: 'Idea', name: 'Idea', count: 1 },
+    ],
+    notSame: [],
+  };
+}

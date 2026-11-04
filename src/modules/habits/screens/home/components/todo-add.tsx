@@ -27,7 +27,7 @@ export function TodoAdd({ onAdd }: Props) {
   };
 
   return (
-    <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.card}>
+    <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.card}>
       <View style={styles.row}>
         <TextInput
           value={title}

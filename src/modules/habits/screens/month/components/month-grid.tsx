@@ -58,7 +58,7 @@ export function MonthGrid({
   };
 
   return (
-    <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.card}>
+    <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.card}>
       <View style={styles.grid} testID="habits-month-grid">
         <View style={styles.names}>
           <View style={styles.cell} />

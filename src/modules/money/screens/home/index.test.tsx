@@ -7,12 +7,14 @@ import { Colors } from '@/constants/theme';
 import { MoneyHome } from './index';
 import { useBusinesses } from '../../data/business-queries';
 import { useActiveView, useCategories, useEntries, useSetView } from '../../data/queries';
+import { useReceiptSync } from '../../data/receipt-import';
 import { useGenerateRecurring } from '../../data/recurring-queries';
 import type { Business } from '../../domain/owners';
 import { business, category, entry, failed, loaded, metrics, pending } from '../test-data';
 
 jest.mock('../../data/queries');
 jest.mock('../../data/business-queries');
+jest.mock('../../data/receipt-import');
 jest.mock('../../data/recurring-queries');
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
 // Monday 2 November 2026.
@@ -32,6 +34,9 @@ beforeEach(() => {
   jest.clearAllMocks();
   jest.mocked(useSetView).mockReturnValue({ mutate: setView } as never);
   jest.mocked(useGenerateRecurring).mockReturnValue({ mutate: generate } as never);
+  jest
+    .mocked(useReceiptSync)
+    .mockReturnValue({ waiting: 0, importNow: jest.fn(), importing: false });
 });
 
 const renderHome = () =>

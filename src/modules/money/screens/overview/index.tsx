@@ -122,7 +122,7 @@ function MonthView({
   }
   return (
     <>
-      <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.card}>
+      <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.card}>
         <ThemedText type="footnote" themeColor="textTertiary">
           Spent
         </ThemedText>
@@ -194,7 +194,7 @@ function YearView({ bars }: { bars: MonthBar[] }) {
   }
   return (
     <>
-      <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.card}>
+      <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.card}>
         <View accessible aria-label={`Year chart. ${summary}`} testID="money-overview-chart">
           <Svg
             width="100%"

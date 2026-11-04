@@ -1,4 +1,11 @@
-import { appendEvent, consumeEvents, EVENT_MAX_AGE_MS, type EventStore, prune } from './outbox';
+import {
+  appendEvent,
+  consumeEvents,
+  EVENT_MAX_AGE_MS,
+  type EventStore,
+  pendingEvents,
+  prune,
+} from './outbox';
 import type { HiveEvent, ReceiptPayloadV1, StoredEvent } from './types';
 
 /** In-memory store with real rollback, standing in for SQLite. */
@@ -145,5 +152,18 @@ describe('events outbox', () => {
     const { store } = createFake();
     for (let i = 0; i < 250; i += 1) appendEvent(store, scanned(String(i)));
     expect(consumeEvents(store, 'money', () => undefined)).toBe(250);
+  });
+
+  it('shows what a consumer has not handled without registering it or moving its cursor', () => {
+    const { state, store } = createFake();
+    store.transaction((tx) => {
+      appendEvent(tx, scanned('a'));
+      appendEvent(tx, scanned('b'));
+    });
+    expect(pendingEvents(store, 'money')).toHaveLength(2);
+    expect(state.cursors.has('money')).toBe(false);
+    consumeEvents(store, 'money', () => undefined);
+    store.transaction((tx) => appendEvent(tx, scanned('c')));
+    expect(pendingEvents(store, 'money').map((e) => e.payload.receiptId)).toEqual(['c']);
   });
 });

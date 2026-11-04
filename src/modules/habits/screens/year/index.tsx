@@ -245,7 +245,7 @@ function Dashboard({
   return (
     <>
       {filter}
-      <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.card}>
+      <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.card}>
         <YearHeatmap
           year={year}
           habitCount={data.habits.length}
@@ -263,7 +263,7 @@ function Dashboard({
               <GlassSurface
                 key={tile.id}
                 kind="glass"
-                radius={Layout.radius.list}
+                radius={Layout.radius.row}
                 style={styles.tile}>
                 <View accessible aria-label={tile.sentence} testID={`habits-year-${tile.id}`}>
                   <ThemedText type="headline" aria-hidden>

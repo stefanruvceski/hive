@@ -30,7 +30,7 @@ export function StarterSuggestions({ onAdd }: Props) {
       <ThemedText type="headline" role="heading">
         Or start with a few
       </ThemedText>
-      <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.card}>
+      <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.card}>
         {starterSuggestions.map((item: Suggestion) => (
           <Pressable
             key={item.id}

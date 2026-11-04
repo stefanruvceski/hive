@@ -27,6 +27,7 @@ import { number } from '../../domain/fiscal-parse';
 import { isPib, toMinor } from '../../domain/receipt-events';
 import { formatAmount, receiptDate, titleOf } from '../../domain/receipt-stats';
 import { Chips, Field } from '../components/form';
+import { TextButton } from '../components/text-button';
 import { WalletScreen } from '../components/wallet-screen';
 
 /** One receipt with all its items; the owner, item prices and quantities can be corrected. */
@@ -147,7 +148,7 @@ function ReceiptView({ receipt }: { receipt: Receipt }) {
         <PrimaryButton label="Delete" onPress={confirmDelete} testID="wallet-receipt-delete" />
       </View>
       {printed && receipt.journal ? (
-        <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.printed}>
+        <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.printed}>
           <ThemedText type="code" style={{ color: theme.text }} testID="wallet-receipt-printed">
             {receipt.journal}
           </ThemedText>
@@ -209,9 +210,9 @@ function ItemRow({ receiptId, item }: { receiptId: string; item: ReceiptItem }) 
   const valid = q !== null && p !== null;
 
   return (
-    <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.item}>
+    <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.item}>
       <View style={styles.itemHead}>
-        <ThemedText style={styles.value}>{item.name}</ThemedText>
+        <ThemedText style={styles.itemName}>{item.name}</ThemedText>
         <ThemedText testID={`wallet-receipt-item-total-${item.id}`}>
           {formatAmount(item.total)}
         </ThemedText>
@@ -256,9 +257,8 @@ function ItemRow({ receiptId, item }: { receiptId: string; item: ReceiptItem }) 
           />
         </View>
       ) : (
-        <PrimaryButton
+        <TextButton
           label="Edit"
-          size="compact"
           onPress={() => setEditing(true)}
           testID={`wallet-receipt-item-edit-${item.id}`}
         />
@@ -271,6 +271,7 @@ const styles = StyleSheet.create({
   block: { gap: Layout.labelGap },
   detail: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.three },
   value: { flex: 1, textAlign: 'right' },
+  itemName: { flex: 1 },
   actions: { gap: Spacing.two, alignItems: 'flex-start' },
   item: { padding: Spacing.three, gap: Spacing.one, alignItems: 'stretch' },
   itemHead: { flexDirection: 'row', gap: Spacing.three, justifyContent: 'space-between' },

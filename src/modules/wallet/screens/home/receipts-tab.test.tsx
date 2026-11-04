@@ -72,17 +72,6 @@ describe('ReceiptsTab', () => {
     });
   });
 
-  it('adds a pasted link', async () => {
-    jest.mocked(useReceipts).mockReturnValue(loaded([receipt('r1')]));
-    await renderTab();
-    const user = userEvent.setup();
-
-    await user.type(screen.getByTestId('wallet-receipt-link'), 'https://suf.purs.gov.rs/v/?vl=Z9');
-    await user.press(screen.getByTestId('wallet-receipt-add-link'));
-
-    expect(add).toHaveBeenCalledWith('https://suf.purs.gov.rs/v/?vl=Z9', expect.anything());
-  });
-
   it('adds a scanned QR code and says when it was already saved', async () => {
     jest.mocked(useReceipts).mockReturnValue(loaded([receipt('r1')]));
     add.mockImplementation(
@@ -99,7 +88,7 @@ describe('ReceiptsTab', () => {
     expect(screen.getByTestId('wallet-receipt-message')).toHaveTextContent(/already saved/);
   });
 
-  it('shows why a link was refused', async () => {
+  it('shows why a scanned code was refused', async () => {
     jest.mocked(useReceipts).mockReturnValue(loaded([receipt('r1')]));
     add.mockImplementation((_text: string, o: { onError: (e: Error) => void }) =>
       o.onError(new Error('This is not a Serbian fiscal receipt QR code.')),
@@ -107,8 +96,8 @@ describe('ReceiptsTab', () => {
     await renderTab();
     const user = userEvent.setup();
 
-    await user.type(screen.getByTestId('wallet-receipt-link'), 'hello');
-    await user.press(screen.getByTestId('wallet-receipt-add-link'));
+    await user.press(screen.getByTestId('wallet-receipt-scan'));
+    await user.press(screen.getByTestId('fake-camera'));
 
     expect(screen.getByTestId('wallet-receipt-message')).toHaveTextContent(/not a Serbian/);
   });

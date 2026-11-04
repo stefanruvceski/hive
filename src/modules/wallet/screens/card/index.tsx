@@ -8,18 +8,23 @@ import { ErrorState } from '@/components/ui/error-state';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PrimaryButton } from '@/components/ui/primary-button';
 import { Spacing } from '@/constants/theme';
+import { useThemeName } from '@/hooks/use-theme';
 
 import { useFullBrightness } from './use-full-brightness';
 import { rememberDeletedCard } from '../../data/deleted-card';
 import { useCard, useDeleteCard, useOpenCard, usePinCard } from '../../data/queries';
 import { readable, spaced } from '../../domain/barcodes';
+import { cardLook, maskedNumber } from '../../domain/card-brands';
+import { cardColor } from '../../domain/card-colors';
 import { type CardFormat, isCardFormat, isSquare } from '../../domain/card-format';
 import { BarcodeView } from '../components/barcode-view';
+import { CardFace } from '../components/card-face';
 import { WalletScreen } from '../components/wallet-screen';
 
 /** A card at the till: the code large on white, the number under it, full brightness. */
 export function WalletCardScreen({ id }: { id: string }) {
   useFullBrightness();
+  const scheme = useThemeName();
   const { data, error, isError, refetch } = useCard(id);
   const open = useOpenCard();
   const pin = usePinCard();
@@ -55,6 +60,12 @@ export function WalletCardScreen({ id }: { id: string }) {
     const format: CardFormat = isCardFormat(data.format) ? data.format : 'CODE_128';
     return (
       <WalletScreen id="wallet-card" title={data.name}>
+        <CardFace
+          name={data.name}
+          look={cardLook(data.name, cardColor(data.color, scheme))}
+          detail={maskedNumber(data.number)}
+          testID="wallet-card-face"
+        />
         <BarcodeView number={data.number} format={format} testID="wallet-card-barcode" />
         {readable(data.number) && !isSquare(format) ? (
           <ThemedText type="number" style={styles.number} testID="wallet-card-number-text">

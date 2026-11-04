@@ -1,4 +1,4 @@
-# Wallet receipts: a pasted receipt link is saved at once and shows in the list (the office may be offline).
+# Wallet receipts: the Receipts tab opens with its scan button and search (scanning needs a camera, so the flow stops there).
 appId: com.ruvceski.hive.dev
 tags:
   - wallet
@@ -8,10 +8,7 @@ tags:
     id: 'home-open-wallet'
 - tapOn:
     id: 'wallet-tab-receipts'
-- tapOn:
-    id: 'wallet-receipt-link'
-- inputText: 'https://suf.purs.gov.rs/v/?vl=MaestroTestReceipt1'
-- hideKeyboard
-- tapOn:
-    id: 'wallet-receipt-add-link'
-- assertVisible: '.*(Pending|Failed).*'
+- assertVisible:
+    id: 'wallet-receipt-scan'
+- assertVisible:
+    id: 'wallet-receipt-search'

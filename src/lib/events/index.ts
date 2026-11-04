@@ -1,6 +1,6 @@
 import { getDb } from '@/lib/db/client';
 
-import { appendEvent, consumeEvents } from './outbox';
+import { appendEvent, consumeEvents, pendingEvents } from './outbox';
 import { type DbTx, drizzleEventStore } from './store';
 import type { HiveEvent } from './types';
 
@@ -31,4 +31,10 @@ export function publish(tx: DbTx, event: HiveEvent) {
 /** Handles the events this consumer has not seen; `handler` must be idempotent (ADR 0003). */
 export function consume(consumer: string, handler: (event: HiveEvent, tx: DbTx) => void) {
   return consumeEvents(drizzleEventStore(getDb()), consumer, handler);
+}
+
+/** What `consumer` has not handled yet and whether it is registered, without changing either. */
+export function pending(consumer: string) {
+  const store = drizzleEventStore(getDb());
+  return { registered: store.cursor(consumer) !== null, events: pendingEvents(store, consumer) };
 }

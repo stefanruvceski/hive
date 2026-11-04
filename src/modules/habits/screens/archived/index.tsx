@@ -65,7 +65,7 @@ export function HabitsArchived() {
           ]}
           testID="habits-archived-list">
           {habits && habits.length > 0 ? (
-            <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.card}>
+            <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.card}>
               {habits.map((habit, index) => (
                 <Fragment key={habit.id}>
                   {index > 0 && (

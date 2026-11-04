@@ -78,10 +78,15 @@ export const moneyEntries = sqliteTable(
     /** The rule that created it; with `date` it is unique, so a rule never creates a day twice. */
     recurringId: text('recurring_id'),
     createdAt: text('created_at').notNull(),
+    /** Which module made the entry (`wallet`); null = typed by hand. Such entries are read-only. */
+    source: text('source'),
+    /** Stable id within the source (`wallet:<receiptId>:<line>`): re-delivered events never duplicate. */
+    sourceRef: text('source_ref'),
   },
   (table) => [
     index('money_entries_space_date').on(table.space, table.date),
     uniqueIndex('money_entries_recurring_day').on(table.recurringId, table.date),
+    uniqueIndex('money_entries_source_ref').on(table.sourceRef),
   ],
 );
 

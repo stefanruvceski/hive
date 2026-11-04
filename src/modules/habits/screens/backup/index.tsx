@@ -80,7 +80,7 @@ export function HabitsBackup() {
             Your habits, to-dos, mood and reminders live only on this phone. Export them to a file
             to keep a copy or move to a new phone.
           </ThemedText>
-          <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.card}>
+          <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.card}>
             <ThemedText type="headline">Export</ThemedText>
             <ThemedText themeColor="textSecondary">
               Saves a file you choose where to put: Files, AirDrop, your drive.
@@ -91,7 +91,7 @@ export function HabitsBackup() {
               testID="habits-backup-export"
             />
           </GlassSurface>
-          <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.card}>
+          <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.card}>
             <ThemedText type="headline">Import</ThemedText>
             <ThemedText themeColor="textSecondary">
               Replaces everything in Habits with a file you exported before.

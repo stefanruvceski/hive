@@ -27,3 +27,7 @@ Modules never import each other ([ADR 0001](0001-modules-sqlite-native-only.md))
 
 - One migration; no UI. Code in `src/lib/events/` (pure outbox logic over a small store interface, tested with an in-memory fake; a Drizzle adapter).
 - Contract v1: `receipt.scanned`, `receipt.updated`, `receipt.deleted`.
+
+## Consumers
+
+- **Money (#84)** reads `receipt.*` as `consumer = 'money'` and keeps one expense entry per receipt line (`source = 'wallet'`, `source_ref = wallet:<receiptId>:<line>`, unique). A refund is a negative total, so its entries are negative expenses. The first time, receipts already scanned are only _offered_ (`pending()` peeks without registering); once Money has said yes it follows every event on open and when the producer signals. Money names a new business `Business <PIB>` because the payload carries the buyer PIB only; the user renames it.

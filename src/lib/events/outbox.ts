@@ -64,6 +64,25 @@ export function consumeEvents<TTx>(
   return handled;
 }
 
+/**
+ * The events `consumer` has not handled yet, without moving its cursor or registering it (a
+ * consumer that is not registered would get everything still kept). Lets a consumer offer an
+ * import before it commits to one.
+ */
+export function pendingEvents<TTx>(store: EventStore<TTx>, consumer: string): HiveEvent[] {
+  const events: HiveEvent[] = [];
+  let after = store.cursor(consumer) ?? 0;
+  for (;;) {
+    const batch = store.readAfter(after, BATCH);
+    for (const stored of batch) {
+      const event = parseEvent(stored);
+      if (event) events.push(event);
+    }
+    after = batch.at(-1)?.id ?? after;
+    if (batch.length < BATCH) return events;
+  }
+}
+
 /** Deletes events everyone has read, and events older than 90 days. */
 export function prune<TTx>(store: EventStore<TTx>, now = Date.now()) {
   store.transaction((tx) => {

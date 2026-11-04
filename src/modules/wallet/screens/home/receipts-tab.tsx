@@ -25,6 +25,8 @@ import {
   titleOf,
 } from '../../domain/receipt-stats';
 import { CardScanner } from '../components/card-scanner';
+import { TextButton } from '../components/text-button';
+import { rowLines, useStackedRow } from '../components/use-stacked-row';
 
 type Row = { kind: 'month'; month: string } | { kind: 'receipt'; receipt: Receipt };
 
@@ -52,14 +54,13 @@ function rowsOf(receipts: readonly Receipt[]): Row[] {
   ]);
 }
 
-/** The Receipts tab: scan or paste a fiscal receipt link, search, star and open receipts. */
+/** The Receipts tab: scan a fiscal receipt's QR code, search, star and open receipts. */
 export function ReceiptsTab() {
   const theme = useTheme();
   const { data, error, isError, refetch } = useReceipts();
   const { refresh, isRefreshing } = useSyncReceipts();
   const add = useAddReceipt();
   const [scanning, setScanning] = useState(false);
-  const [link, setLink] = useState('');
   const [query, setQuery] = useState('');
   const [starredOnly, setStarredOnly] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -68,7 +69,6 @@ export function ReceiptsTab() {
     setMessage(null);
     add.mutate(text, {
       onSuccess: ({ duplicate }) => {
-        setLink('');
         if (duplicate) setMessage('This receipt is already saved.');
       },
       onError: (e) => setMessage(e.message),
@@ -93,32 +93,12 @@ export function ReceiptsTab() {
           testID="wallet-receipt-scan"
         />
       )}
-      <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.field}>
-        <TextInput
-          aria-label="Receipt link"
-          placeholder="Or paste the receipt link"
-          placeholderTextColor={theme.textQuaternary}
-          selectionColor={theme.accent}
-          value={link}
-          onChangeText={setLink}
-          autoCapitalize="none"
-          autoCorrect={false}
-          testID="wallet-receipt-link"
-          style={[styles.input, { color: theme.text }]}
-        />
-      </GlassSurface>
-      <PrimaryButton
-        label="Add link"
-        disabled={link.trim() === '' || add.isPending}
-        onPress={() => addText(link)}
-        testID="wallet-receipt-add-link"
-      />
       {message ? (
         <ThemedText role="alert" themeColor="danger" testID="wallet-receipt-message">
           {message}
         </ThemedText>
       ) : null}
-      <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.field}>
+      <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.field}>
         <TextInput
           aria-label="Search receipts"
           placeholder="Search shop, item or note"
@@ -130,6 +110,11 @@ export function ReceiptsTab() {
           style={[styles.input, { color: theme.text }]}
         />
       </GlassSurface>
+      <TextButton
+        label="Prices by shop"
+        onPress={() => router.push('/wallet/prices')}
+        testID="wallet-open-prices"
+      />
       <Pressable
         role="switch"
         aria-checked={starredOnly}
@@ -198,6 +183,8 @@ const keyOf = (row: Row) => (row.kind === 'month' ? `m-${row.month}` : row.recei
 const statusText = { pending: 'Pending', failed: 'Failed', ok: '' } as const;
 
 function ReceiptRow({ receipt }: { receipt: Receipt }) {
+  const stacked = useStackedRow();
+  const lines = rowLines(stacked);
   const status = statusText[receipt.status];
   const subtitle = [receiptDate(receipt), status].filter(Boolean).join(' · ');
   return (
@@ -206,13 +193,16 @@ function ReceiptRow({ receipt }: { receipt: Receipt }) {
       aria-label={titleOf(receipt)}
       testID={`wallet-receipt-${receipt.id}`}
       onPress={() => router.push({ pathname: '/wallet/receipt/[id]', params: { id: receipt.id } })}>
-      <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.row}>
-        <View style={styles.texts}>
-          <ThemedText numberOfLines={1}>
+      <GlassSurface
+        kind="glass"
+        radius={Layout.radius.row}
+        style={[styles.row, stacked && styles.stacked]}>
+        <View style={stacked ? undefined : styles.texts}>
+          <ThemedText numberOfLines={lines}>
             {receipt.starred ? '★ ' : ''}
             {titleOf(receipt)}
           </ThemedText>
-          <ThemedText type="footnote" numberOfLines={1}>
+          <ThemedText type="footnote" numberOfLines={lines}>
             {subtitle}
           </ThemedText>
         </View>
@@ -246,5 +236,6 @@ const styles = StyleSheet.create({
     minHeight: Layout.listRow.minHeight,
     paddingHorizontal: Layout.listRow.paddingHorizontal,
   },
+  stacked: { flexDirection: 'column', alignItems: 'flex-start', paddingVertical: Spacing.two },
   texts: { flex: 1 },
 });

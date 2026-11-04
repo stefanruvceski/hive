@@ -25,7 +25,7 @@ export function FormGroup({ title, children, padded = false, testID }: Props) {
       ) : null}
       <GlassSurface
         kind="glass"
-        radius={Layout.radius.list}
+        radius={Layout.radius.row}
         style={padded ? styles.padded : styles.list}>
         {children}
       </GlassSurface>

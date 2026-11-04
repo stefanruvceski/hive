@@ -15,7 +15,7 @@ export function Group({ title, children }: { title?: string; children: ReactNode
           {title}
         </ThemedText>
       ) : null}
-      <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.surface}>
+      <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.surface}>
         {children}
       </GlassSurface>
     </View>

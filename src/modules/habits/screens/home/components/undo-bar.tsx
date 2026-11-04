@@ -27,7 +27,7 @@ export function UndoBar({ message, onUndo, onDismiss }: Props) {
 
   return (
     <View style={[styles.wrap, { bottom: insets.bottom + Spacing.three }]} pointerEvents="box-none">
-      <GlassSurface kind="bar" radius={Layout.radius.list} style={styles.bar}>
+      <GlassSurface kind="bar" radius={Layout.radius.row} style={styles.bar}>
         <ThemedText style={styles.message} role="alert" testID="habits-undo-message">
           {message}
         </ThemedText>

@@ -27,7 +27,7 @@ export function OverdueCard({ todos, onMoveToToday, onDone, onDelete }: Props) {
       <ThemedText type="listHeader" role="heading" style={styles.inset}>
         {`Overdue · ${todos.length}`}
       </ThemedText>
-      <GlassSurface kind="glass" radius={Layout.radius.list} style={styles.list}>
+      <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.list}>
         {todos.map((todo, index) => (
           <Fragment key={todo.id}>
             {index > 0 && <View style={[styles.separator, { backgroundColor: theme.separator }]} />}
