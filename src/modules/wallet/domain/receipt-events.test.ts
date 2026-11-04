@@ -40,11 +40,22 @@ describe('receipt events', () => {
         shop: 'BS Beograd 5',
         company: 'NIS a.d.',
         buyerTin: '104052135',
+        tin: '100000001',
+        refund: false,
         total: 837998,
         time: '2026-10-25T14:03:11',
         addedAt: 0,
       },
-      [{ name: 'Gorivo', quantity: 40, unitPrice: 20500, total: 820000, unit: 'L', vat: 'Ђ' }],
+      [
+        {
+          name: 'EVRO PREMIJUM BMB-95,2710124500',
+          quantity: 40,
+          unitPrice: 20500,
+          total: 820000,
+          unit: 'L',
+          vat: 'Ђ',
+        },
+      ],
     );
     expect(payload).toEqual({
       version: 1,
@@ -55,7 +66,19 @@ describe('receipt events', () => {
       total: 837998,
       currency: 'RSD',
       issuedAt: '2026-10-25T14:03:11',
-      items: [{ name: 'Gorivo', quantity: 40, unitPrice: 20500, total: 820000, vatLabel: 'Ђ' }],
+      shopPib: '100000001',
+      company: 'NIS a.d.',
+      refund: false,
+      items: [
+        {
+          line: 0,
+          name: 'EVRO PREMIJUM BMB-95',
+          quantity: 40,
+          unitPrice: 20500,
+          total: 820000,
+          vatLabel: 'Ђ',
+        },
+      ],
     });
   });
 

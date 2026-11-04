@@ -7,6 +7,8 @@ export type ReceiptEventItem = {
   unitPrice: number;
   total: number;
   vatLabel: string | null;
+  /** Position of the line on the receipt, from 0 (older events: the array index). */
+  line?: number;
 };
 
 /** The receipt as a consumer needs it. `version` is part of the payload (ADR 0003 §6). */
@@ -24,6 +26,14 @@ export type ReceiptPayloadV1 = {
   /** ISO timestamp the receipt was issued. */
   issuedAt: string;
   items: ReceiptEventItem[];
+  /**
+   * Added after v1 shipped, so older events lack them (ADR 0003 §6: consumers handle both).
+   * The shop's PIB (who sold; `pib` above is the buyer's), the company as printed, the tax
+   * office's refund flag.
+   */
+  shopPib?: string | null;
+  company?: string | null;
+  refund?: boolean;
 };
 
 export type ReceiptDeletedPayloadV1 = { version: 1; receiptId: string; sourceRef: string };

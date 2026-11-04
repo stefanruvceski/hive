@@ -1,4 +1,5 @@
 import {
+  isFuel,
   byMonth,
   formatAmount,
   formatLiters,
@@ -93,5 +94,14 @@ describe('receipt stats', () => {
     expect(titleOf({ shop: 'BS Beograd 5', company: 'NIS' })).toBe('BS Beograd 5');
     expect(titleOf({ shop: null, company: 'NIS' })).toBe('NIS');
     expect(titleOf({ shop: null, company: null })).toBe('Receipt');
+  });
+});
+
+describe('Serbian fuel spellings', () => {
+  it('knows PREMIJUM, with or without the product code', () => {
+    const item = (name: string) => ({ name, quantity: 1, unitPrice: 1, total: 1 });
+    expect(isFuel(item('EVRO PREMIJUM'))).toBe(true);
+    expect(isFuel(item('EVRO PREMIJUM BMB-95,2710124500'))).toBe(true);
+    expect(isFuel(item('Voda Rosa 1,5l'))).toBe(false);
   });
 });

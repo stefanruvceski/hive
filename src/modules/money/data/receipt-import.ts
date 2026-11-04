@@ -9,7 +9,7 @@ import { moneyKeys, seedCategories } from './queries';
 import { moneyCategories, moneyEntries, moneyItems, type Space } from './schema';
 import { newId } from '../domain/ids';
 import {
-  categoryNameFor,
+  categoryNameForEntry,
   planEvent,
   type ReceiptEntry,
   reconcile,
@@ -62,7 +62,7 @@ function write(tx: DbTx, receiptId: string, entries: readonly ReceiptEntry[]) {
       currency: 'RSD',
       rate: 1,
       amountRsdMinor: e.amountMinor,
-      categoryId: categoryFor(tx, space, categoryNameFor(e.shop, space)),
+      categoryId: categoryFor(tx, space, categoryNameForEntry(e, space)),
       date: e.date,
       note: e.note,
     };

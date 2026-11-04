@@ -14,7 +14,7 @@ import { useToday } from '@/hooks/use-today';
 
 import { type Category, type Entry, useCategories, useEntries } from '../../data/queries';
 import { useGenerateRecurring } from '../../data/recurring-queries';
-import { formatMinor, formatWhole } from '../../domain/amount';
+import { formatExact, formatMinor, formatWhole } from '../../domain/amount';
 import { monthLabel, monthOf, shiftMonth } from '../../domain/dates';
 import { groupByDay, totalsOf } from '../../domain/entries';
 import { categoryLabel, inView, type Business } from '../../domain/owners';
@@ -304,7 +304,7 @@ function EntryRow({
     entry.kind === 'expense' || (entry.kind === 'payout' && entry.space === 'business');
   // A refund is a negative expense: money coming back.
   const leaves = outflow ? entry.amountMinor >= 0 : entry.amountMinor < 0;
-  const amount = `${leaves ? '−' : '+'}${formatMinor(Math.abs(entry.amountMinor), entry.currency)}`;
+  const amount = `${leaves ? '−' : '+'}${formatExact(Math.abs(entry.amountMinor), entry.currency)}`;
   const receiptId = receiptIdOf(entry.sourceRef);
   const subtitle = [owner, receiptId ? 'Wallet' : null, entry.note].filter(Boolean).join(' · ');
   return (
@@ -326,7 +326,7 @@ function EntryRow({
         <ThemedText>{amount}</ThemedText>
         {entry.currency !== 'RSD' ? (
           <ThemedText type="footnote" themeColor="textTertiary">
-            {formatMinor(entry.amountRsdMinor)}
+            {formatExact(entry.amountRsdMinor)}
           </ThemedText>
         ) : null}
       </View>

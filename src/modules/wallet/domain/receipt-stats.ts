@@ -25,7 +25,7 @@ export type StatsReceipt = {
 export type Fuel = { liters: number; pricePerLiter: number; amount: number; name: string };
 
 const FUEL =
-  /\b(DIZEL|DIESEL|BENZIN|BMB|TNG|LPG|AUTOGAS|AUTO GAS|CNG|GORIVO|EVRO ?(DIZEL|PREMIUM|95|98|100)|EURO ?(DIESEL|95|98|100)|G-DRIVE|Q ?MAX|MAXXMOTION|ULTIMATE|V-POWER)\b/;
+  /\b(DIZEL|DIESEL|BENZIN|BMB|TNG|LPG|AUTOGAS|AUTO GAS|CNG|GORIVO|EVRO ?(DIZEL|PREMIUM|PREMIJUM|95|98|100)|EURO ?(DIESEL|95|98|100)|G-DRIVE|Q ?MAX|MAXXMOTION|ULTIMATE|V-POWER)\b/;
 
 export const isFuel = (item: StatsItem) => FUEL.test((latin(item.name) ?? item.name).toUpperCase());
 
