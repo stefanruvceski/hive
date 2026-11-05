@@ -64,18 +64,6 @@ export function WalletCardScreen({ id }: { id: string }) {
         trailing={
           <>
             <GlassButton
-              icon={{
-                ios: 'qrcode.viewfinder',
-                android: 'qr_code_scanner',
-                web: 'qr_code_scanner',
-              }}
-              label="Scan a receipt"
-              onPress={() =>
-                router.push({ pathname: '/wallet', params: { tab: 'receipts', scan: '1' } })
-              }
-              testID="wallet-card-scan-receipt"
-            />
-            <GlassButton
               icon={
                 data.pinned
                   ? { ios: 'star.fill', android: 'star', web: 'star' }
@@ -90,6 +78,18 @@ export function WalletCardScreen({ id }: { id: string }) {
               label="Delete"
               onPress={() => confirmDelete(data.name)}
               testID="wallet-card-delete"
+            />
+            <GlassButton
+              icon={{
+                ios: 'qrcode.viewfinder',
+                android: 'qr_code_scanner',
+                web: 'qr_code_scanner',
+              }}
+              label="Scan a receipt"
+              onPress={() =>
+                router.push({ pathname: '/wallet', params: { tab: 'receipts', scan: '1' } })
+              }
+              testID="wallet-card-scan-receipt"
             />
           </>
         }>
