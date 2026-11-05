@@ -1,14 +1,16 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
-import { StyleSheet } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { Spacing } from '@/constants/theme';
 import { useAppSettings, useSetAppSetting } from '@/hooks/use-app-settings';
 import { isApiConfigured } from '@/lib/api';
+import { replaceFromBackup } from '@/lib/backup/db';
 import { defaultAppSettings } from '@/utils/app-settings';
 
+import * as files from './backup-files';
 import { Settings } from './index';
 
 // Mock at the network boundary — the api client, never component internals (agent-rules/09 §5).
@@ -23,6 +25,14 @@ jest.mock('@/hooks/use-app-settings');
 const mutate = jest.fn();
 
 jest.mock('expo-router', () => ({ router: { back: jest.fn() } }));
+
+// The device boundary: the file system and the database.
+jest.mock('./backup-files');
+jest.mock('@/lib/backup/db', () => ({
+  readAppBackup: jest.fn(() => ({ app: 'hive-backup', version: 1, exportedAt: '', tables: {} })),
+  replaceFromBackup: jest.fn(),
+}));
+const backupText = JSON.stringify({ app: 'hive-backup', version: 1, exportedAt: 'x', tables: {} });
 
 // fontScale is what the rows react to; the rest is a plain phone window (copy of key-value-row.test).
 const window = (fontScale: number) => ({ width: 402, height: 874, scale: 3, fontScale });
@@ -41,6 +51,7 @@ function mockSettings(result: object) {
 }
 
 beforeEach(() => {
+  jest.mocked(files.pickBackupFolder).mockReset();
   mockFontScale(1);
   mutate.mockReset();
   mockSettings({ data: defaultAppSettings, isPending: false, isError: false });
@@ -163,11 +174,141 @@ describe('Settings preferences', () => {
     expect(screen.getByTestId('app-info-version')).not.toHaveStyle({ marginStart: 'auto' });
   });
 
-  it('shows Backup as not available yet', async () => {
+  it('shows that no backup has been made or chosen yet', async () => {
     await renderSettings();
 
-    expect(screen.getByTestId('settings-backup-now')).toBeDisabled();
     expect(screen.getByTestId('settings-backup-folder')).toHaveTextContent('Not set up');
+    expect(screen.getByTestId('settings-backup-last')).toHaveTextContent('Never');
+  });
+
+  it('shows the chosen folder and the last backup in the chosen date format', async () => {
+    mockSettings({
+      data: {
+        ...defaultAppSettings,
+        backupFolder: 'file:///Users/me/Backups/',
+        lastBackup: new Date(2026, 10, 5, 9, 7).toISOString(),
+      },
+      isPending: false,
+      isError: false,
+    });
+    await renderSettings();
+
+    expect(screen.getByTestId('settings-backup-folder')).toHaveTextContent('Backups');
+    expect(screen.getByTestId('settings-backup-last')).toHaveTextContent('05.11.2026 09:07');
+  });
+
+  it('asks for a folder on the first Back Up Now, writes the backup there and notes the time', async () => {
+    jest.mocked(files.pickBackupFolder).mockResolvedValue({ uri: 'file:///b/', name: 'b' });
+    jest.mocked(files.writeBackupToFolder).mockResolvedValue();
+    await renderSettings();
+
+    await userEvent.setup().press(screen.getByTestId('settings-backup-now'));
+
+    expect(mutate).toHaveBeenCalledWith({ key: 'backupFolder', value: 'file:///b/' });
+    expect(files.writeBackupToFolder).toHaveBeenCalledWith(
+      'file:///b/',
+      expect.any(String),
+      expect.any(Date),
+    );
+    expect(mutate).toHaveBeenCalledWith({ key: 'lastBackup', value: expect.any(String) });
+    expect(await screen.findByTestId('settings-backup-status')).toHaveTextContent(/Backed up/);
+  });
+
+  it('writes to the folder already chosen without asking again', async () => {
+    mockSettings({
+      data: { ...defaultAppSettings, backupFolder: 'file:///b/' },
+      isPending: false,
+      isError: false,
+    });
+    jest.mocked(files.writeBackupToFolder).mockResolvedValue();
+    await renderSettings();
+
+    await userEvent.setup().press(screen.getByTestId('settings-backup-now'));
+
+    expect(files.pickBackupFolder).not.toHaveBeenCalled();
+    expect(files.writeBackupToFolder).toHaveBeenCalledWith(
+      'file:///b/',
+      expect.any(String),
+      expect.any(Date),
+    );
+  });
+
+  it('says so when the folder cannot be written to', async () => {
+    mockSettings({
+      data: { ...defaultAppSettings, backupFolder: 'file:///gone/' },
+      isPending: false,
+      isError: false,
+    });
+    jest.mocked(files.writeBackupToFolder).mockRejectedValue(new Error('no access'));
+    await renderSettings();
+
+    await userEvent.setup().press(screen.getByTestId('settings-backup-now'));
+
+    expect(await screen.findByTestId('settings-backup-status')).toHaveTextContent(
+      /Choose it again/,
+    );
+    expect(mutate).not.toHaveBeenCalledWith(expect.objectContaining({ key: 'lastBackup' }));
+  });
+
+  it('shares a backup through the share sheet', async () => {
+    jest.mocked(files.shareBackup).mockResolvedValue();
+    await renderSettings();
+
+    await userEvent.setup().press(screen.getByTestId('settings-backup-share'));
+
+    expect(files.shareBackup).toHaveBeenCalledWith(expect.any(String), expect.any(Date));
+  });
+
+  it('asks before replacing everything with a file, and refuses a file that is not a backup', async () => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+    jest
+      .mocked(files.pickBackupText)
+      .mockResolvedValueOnce('nonsense')
+      .mockResolvedValueOnce(backupText);
+    await renderSettings();
+    const user = userEvent.setup();
+
+    await user.press(screen.getByTestId('settings-restore-file'));
+    expect(await screen.findByTestId('settings-backup-status')).toHaveTextContent(
+      /not a Hive backup/,
+    );
+    expect(alert).not.toHaveBeenCalled();
+
+    await user.press(screen.getByTestId('settings-restore-file'));
+    await waitFor(() =>
+      expect(alert).toHaveBeenCalledWith(
+        'Replace everything in Hive?',
+        expect.any(String),
+        expect.any(Array),
+      ),
+    );
+    const buttons = alert.mock.calls[0]?.[2] ?? [];
+    buttons.find((button) => button.text === 'Replace')?.onPress?.();
+    expect(replaceFromBackup).toHaveBeenCalled();
+  });
+
+  it('needs a folder before it can restore the latest backup', async () => {
+    await renderSettings();
+    await userEvent.setup().press(screen.getByTestId('settings-restore-latest'));
+
+    expect(await screen.findByTestId('settings-backup-status')).toHaveTextContent(
+      /Choose a backup folder/,
+    );
+  });
+
+  it('asks before restoring the latest backup of the chosen folder', async () => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+    mockSettings({
+      data: { ...defaultAppSettings, backupFolder: 'file:///b/' },
+      isPending: false,
+      isError: false,
+    });
+    jest.mocked(files.readLatestFromFolder).mockResolvedValue(backupText);
+    await renderSettings();
+
+    await userEvent.setup().press(screen.getByTestId('settings-restore-latest'));
+
+    await waitFor(() => expect(alert).toHaveBeenCalled());
   });
 
   it('shows a loading state while settings are read', async () => {

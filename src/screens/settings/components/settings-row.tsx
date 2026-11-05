@@ -1,6 +1,6 @@
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import type { ReactNode } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Layout, Spacing } from '@/constants/theme';
@@ -21,6 +21,8 @@ type Props = {
   trailing?: ReactNode;
   /** Label as a teal action ("Back Up Now") instead of plain text. */
   action?: boolean;
+  /** Makes the whole row a button. */
+  onPress?: () => void;
   /** Shown but not usable yet; content is dimmed, never the glass behind it. */
   disabled?: boolean;
   /** On the value text when there is one (what tests assert), else on the row. */
@@ -29,8 +31,8 @@ type Props = {
 
 /**
  * One Settings list row: optional icon tile, label, value or control, 54 pt high. The value sits
- * at the end of the row and stacks under the label at accessibility text sizes. Not pressable yet:
- * no row opens anything until Customize Home (#31) and Backup land.
+ * at the end of the row and stacks under the label at accessibility text sizes. With `onPress` the
+ * whole row is a button.
  */
 export function SettingsRow({
   label,
@@ -39,6 +41,7 @@ export function SettingsRow({
   valueType = 'row',
   trailing,
   action = false,
+  onPress,
   disabled = false,
   testID,
 }: Props) {
@@ -47,11 +50,15 @@ export function SettingsRow({
   const stacked = fontScale >= STACK_FONT_SCALE;
 
   return (
-    <View
+    <Pressable
       style={styles.row}
       testID={value === undefined ? testID : `${testID}-row`}
+      role={onPress ? 'button' : undefined}
+      aria-label={onPress && value !== undefined ? `${label}, ${value}` : undefined}
+      onPress={disabled ? undefined : onPress}
+      disabled={!onPress || disabled}
       aria-disabled={disabled || undefined}
-      accessible={disabled || undefined}>
+      accessible={disabled || onPress ? true : undefined}>
       <View style={[styles.content, disabled && styles.disabled]}>
         {icon && (
           <View style={[styles.tile, { backgroundColor: theme.accentFill }]}>
@@ -79,7 +86,7 @@ export function SettingsRow({
         </View>
         {trailing}
       </View>
-    </View>
+    </Pressable>
   );
 }
 

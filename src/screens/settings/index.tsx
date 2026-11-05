@@ -16,6 +16,7 @@ import { type Appearance, type DateFormat, formatDateExample } from '@/utils/app
 import { AppInfoCard } from './components/app-info-card';
 import { SettingsGroup } from './components/settings-group';
 import { SettingsRow } from './components/settings-row';
+import { useBackup } from './use-backup';
 
 const appearanceOptions: SegmentedOption<Appearance>[] = [
   { value: 'system', label: 'System' },
@@ -29,7 +30,7 @@ const dateFormatOptions: SegmentedOption<DateFormat>[] = [
   { value: 'us', label: 'US' },
 ];
 
-/** Settings from docs/design/canvas/Settings.dc.html: preferences, backup (not yet live), about. */
+/** Settings from docs/design/canvas/Settings.dc.html: preferences, backup and restore, about. */
 export function Settings() {
   const insets = useSafeAreaInsets();
 
@@ -130,19 +131,78 @@ function Preferences() {
   );
 }
 
-/** Backup is designed but not built yet: shown, dimmed and inert until the backup story. */
+/** The folder's name from its URI: `file:///…/Backups/` → `Backups`. */
+const folderName = (uri: string) =>
+  decodeURIComponent(uri.replace(/\/+$/, '').split(/[/:]/).pop() ?? '') || 'Chosen';
+
+const lastBackupText = (iso: string | null, format: DateFormat) => {
+  const at = iso === null ? null : new Date(iso);
+  if (at === null || Number.isNaN(at.getTime())) return 'Never';
+  const time = `${String(at.getHours()).padStart(2, '0')}:${String(at.getMinutes()).padStart(2, '0')}`;
+  return `${formatDateExample(format, at)} ${time}`;
+};
+
+/** Backup and restore of every app as one file, to a folder the user chose or through the share sheet. */
 function BackupGroup() {
+  const { data } = useAppSettings();
+  const backup = useBackup(data?.backupFolder ?? null);
+  const disabled = backup.busy;
+
   return (
     <SettingsGroup
       title="Backup"
-      footnote="Every app in one file, saved once a day to a folder on your phone: two weeks of daily copies and one per month. The folder stays if Hive is deleted. Keys and sign-ins are never in it."
+      footnote="Every app in one file. Back up when you like: to the folder you choose (it stays if Hive is deleted) or to anywhere through Share. Keys and sign-ins are never in it."
       testID="settings-backup">
-      <SettingsRow label="Back Up Now" action disabled testID="settings-backup-now" />
-      <SettingsRow label="Folder" value="Not set up" disabled testID="settings-backup-folder" />
-      <SettingsRow label="Last Backup" value="Never" disabled testID="settings-backup-last" />
-      <SettingsRow label="Restore Latest Backup" action disabled testID="settings-restore-latest" />
-      <SettingsRow label="Restore from File…" action disabled testID="settings-restore-file" />
-      <SettingsRow label="Share Backup…" action disabled testID="settings-backup-share" />
+      <SettingsRow
+        label="Back Up Now"
+        action
+        disabled={disabled}
+        onPress={() => void backup.backUpNow()}
+        testID="settings-backup-now"
+      />
+      <SettingsRow
+        label="Folder"
+        value={data?.backupFolder ? folderName(data.backupFolder) : 'Not set up'}
+        disabled={disabled}
+        onPress={() => void backup.chooseFolder()}
+        testID="settings-backup-folder"
+      />
+      <SettingsRow
+        label="Last Backup"
+        value={lastBackupText(data?.lastBackup ?? null, data?.dateFormat ?? 'eu')}
+        testID="settings-backup-last"
+      />
+      <SettingsRow
+        label="Restore Latest Backup"
+        action
+        disabled={disabled}
+        onPress={() => void backup.restoreLatest()}
+        testID="settings-restore-latest"
+      />
+      <SettingsRow
+        label="Restore from File…"
+        action
+        disabled={disabled}
+        onPress={() => void backup.restoreFromFile()}
+        testID="settings-restore-file"
+      />
+      <SettingsRow
+        label="Share Backup…"
+        action
+        disabled={disabled}
+        onPress={() => void backup.share()}
+        testID="settings-backup-share"
+      />
+      {backup.status && (
+        <ThemedText
+          role="alert"
+          type="footnote"
+          themeColor={backup.status.kind === 'error' ? 'danger' : 'textSecondary'}
+          style={styles.inset}
+          testID="settings-backup-status">
+          {backup.status.text}
+        </ThemedText>
+      )}
     </SettingsGroup>
   );
 }
