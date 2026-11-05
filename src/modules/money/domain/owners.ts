@@ -4,6 +4,8 @@
 
 import type { Space } from '../data/schema';
 
+export { isValidPib, normalizePib } from '@/utils/pib';
+
 export type Business = { id: string; name: string; pib: string; archivedAt: string | null };
 
 /** What the screens show: everything, Private only, or one business (by its id). */
@@ -42,24 +44,6 @@ export const spaceOfOwner = (owner: string): Space =>
 
 /** The owner a new entry starts with in a view (All starts as Private). */
 export const ownerForView = (view: View): string => (view === 'all' ? 'private' : view);
-
-/** Digits only, or null when it is not nine digits. Spaces and dashes are ignored. */
-export function normalizePib(text: string): string | null {
-  const digits = text.replace(/[\s-]/g, '');
-  return /^\d{9}$/.test(digits) ? digits : null;
-}
-
-/** The PIB check digit (ISO 7064, MOD 11,10) is the ninth digit. */
-export function isValidPib(pib: string): boolean {
-  if (!/^\d{9}$/.test(pib)) return false;
-  let product = 10;
-  for (const char of pib.slice(0, 8)) {
-    let sum = (Number(char) + product) % 10;
-    if (sum === 0) sum = 10;
-    product = (2 * sum) % 11;
-  }
-  return Number(pib[8]) === (11 - product) % 10;
-}
 
 /** A business name is shown, so a category from the other list gets its space in All. */
 export const categoryLabel = (

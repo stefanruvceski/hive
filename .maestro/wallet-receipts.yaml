@@ -1,4 +1,4 @@
-# Wallet receipts: the Receipts tab opens with its scan button and search (scanning needs a camera, so the flow stops there).
+# Wallet receipts: the Receipts tab opens with the scan button in the header and search (scanning needs a camera, so the flow stops there).
 appId: com.ruvceski.hive.dev
 tags:
   - wallet

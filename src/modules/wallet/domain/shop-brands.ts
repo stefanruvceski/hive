@@ -4,7 +4,16 @@ import { latin } from './fiscal-parse';
 // Shops by company, not branch. Ported from hive-poc Brands.kt / Chains (names only; the
 // colours, logos and categories stay in the Kotlin PoC until a screen needs them).
 
-type ShopLike = { company: string | null; shop: string | null };
+type ShopLike = { company: string | null; shop: string | null; tin?: string | null };
+
+/** Companies known by the shop's PIB: the same name on every receipt, whatever the branch prints. */
+const KNOWN_SHOPS: Readonly<Record<string, string>> = {
+  '104052135': 'NIS',
+};
+
+/** The name a known PIB goes by, or null. */
+export const knownShop = (tin: string | null | undefined): string | null =>
+  KNOWN_SHOPS[tin?.trim() ?? ''] ?? null;
 
 const RULES: readonly (readonly [RegExp, string])[] = [
   [/NAFTNA INDUSTRIJA SRBIJE|\bNIS\b|NIS PETROL/, 'NIS'],
@@ -72,19 +81,35 @@ export function shortCompany(company: string | null, shop: string | null): strin
   return long ? (shopName(shop) ?? c ?? null) : c || null;
 }
 
-/** What to call a shop in lists: the chain ("NIS"), else a short company name, else the branch. */
+/** The company's own name for lists: legal forms dropped, at most three words. Never the branch. */
+export function companyLabel(company: string | null): string | null {
+  const c = company
+    ?.split(',')[0]
+    ?.replace(LEGAL, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^[- ]+|[- ]+$/g, '');
+  if (!c) return null;
+  return c.split(' ').slice(0, 3).join(' ');
+}
+
+/**
+ * What to call a shop everywhere: one name per company, the same on every receipt of it. A known
+ * PIB first, then a known chain ("NIS"), then the company's cleaned name, last the branch.
+ */
 export const shopTitle = (r: ShopLike): string =>
-  brandOf(r.company, r.shop) ?? shortCompany(r.company, r.shop) ?? shopName(r.shop) ?? 'Receipt';
+  knownShop(r.tin) ??
+  brandOf(r.company, r.shop) ??
+  companyLabel(r.company) ??
+  shopName(r.shop) ??
+  'Receipt';
 
 /** The shop key: a known chain by its name, anyone else by tax number (same at every branch). */
-export const shopKey = (r: ShopLike & { tin: string | null }): string =>
+export const shopKey = (r: ShopLike): string =>
   brandOf(r.company, r.shop) ?? (r.tin?.trim() ? `pib:${r.tin.trim()}` : shopTitle(r));
 
 /** `[key, name]` of a receipt's shop with the user's merges and names applied. */
-export function shopOf(
-  r: ShopLike & { tin: string | null },
-  groups: readonly AliasGroup[],
-): [string, string] {
+export function shopOf(r: ShopLike, groups: readonly AliasGroup[]): [string, string] {
   const key = canonical(groups, shopKey(r));
   return [key, groupOf(groups, key)?.name ?? shopTitle(r)];
 }

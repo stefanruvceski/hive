@@ -1,6 +1,8 @@
 import { render, screen, userEvent } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
+import { Layout } from '@/constants/theme';
+
 import { ScreenHeader } from './screen-header';
 
 describe('ScreenHeader', () => {
@@ -20,5 +22,13 @@ describe('ScreenHeader', () => {
     expect(screen.getByText('Save')).toBeOnTheScreen();
     await userEvent.setup().press(screen.getByRole('button', { name: 'Back' }));
     expect(onBack).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('ScreenHeader spacing', () => {
+  it('leaves the usual section gap under the header', async () => {
+    await render(<ScreenHeader title="T" onBack={() => {}} backTestID="b" titleTestID="t" />);
+    const row = screen.getByTestId('t').parent?.parent;
+    expect(row).toHaveStyle({ paddingBottom: Layout.sectionGap });
   });
 });

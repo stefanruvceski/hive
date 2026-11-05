@@ -2,6 +2,7 @@ import type { HiveEvent, ReceiptPayloadV1 } from '@/lib/events';
 
 import {
   categoryNameFor,
+  categoryNameForEntry,
   planEvent,
   type ReceiptEntry,
   reconcile,
@@ -40,6 +41,8 @@ describe('receipt entries', () => {
           pib: null,
           shop: 'Maxi 12',
           name: 'MLEKO',
+          shopPib: null,
+          company: null,
         },
         {
           sourceRef: 'wallet:r1:1',
@@ -49,6 +52,8 @@ describe('receipt entries', () => {
           pib: null,
           shop: 'Maxi 12',
           name: 'HLEB',
+          shopPib: null,
+          company: null,
         },
       ],
     });
@@ -126,5 +131,46 @@ describe('receipt entries', () => {
     expect(categoryNameFor('Maxi 12', 'private')).toBe('Food');
     expect(categoryNameFor('Idea Centar', 'business')).toBe('Supplies');
     expect(categoryNameFor('Pekara Kod Mike', 'private')).toBe('Other');
+  });
+});
+
+describe('category of a receipt line', () => {
+  const line = (over: Partial<ReceiptEntry> = {}) => ({
+    shop: '1206824-BS Ruma 1',
+    shopPib: null,
+    company: null,
+    name: 'EVRO PREMIJUM BMB-95',
+    ...over,
+  });
+
+  it('puts fuel from a branch name Money does not know into Fuel, by the item', () => {
+    expect(categoryNameForEntry(line(), 'business')).toBe('Fuel');
+    expect(categoryNameForEntry(line({ name: 'EVRO PREMIJUM' }), 'private')).toBe('Transport');
+    expect(categoryNameForEntry(line({ name: 'Kafa' }), 'private')).toBe('Other');
+  });
+
+  it('goes by the shop PIB first, whatever the line is called', () => {
+    expect(categoryNameForEntry(line({ shopPib: '104052135', name: 'Kafa' }), 'business')).toBe(
+      'Fuel',
+    );
+  });
+
+  it('goes by the company name when the branch tells nothing', () => {
+    expect(
+      categoryNameForEntry(line({ company: 'Lidl Srbija KD', name: 'Mleko' }), 'private'),
+    ).toBe('Food');
+  });
+
+  it('treats a refund flag like a negative total, and older events without it too', () => {
+    const entries = (p: Partial<ReceiptPayloadV1>) =>
+      planEvent(scanned(payload({ total: 30000, ...p }))).entries.map((e) => e.amountMinor);
+    expect(entries({ refund: true })).toEqual([-20000, -10000]);
+    expect(entries({ total: -30000 })).toEqual([-20000, -10000]);
+    expect(entries({})).toEqual([20000, 10000]);
+  });
+
+  it('carries the new payload fields into the entry, null for older events', () => {
+    const [e] = planEvent(scanned(payload({ shopPib: '104052135', company: 'NIS a.d.' }))).entries;
+    expect(e).toMatchObject({ shopPib: '104052135', company: 'NIS a.d.' });
   });
 });

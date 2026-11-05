@@ -85,6 +85,14 @@ export const priceBookQuery = () =>
 
 export const usePriceBook = () => useQuery(priceBookQuery());
 
+/** The names and merges the user gave shops; the receipts list and screen use them (one name per company). */
+export const shopGroupsQuery = () =>
+  queryOptions({
+    queryKey: [...priceKeys.all(), 'shop-groups'] as const,
+    queryFn: async (): Promise<AliasGroup[]> => readGroups(walletShopAliases),
+  });
+export const useShopGroups = () => useQuery(shopGroupsQuery());
+
 type Table = typeof walletProductAliases | typeof walletShopAliases;
 
 function save(table: Table, groups: readonly AliasGroup[]) {

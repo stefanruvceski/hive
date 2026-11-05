@@ -1,4 +1,6 @@
+import type { AliasGroup } from './aliases';
 import { latin } from './fiscal-parse';
+import { shopOf } from './shop-brands';
 
 // Totals, grouping and search for the Receipts tab (pure, unit tested). Ported from hive-poc
 // ReceiptStats.kt. Money is in minor units (para); `time` is Belgrade local time.
@@ -23,7 +25,7 @@ export type StatsReceipt = {
 export type Fuel = { liters: number; pricePerLiter: number; amount: number; name: string };
 
 const FUEL =
-  /\b(DIZEL|DIESEL|BENZIN|BMB|TNG|LPG|AUTOGAS|AUTO GAS|CNG|GORIVO|EVRO ?(DIZEL|PREMIUM|95|98|100)|EURO ?(DIESEL|95|98|100)|G-DRIVE|Q ?MAX|MAXXMOTION|ULTIMATE|V-POWER)\b/;
+  /\b(DIZEL|DIESEL|BENZIN|BMB|TNG|LPG|AUTOGAS|AUTO GAS|CNG|GORIVO|EVRO ?(DIZEL|PREMIUM|PREMIJUM|95|98|100)|EURO ?(DIESEL|95|98|100)|G-DRIVE|Q ?MAX|MAXXMOTION|ULTIMATE|V-POWER)\b/;
 
 export const isFuel = (item: StatsItem) => FUEL.test((latin(item.name) ?? item.name).toUpperCase());
 
@@ -75,11 +77,16 @@ export const titleOf = (r: Pick<StatsReceipt, 'shop' | 'company'>) =>
   r.shop ?? r.company ?? 'Receipt';
 
 /** Free-text search over shop, company, address, items and note; Cyrillic input matches Latin text. */
-export function searchReceipts<T extends StatsReceipt>(rs: readonly T[], query: string): T[] {
+export function searchReceipts<T extends StatsReceipt & { tin?: string | null }>(
+  rs: readonly T[],
+  query: string,
+  groups: readonly AliasGroup[] = [],
+): T[] {
   const q = (latin(query) ?? query).trim().toLowerCase();
   if (q === '') return [...rs];
   return rs.filter((r) =>
     [
+      shopOf(r, groups)[1],
       titleOf(r),
       r.shop,
       r.company,

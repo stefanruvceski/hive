@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,6 +19,7 @@ import { rememberDeletedCard, useDeletedCard } from '../../data/deleted-card';
 import { rememberDeletedReceipt, useDeletedReceipt } from '../../data/deleted-receipt';
 import { type WalletCard, useCards, useRestoreCard } from '../../data/queries';
 import { useRestoreReceipt } from '../../data/receipt-queries';
+import { readable } from '../../domain/barcodes';
 import { cardLook, maskedNumber } from '../../domain/card-brands';
 import { cardColor } from '../../domain/card-colors';
 import { CardFace } from '../components/card-face';
@@ -34,7 +35,12 @@ const tabs = [
 
 /** Wallet's entry screen: loyalty cards and fiscal receipts, under the same header as the detail screens. */
 export function WalletHome() {
-  const [tab, setTab] = useState<Tab>('cards');
+  const params = useLocalSearchParams<{ tab?: string; pib?: string; scan?: string }>();
+  const [tab, setTab] = useState<Tab>(params.tab === 'receipts' ? 'receipts' : 'cards');
+  // "scan=1" opens the camera at once (from a card: scan the loyalty card, then the receipt).
+  const [scanning, setScanning] = useState(params.scan === '1');
+  // The company whose receipts are shown (from the receipt screen); cleared with "Show all".
+  const [pib, setPib] = useState<string | undefined>(params.pib);
   const deletedCard = useDeletedCard();
   const deletedReceipt = useDeletedReceipt();
   const restoreCard = useRestoreCard();
@@ -56,7 +62,18 @@ export function WalletHome() {
                   onPress={addCard}
                   testID="wallet-add"
                 />
-              ) : undefined
+              ) : (
+                <GlassButton
+                  icon={{
+                    ios: 'qrcode.viewfinder',
+                    android: 'qr_code_scanner',
+                    web: 'qr_code_scanner',
+                  }}
+                  label="Scan receipt"
+                  onPress={() => setScanning((on) => !on)}
+                  testID="wallet-receipt-scan"
+                />
+              )
             }
           />
           <SegmentedControl
@@ -67,7 +84,16 @@ export function WalletHome() {
             testID="wallet-tab"
           />
         </View>
-        {tab === 'cards' ? <WalletContent /> : <ReceiptsTab />}
+        {tab === 'cards' ? (
+          <WalletContent />
+        ) : (
+          <ReceiptsTab
+            scanning={scanning}
+            onScanningChange={setScanning}
+            pib={pib}
+            onClearPib={() => setPib(undefined)}
+          />
+        )}
       </SafeAreaView>
       {deletedCard ? (
         <UndoBar
@@ -143,7 +169,7 @@ function CardTile({ card }: { card: WalletCard }) {
       <CardFace
         look={cardLook(card.name, cardColor(card.color, scheme))}
         name={card.name}
-        detail={`${card.pinned ? '★ ' : ''}${maskedNumber(card.number)}`.trim()}
+        detail={`${card.pinned ? '★ ' : ''}${readable(card.number) ? maskedNumber(card.number) : ''}`.trim()}
       />
     </Pressable>
   );

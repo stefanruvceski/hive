@@ -4,8 +4,10 @@ import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
+import { GlassButton } from '@/components/ui/glass-button';
 import { GlassSurface } from '@/components/ui/glass-surface';
 import { LoadingState } from '@/components/ui/loading-state';
+import { SaveButton } from '@/components/ui/save-button';
 import { SectionLabel } from '@/components/ui/section-label';
 import { Layout, Spacing } from '@/constants/theme';
 
@@ -43,45 +45,22 @@ export function WalletProduct({ productKey }: { productKey: string }) {
     body = (
       <>
         {name === null ? (
-          <View style={styles.actions}>
-            <TextButton
-              label="Rename"
-              onPress={() => setName(product.name)}
-              testID="wallet-product-rename-open"
-            />
-            {product.named ? (
+          product.named ? (
+            <View style={styles.actions}>
               <TextButton
                 label="Use the printed name"
                 onPress={() => rename.mutate({ key: product.key, name: null })}
                 testID="wallet-product-reset-name"
               />
-            ) : null}
-          </View>
-        ) : (
-          <>
-            <TextField
-              label="Product name"
-              value={name}
-              onChangeText={setName}
-              testID="wallet-product-name"
-            />
-            <View style={styles.actions}>
-              <TextButton
-                label="Cancel"
-                onPress={() => setName(null)}
-                testID="wallet-product-rename-cancel"
-              />
-              <TextButton
-                label="Save name"
-                disabled={name.trim() === '' || name.trim() === product.name}
-                onPress={() => {
-                  rename.mutate({ key: product.key, name });
-                  setName(null);
-                }}
-                testID="wallet-product-rename"
-              />
             </View>
-          </>
+          ) : null
+        ) : (
+          <TextField
+            label="Product name"
+            value={name}
+            onChangeText={setName}
+            testID="wallet-product-name"
+          />
         )}
 
         <SectionLabel testID="wallet-product-shops-label">By shop</SectionLabel>
@@ -168,7 +147,38 @@ export function WalletProduct({ productKey }: { productKey: string }) {
   }
 
   return (
-    <WalletScreen id="wallet-product" title={product?.name ?? 'Product'}>
+    <WalletScreen
+      id="wallet-product"
+      title={product?.name ?? 'Product'}
+      trailing={
+        product ? (
+          name === null ? (
+            <GlassButton
+              icon={{ ios: 'pencil', android: 'edit', web: 'edit' }}
+              label="Rename"
+              onPress={() => setName(product.name)}
+              testID="wallet-product-rename-open"
+            />
+          ) : (
+            <>
+              <GlassButton
+                icon={{ ios: 'xmark', android: 'close', web: 'close' }}
+                label="Cancel"
+                onPress={() => setName(null)}
+                testID="wallet-product-rename-cancel"
+              />
+              <SaveButton
+                disabled={name.trim() === '' || name.trim() === product.name}
+                onPress={() => {
+                  rename.mutate({ key: product.key, name });
+                  setName(null);
+                }}
+                testID="wallet-product-rename"
+              />
+            </>
+          )
+        ) : null
+      }>
       {body}
     </WalletScreen>
   );

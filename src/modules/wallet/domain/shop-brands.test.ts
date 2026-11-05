@@ -36,3 +36,32 @@ describe('shop-brands', () => {
     expect(shopOf(r({ tin: '202' }), g)).toEqual(['pib:101', 'Mike']);
   });
 });
+
+describe('one name per company', () => {
+  const nis = (shop: string, company = 'Naftna industrija Srbije A.D. Novi Sad') => ({
+    company,
+    shop,
+    tin: '104052135',
+  });
+
+  it('names every NIS receipt NIS, whatever the branch or the printed company', () => {
+    expect(shopTitle(nis('1206824-BS Ruma 1'))).toBe('NIS');
+    expect(shopTitle(nis('1234 - BS BEOGRAD 5', 'Something else d.o.o.'))).toBe('NIS');
+    expect(shopTitle({ company: null, shop: null, tin: '104052135' })).toBe('NIS');
+  });
+
+  it('falls back to the cleaned company name, not the branch', () => {
+    const a = {
+      company: 'Pekara Zlatni klas D.O.O. Ruma',
+      shop: '1-Pekara Ruma 1',
+      tin: '100000001',
+    };
+    const b = { ...a, shop: '2-Pekara Sabac 2' };
+    expect(shopTitle(a)).toBe('Pekara Zlatni klas');
+    expect(shopTitle(b)).toBe(shopTitle(a));
+  });
+
+  it('uses the branch only when nothing else is known', () => {
+    expect(shopTitle({ company: null, shop: '77 - Kiosk Sabac', tin: null })).toBe('Kiosk Sabac');
+  });
+});

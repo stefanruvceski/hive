@@ -1,13 +1,12 @@
 import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
+import { GlassButton } from '@/components/ui/glass-button';
 import { LoadingState } from '@/components/ui/loading-state';
-import { PrimaryButton } from '@/components/ui/primary-button';
-import { Spacing } from '@/constants/theme';
 import { useThemeName } from '@/hooks/use-theme';
 
 import { useFullBrightness } from './use-full-brightness';
@@ -59,7 +58,41 @@ export function WalletCardScreen({ id }: { id: string }) {
   if (data) {
     const format: CardFormat = isCardFormat(data.format) ? data.format : 'CODE_128';
     return (
-      <WalletScreen id="wallet-card" title={data.name}>
+      <WalletScreen
+        id="wallet-card"
+        title={data.name}
+        trailing={
+          <>
+            <GlassButton
+              icon={
+                data.pinned
+                  ? { ios: 'star.fill', android: 'star', web: 'star' }
+                  : { ios: 'star', android: 'star_border', web: 'star_border' }
+              }
+              label={data.pinned ? 'Unpin' : 'Pin to top'}
+              onPress={() => pin.mutate({ id, pinned: !data.pinned })}
+              testID="wallet-card-pin"
+            />
+            <GlassButton
+              icon={{ ios: 'trash', android: 'delete', web: 'delete' }}
+              label="Delete"
+              onPress={() => confirmDelete(data.name)}
+              testID="wallet-card-delete"
+            />
+            <GlassButton
+              icon={{
+                ios: 'qrcode.viewfinder',
+                android: 'qr_code_scanner',
+                web: 'qr_code_scanner',
+              }}
+              label="Scan a receipt"
+              onPress={() =>
+                router.push({ pathname: '/wallet', params: { tab: 'receipts', scan: '1' } })
+              }
+              testID="wallet-card-scan-receipt"
+            />
+          </>
+        }>
         <CardFace
           name={data.name}
           look={cardLook(data.name, cardColor(data.color, scheme))}
@@ -73,18 +106,6 @@ export function WalletCardScreen({ id }: { id: string }) {
           </ThemedText>
         ) : null}
         {data.note ? <ThemedText type="hint">{data.note}</ThemedText> : null}
-        <View style={styles.actions}>
-          <PrimaryButton
-            label={data.pinned ? 'Unpin' : 'Pin to top'}
-            onPress={() => pin.mutate({ id, pinned: !data.pinned })}
-            testID="wallet-card-pin"
-          />
-          <PrimaryButton
-            label="Delete"
-            onPress={() => confirmDelete(data.name)}
-            testID="wallet-card-delete"
-          />
-        </View>
       </WalletScreen>
     );
   }
@@ -99,5 +120,4 @@ export function WalletCardScreen({ id }: { id: string }) {
 
 const styles = StyleSheet.create({
   number: { textAlign: 'center' },
-  actions: { flexDirection: 'row', gap: Spacing.three, flexWrap: 'wrap' },
 });

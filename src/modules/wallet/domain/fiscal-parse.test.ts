@@ -1,5 +1,6 @@
 import {
   buyerTinIn,
+  cleanItemName,
   companyTin,
   emptyReceipt,
   latin,
@@ -8,6 +9,7 @@ import {
   parseJournal,
   parseReceipt,
   receiptKey,
+  unitLabel,
   verificationUrl,
 } from './fiscal-parse';
 
@@ -165,5 +167,21 @@ describe('fiscal receipts', () => {
     expect(r.buyerTin).toBeNull();
     const other = { ...base, ownerManual: true, buyerTin: '100000001' };
     expect(parseJournal(other, fuelJournal).buyerTin).toBe('100000001');
+  });
+});
+
+describe('item names and units', () => {
+  it('drops the product code printed after the name', () => {
+    expect(cleanItemName('EVRO PREMIJUM BMB-95,2710124500')).toBe('EVRO PREMIJUM BMB-95');
+    expect(cleanItemName('Voda Rosa 1,5l')).toBe('Voda Rosa 1,5l');
+    expect(cleanItemName('Hleb 500g, 12')).toBe('Hleb 500g, 12');
+    expect(cleanItemName(',2710124500')).toBe(',2710124500');
+  });
+
+  it('writes litres as L', () => {
+    expect(unitLabel('LIT')).toBe('L');
+    expect(unitLabel('ltr')).toBe('L');
+    expect(unitLabel('KOM')).toBe('KOM');
+    expect(unitLabel(null)).toBeNull();
   });
 });

@@ -1,4 +1,4 @@
-// Pure release rules for a swipeable habit row (iOS list behaviour): drag a little and let go to
+// Pure release rules for a swipeable list row (iOS list behaviour): drag a little and let go to
 // open the buttons, drag all the way to run the outer one. No React. Tested in swipe.test.ts.
 
 export type SwipeSide = 'leading' | 'trailing';

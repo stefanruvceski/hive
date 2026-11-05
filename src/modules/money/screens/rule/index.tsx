@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 
 import { ThemedText } from '@/components/themed-text';
-import { PrimaryButton } from '@/components/ui/primary-button';
+import { SaveButton } from '@/components/ui/save-button';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { useToday } from '@/hooks/use-today';
 
@@ -122,15 +122,7 @@ function RuleForm({
     <MoneyScreen
       id="money-rule"
       title={title}
-      trailing={
-        <PrimaryButton
-          label="Save"
-          size="compact"
-          onPress={submit}
-          disabled={save.isPending}
-          testID="money-rule-save"
-        />
-      }>
+      trailing={<SaveButton onPress={submit} disabled={save.isPending} testID="money-rule-save" />}>
       <SegmentedControl
         options={kindOptions}
         value={kind}

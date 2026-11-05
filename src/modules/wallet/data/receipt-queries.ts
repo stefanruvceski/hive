@@ -197,7 +197,7 @@ function useInvalidating<TVars, TResult>(fn: (vars: TVars) => TResult) {
   });
 }
 
-/** The note and the star: not part of what other modules read. */
+/** The note: not part of what other modules read. */
 export const useEditReceiptNote = () =>
   useInvalidating(({ id, note }: { id: string; note: string }) => {
     getDb()
@@ -205,11 +205,6 @@ export const useEditReceiptNote = () =>
       .set({ note: note.trim() })
       .where(eq(walletReceipts.id, id))
       .run();
-  });
-
-export const useStarReceipt = () =>
-  useInvalidating(({ id, starred }: { id: string; starred: boolean }) => {
-    getDb().update(walletReceipts).set({ starred }).where(eq(walletReceipts.id, id)).run();
   });
 
 /** Who the receipt belongs to: a PIB, or null for personal. The choice survives a refetch. */
@@ -270,6 +265,23 @@ export const useEditReceiptItem = () =>
       });
     },
   );
+
+/** Takes one line off a receipt; consumers hear the receipt again without it. */
+export const useDeleteReceiptItem = () =>
+  useInvalidating(({ receiptId, itemId }: { receiptId: string; itemId: string }) => {
+    getDb().transaction((tx) => {
+      tx.delete(walletReceiptItems).where(eq(walletReceiptItems.id, itemId)).run();
+      const row = tx.select().from(walletReceipts).where(eq(walletReceipts.id, receiptId)).get();
+      if (row?.status !== 'ok') return;
+      const items = tx
+        .select()
+        .from(walletReceiptItems)
+        .where(eq(walletReceiptItems.receiptId, receiptId))
+        .orderBy(asc(walletReceiptItems.position))
+        .all();
+      publish(tx, { type: 'receipt.updated', payload: eventFor(row, items.map(toStored)) });
+    });
+  });
 
 /** Deletes the receipt and hands it back (with its items) so the caller can offer Undo. */
 export const useDeleteReceipt = () =>

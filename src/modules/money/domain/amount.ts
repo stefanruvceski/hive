@@ -31,6 +31,18 @@ export function formatMinor(minor: number, currency: string = baseCurrency): str
   return `${sign}${whole}.${String(abs % 100).padStart(2, '0')} ${currency}`;
 }
 
+/**
+ * An entry's own amount: like `formatMinor`, but dinars keep their para when there are any
+ * ("3,000.61 RSD"), so a receipt's 3.000,61 is not shown as 3,001. Totals stay whole.
+ */
+export function formatExact(minor: number, currency: string = baseCurrency): string {
+  if (currency !== baseCurrency || minor % 100 === 0) return formatMinor(minor, currency);
+  const sign = minor < 0 ? '−' : '';
+  const abs = Math.abs(minor);
+  const whole = String(Math.floor(abs / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `${sign}${whole}.${String(abs % 100).padStart(2, '0')} ${currency}`;
+}
+
 /** Minor units as the text a field shows: 1250 → "12.50". */
 export const minorToText = (minor: number): string => (minor / 100).toFixed(2);
 

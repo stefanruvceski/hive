@@ -36,7 +36,9 @@ describe('HabitsArchived', () => {
     const user = userEvent.setup();
 
     expect(screen.getByText('Run')).toBeOnTheScreen();
-    await user.press(screen.getByTestId('habits-archived-restore-run'));
+    await user.press(
+      screen.getByTestId('habits-archived-swipe-run-edit', { includeHiddenElements: true }),
+    );
 
     expect(restore).toHaveBeenCalledWith('run', expect.anything());
   });
@@ -46,7 +48,9 @@ describe('HabitsArchived', () => {
     await renderArchived();
     const user = userEvent.setup();
 
-    await user.press(screen.getByTestId('habits-archived-delete-run'));
+    await user.press(
+      screen.getByTestId('habits-archived-swipe-run-archive', { includeHiddenElements: true }),
+    );
     expect(remove).not.toHaveBeenCalled();
     expect(alert.mock.calls[0]?.[1]).toMatch(/history/i);
     alert.mock.calls[0]?.[2]?.find((b) => b.text === 'Delete')?.onPress?.();
@@ -60,7 +64,9 @@ describe('HabitsArchived', () => {
     await renderArchived();
     const user = userEvent.setup();
 
-    await user.press(screen.getByTestId('habits-archived-restore-run'));
+    await user.press(
+      screen.getByTestId('habits-archived-swipe-run-edit', { includeHiddenElements: true }),
+    );
 
     expect(alert).toHaveBeenCalledWith(
       "Couldn't restore",

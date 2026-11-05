@@ -3,29 +3,49 @@ import { router } from 'expo-router';
 import { Alert } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { useBusinesses } from '@/hooks/use-businesses';
+
 import { WalletReceiptScreen } from './index';
+import { useShopGroups } from '../../data/price-queries';
 import {
   useDeleteReceipt,
+  useDeleteReceiptItem,
   useEditReceiptItem,
   useEditReceiptNote,
   useReceipt,
   useRetryReceipt,
   useSetReceiptOwner,
-  useStarReceipt,
 } from '../../data/receipt-queries';
 import { loaded, receipt } from '../test-data';
 
 jest.mock('../../data/receipt-queries');
-jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
+jest.mock('../../data/price-queries');
+jest.mock('@/hooks/use-businesses', () => ({
+  ...jest.requireActual('@/hooks/use-businesses'),
+  useBusinesses: jest.fn(),
+}));
+jest.mock('expo-router', () => ({
+  router: { push: jest.fn(), back: jest.fn() },
+  useLocalSearchParams: () => ({}),
+}));
 
 const hooks = {
-  star: jest.fn(),
   note: jest.fn(),
   retry: jest.fn(),
   remove: jest.fn(),
   owner: jest.fn(),
   item: jest.fn(),
+  removeItem: jest.fn(),
 };
+const firm = {
+  id: 'b1',
+  name: 'Moja firma',
+  pib: '104052135',
+  archivedAt: null,
+  createdAt: '2026-01-01',
+};
+// A swipe cannot be performed in Jest, so the row's buttons are pressed while still closed.
+const hidden = { includeHiddenElements: true };
 const frame = {
   frame: { x: 0, y: 0, width: 390, height: 844 },
   insets: { top: 0, left: 0, right: 0, bottom: 0 },
@@ -39,12 +59,14 @@ const renderScreen = () =>
 
 beforeEach(() => {
   jest.clearAllMocks();
-  jest.mocked(useStarReceipt).mockReturnValue({ mutate: hooks.star } as never);
+  jest.mocked(useShopGroups).mockReturnValue(loaded([]));
+  jest.mocked(useBusinesses).mockReturnValue(loaded([firm]));
   jest.mocked(useEditReceiptNote).mockReturnValue({ mutate: hooks.note } as never);
   jest.mocked(useRetryReceipt).mockReturnValue({ mutate: hooks.retry, isPending: false } as never);
   jest.mocked(useDeleteReceipt).mockReturnValue({ mutate: hooks.remove } as never);
   jest.mocked(useSetReceiptOwner).mockReturnValue({ mutate: hooks.owner } as never);
   jest.mocked(useEditReceiptItem).mockReturnValue({ mutate: hooks.item } as never);
+  jest.mocked(useDeleteReceiptItem).mockReturnValue({ mutate: hooks.removeItem } as never);
 });
 
 describe('WalletReceiptScreen', () => {
@@ -96,26 +118,99 @@ describe('WalletReceiptScreen', () => {
     expect(screen.getByText(/doesn't know this receipt/)).toBeOnTheScreen();
   });
 
-  it('changes the owner to a company by PIB, and back to personal', async () => {
-    jest.mocked(useReceipt).mockReturnValue(loaded(receipt('r1')));
-    await renderScreen();
-    const user = userEvent.setup();
-
-    await user.press(screen.getByTestId('wallet-receipt-owner-company'));
-    expect(screen.getByTestId('wallet-receipt-owner-save')).toBeDisabled();
-    await user.type(screen.getByTestId('wallet-receipt-owner-pib'), '104052135');
-    await user.press(screen.getByTestId('wallet-receipt-owner-save'));
-    expect(hooks.owner).toHaveBeenCalledWith({ id: 'r1', buyerTin: '104052135' });
-  });
-
-  it('keeps the company owner and can make it personal', async () => {
+  it('marks the current owner in the pills and offers Save only for a change', async () => {
     jest.mocked(useReceipt).mockReturnValue(loaded(receipt('r1', { buyerTin: '104052135' })));
     await renderScreen();
     const user = userEvent.setup();
 
+    expect(screen.getByTestId('wallet-receipt-owner-pib:104052135')).toBeChecked();
+    expect(screen.queryByText('Change owner')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('wallet-receipt-owner-save')).not.toBeOnTheScreen();
+
     await user.press(screen.getByTestId('wallet-receipt-owner-personal'));
     await user.press(screen.getByTestId('wallet-receipt-owner-save'));
     expect(hooks.owner).toHaveBeenCalledWith({ id: 'r1', buyerTin: null });
+  });
+
+  it('chooses a known business without typing its PIB', async () => {
+    jest.mocked(useReceipt).mockReturnValue(loaded(receipt('r1')));
+    await renderScreen();
+    const user = userEvent.setup();
+
+    expect(screen.getByTestId('wallet-receipt-owner-personal')).toBeChecked();
+    await user.press(screen.getByTestId('wallet-receipt-owner-pib:104052135'));
+    await user.press(screen.getByTestId('wallet-receipt-owner-save'));
+    expect(hooks.owner).toHaveBeenCalledWith({ id: 'r1', buyerTin: '104052135' });
+  });
+
+  it('takes a new PIB as the fallback and says why it cannot be saved yet', async () => {
+    jest.mocked(useReceipt).mockReturnValue(loaded(receipt('r1')));
+    await renderScreen();
+    const user = userEvent.setup();
+
+    await user.press(screen.getByTestId('wallet-receipt-owner-other'));
+    await user.type(screen.getByTestId('wallet-receipt-owner-pib'), '1040');
+    expect(screen.getByTestId('wallet-receipt-owner-problem')).toHaveTextContent(/9 digits/);
+    expect(screen.queryByTestId('wallet-receipt-owner-save')).not.toBeOnTheScreen();
+    await user.type(screen.getByTestId('wallet-receipt-owner-pib'), '52135');
+    await user.press(screen.getByTestId('wallet-receipt-owner-save'));
+    expect(hooks.owner).toHaveBeenCalledWith({ id: 'r1', buyerTin: '104052135' });
+  });
+
+  it('shows a buyer PIB no business has as it is, without asking to save a business', async () => {
+    jest.mocked(useReceipt).mockReturnValue(loaded(receipt('r1', { buyerTin: '100000001' })));
+    await renderScreen();
+
+    expect(screen.getByTestId('wallet-receipt-owner-other')).toBeChecked();
+    expect(screen.getByTestId('wallet-receipt-owner-pib').props.value).toBe('100000001');
+    expect(screen.queryByTestId('wallet-receipt-owner-save')).not.toBeOnTheScreen();
+  });
+
+  it('shows only the company, date, total and items; the rest is under "see as printed"', async () => {
+    jest.mocked(useReceipt).mockReturnValue(loaded(receipt('r1')));
+    await renderScreen();
+    const user = userEvent.setup();
+
+    expect(screen.getByTestId('wallet-receipt-date')).toHaveTextContent('2026-10-25 14:03');
+    for (const hidden of ['Address', 'Invoice', 'Payment', 'Shop PIB']) {
+      expect(screen.queryByText(hidden)).not.toBeOnTheScreen();
+    }
+    expect(screen.queryByTestId('wallet-receipt-star')).not.toBeOnTheScreen();
+    await user.press(screen.getByTestId('wallet-receipt-printed-toggle'));
+    expect(screen.getByText('Invoice')).toBeOnTheScreen();
+    expect(screen.getByText('AB-1')).toBeOnTheScreen();
+    expect(screen.getByText('Shop PIB')).toBeOnTheScreen();
+  });
+
+  it('names the company uniformly and opens its receipts', async () => {
+    jest
+      .mocked(useReceipt)
+      .mockReturnValue(
+        loaded(receipt('r1', { tin: '104052135', company: 'X d.o.o.', shop: '1206824-BS Ruma 1' })),
+      );
+    await renderScreen();
+
+    expect(screen.getByTestId('wallet-receipt-title')).toHaveTextContent('NIS');
+    await userEvent.setup().press(screen.getByTestId('wallet-receipt-company'));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/wallet',
+      params: { tab: 'receipts', pib: '104052135' },
+    });
+  });
+
+  it('cleans the product code and writes litres as L', async () => {
+    const base = receipt('r1');
+    jest.mocked(useReceipt).mockReturnValue(
+      loaded(
+        receipt('r1', {
+          items: [{ ...base.items[0]!, name: 'EVRO PREMIJUM BMB-95,2710124500', unit: 'LIT' }],
+        }),
+      ),
+    );
+    await renderScreen();
+
+    expect(screen.getByText('EVRO PREMIJUM BMB-95')).toBeOnTheScreen();
+    expect(screen.getByText(/40 L × 205,00/)).toBeOnTheScreen();
   });
 
   it('corrects a misread price and quantity', async () => {
@@ -123,7 +218,7 @@ describe('WalletReceiptScreen', () => {
     await renderScreen();
     const user = userEvent.setup();
 
-    await user.press(screen.getByTestId('wallet-receipt-item-edit-r1-i1'));
+    await user.press(screen.getByTestId('wallet-receipt-item-r1-i1-edit', hidden));
     await user.clear(screen.getByTestId('wallet-receipt-item-qty-r1-i1'));
     await user.type(screen.getByTestId('wallet-receipt-item-qty-r1-i1'), '38,5');
     await user.clear(screen.getByTestId('wallet-receipt-item-price-r1-i1'));
@@ -136,13 +231,21 @@ describe('WalletReceiptScreen', () => {
     );
   });
 
-  it('stars, notes and shows it as printed', async () => {
+  it('deletes an item only after confirmation', async () => {
+    jest.mocked(useReceipt).mockReturnValue(loaded(receipt('r1')));
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+    await renderScreen();
+    await userEvent.setup().press(screen.getByTestId('wallet-receipt-item-r1-i1-archive', hidden));
+
+    expect(hooks.removeItem).not.toHaveBeenCalled();
+    alert.mock.calls[0]?.[2]?.find((b) => b.text === 'Delete')?.onPress?.();
+    expect(hooks.removeItem).toHaveBeenCalledWith({ receiptId: 'r1', itemId: 'r1-i1' });
+  });
+
+  it('notes and shows it as printed', async () => {
     jest.mocked(useReceipt).mockReturnValue(loaded(receipt('r1')));
     await renderScreen();
     const user = userEvent.setup();
-
-    await user.press(screen.getByTestId('wallet-receipt-star'));
-    expect(hooks.star).toHaveBeenCalledWith({ id: 'r1', starred: true });
 
     await user.type(screen.getByTestId('wallet-receipt-note'), 'Trip');
     await fireEvent(screen.getByTestId('wallet-receipt-note'), 'endEditing');

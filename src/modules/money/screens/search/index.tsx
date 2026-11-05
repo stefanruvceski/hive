@@ -10,7 +10,7 @@ import { useToday } from '@/hooks/use-today';
 import { shareCsv } from '../../data/csv-file';
 import { type Entry, useCategories, useEntries, useItems } from '../../data/queries';
 import type { EntryKind } from '../../data/schema';
-import { formatMinor } from '../../domain/amount';
+import { formatExact } from '../../domain/amount';
 import { isIsoDate } from '../../domain/dates';
 import { categoryLabel, inView } from '../../domain/owners';
 import { emptyFilter, type Filter, filterEntries, isFiltering, toCsv } from '../../domain/search';
@@ -187,7 +187,7 @@ function SearchForm({
                   type="footnote"
                   themeColor="textTertiary">{`${entry.date}${entry.note ? ` · ${entry.note}` : ''}`}</ThemedText>
               </View>
-              <ThemedText>{formatMinor(entry.amountMinor, entry.currency)}</ThemedText>
+              <ThemedText>{formatExact(entry.amountMinor, entry.currency)}</ThemedText>
             </Pressable>
           ))
         )}

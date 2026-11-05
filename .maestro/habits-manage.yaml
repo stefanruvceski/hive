@@ -50,8 +50,12 @@ tags:
 - tapOn:
     id: 'habits-archived-link'
 - assertVisible: 'Read 10 pages'
+- swipe:
+    from:
+      id: 'habits-archived-item-.*'
+    direction: RIGHT
 - tapOn:
-    id: 'habits-archived-restore-.*'
+    id: 'habits-archived-swipe-.*-edit'
 - assertVisible:
     id: 'habits-archived-empty'
 - tapOn:
@@ -66,8 +70,12 @@ tags:
     id: 'habits-swipe-.*-archive'
 - tapOn:
     id: 'habits-archived-link'
+- swipe:
+    from:
+      id: 'habits-archived-item-.*'
+    direction: LEFT
 - tapOn:
-    id: 'habits-archived-delete-.*'
+    id: 'habits-archived-swipe-.*-archive'
 - tapOn: 'Delete'
 - assertVisible:
     id: 'habits-archived-empty'

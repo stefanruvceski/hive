@@ -59,3 +59,16 @@ export const coreEventCursor = sqliteTable('core_event_cursor', {
   consumer: text('consumer').primaryKey(),
   lastEventId: integer('last_event_id').notNull(),
 });
+
+/**
+ * The businesses the user runs, shared by every module (ADR 0004). Money owners, Wallet receipts
+ * and their buyer all point at the same row; the PIB (Serbian tax number) tells two apart.
+ */
+export const coreBusinesses = sqliteTable('core_businesses', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  pib: text('pib').notNull().unique(),
+  /** Hidden from new entries but kept on old ones. */
+  archivedAt: text('archived_at'),
+  createdAt: text('created_at').notNull(),
+});

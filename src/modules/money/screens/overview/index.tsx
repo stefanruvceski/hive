@@ -10,7 +10,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useToday } from '@/hooks/use-today';
 
 import { useCategories, useEntries, useItems } from '../../data/queries';
-import { formatMinor } from '../../domain/amount';
+import { formatExact, formatMinor } from '../../domain/amount';
 import { monthLabel, monthOf, shiftMonth } from '../../domain/dates';
 import {
   axisLabel,
@@ -162,7 +162,7 @@ function MonthView({
         {summary.biggest.map((entry) => (
           <View key={entry.id} style={styles.barTop}>
             <ThemedText>{names.get(entry.categoryId ?? '') ?? 'Split'}</ThemedText>
-            <ThemedText>{formatMinor(entry.amountRsdMinor)}</ThemedText>
+            <ThemedText>{formatExact(entry.amountRsdMinor)}</ThemedText>
           </View>
         ))}
       </Group>

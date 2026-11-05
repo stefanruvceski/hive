@@ -12,6 +12,8 @@ type Props = {
   /** Accessible name; the button has no visible text. */
   label: string;
   onPress?: () => void;
+  /** Dimmed and inert, but still announced (a Save on an invalid form). */
+  disabled?: boolean;
   testID: string;
 };
 
@@ -19,7 +21,7 @@ type Props = {
  * Round glass control (Settings, Close, Back), 44 pt. Liquid Glass on iOS 26+, otherwise
  * `GlassSurface`. Pressed feedback fades the glyph only — a faded parent breaks the blur on iOS.
  */
-export function GlassButton({ icon, label, onPress, testID }: Props) {
+export function GlassButton({ icon, label, onPress, disabled, testID }: Props) {
   const theme = useTheme();
 
   return (
@@ -27,8 +29,9 @@ export function GlassButton({ icon, label, onPress, testID }: Props) {
       role="button"
       aria-label={label}
       testID={testID}
-      onPress={onPress}
-      style={styles.button}>
+      aria-disabled={disabled}
+      onPress={disabled ? undefined : onPress}
+      style={[styles.button, disabled && styles.disabled]}>
       {({ pressed }) => {
         const glyph = (
           <SymbolView
@@ -66,6 +69,9 @@ const styles = StyleSheet.create({
   },
   round: {
     borderRadius: Layout.control.size / 2,
+  },
+  disabled: {
+    opacity: 0.4,
   },
   pressed: {
     opacity: 0.5,

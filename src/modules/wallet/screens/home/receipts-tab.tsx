@@ -7,23 +7,19 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
 import { GlassSurface } from '@/components/ui/glass-surface';
 import { LoadingState } from '@/components/ui/loading-state';
-import { PrimaryButton } from '@/components/ui/primary-button';
 import { Layout, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+import { useShopGroups } from '../../data/price-queries';
 import {
   type Receipt,
   useAddReceipt,
   useReceipts,
   useSyncReceipts,
 } from '../../data/receipt-queries';
-import {
-  byMonth,
-  formatAmount,
-  receiptDate,
-  searchReceipts,
-  titleOf,
-} from '../../domain/receipt-stats';
+import type { AliasGroup } from '../../domain/aliases';
+import { byMonth, formatAmount, receiptDate, searchReceipts } from '../../domain/receipt-stats';
+import { shopOf } from '../../domain/shop-brands';
 import { CardScanner } from '../components/card-scanner';
 import { TextButton } from '../components/text-button';
 import { rowLines, useStackedRow } from '../components/use-stacked-row';
@@ -54,16 +50,27 @@ function rowsOf(receipts: readonly Receipt[]): Row[] {
   ]);
 }
 
-/** The Receipts tab: scan a fiscal receipt's QR code, search, star and open receipts. */
-export function ReceiptsTab() {
+type TabProps = {
+  /** The camera is open (the scan button is in the screen header). */
+  scanning?: boolean;
+  onScanningChange?: (scanning: boolean) => void;
+  /** Only the receipts of the company with this shop PIB. */
+  pib?: string;
+  onClearPib?: () => void;
+};
+
+/** The Receipts tab: search and open receipts; the scan button is in the header. */
+export function ReceiptsTab({ scanning = false, onScanningChange, pib, onClearPib }: TabProps) {
   const theme = useTheme();
   const { data, error, isError, refetch } = useReceipts();
+  const groups = useShopGroups().data ?? [];
   const { refresh, isRefreshing } = useSyncReceipts();
   const add = useAddReceipt();
-  const [scanning, setScanning] = useState(false);
   const [query, setQuery] = useState('');
-  const [starredOnly, setStarredOnly] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const first = pib ? data?.find((r) => r.tin?.trim() === pib) : undefined;
+  // The company's name, not its PIB: that is what the user clicked through from.
+  const companyName = first ? shopOf(first, groups)[1] : pib;
 
   const addText = (text: string) => {
     setMessage(null);
@@ -81,22 +88,26 @@ export function ReceiptsTab() {
         <CardScanner
           barcodeTypes={['qr']}
           onScanned={(text) => {
-            setScanning(false);
+            onScanningChange?.(false);
             addText(text);
           }}
-          onClose={() => setScanning(false)}
+          onClose={() => onScanningChange?.(false)}
         />
-      ) : (
-        <PrimaryButton
-          label="Scan receipt"
-          onPress={() => setScanning(true)}
-          testID="wallet-receipt-scan"
-        />
-      )}
+      ) : null}
       {message ? (
         <ThemedText role="alert" themeColor="danger" testID="wallet-receipt-message">
           {message}
         </ThemedText>
+      ) : null}
+      {pib ? (
+        <Pressable
+          role="button"
+          aria-label="Show all companies"
+          onPress={onClearPib}
+          style={styles.toggle}
+          testID="wallet-receipts-company-filter">
+          <ThemedText themeColor="accentText">{`Receipts of ${companyName} · Show all`}</ThemedText>
+        </Pressable>
       ) : null}
       <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.field}>
         <TextInput
@@ -115,23 +126,12 @@ export function ReceiptsTab() {
         onPress={() => router.push('/wallet/prices')}
         testID="wallet-open-prices"
       />
-      <Pressable
-        role="switch"
-        aria-checked={starredOnly}
-        aria-label="Starred only"
-        onPress={() => setStarredOnly((on) => !on)}
-        hitSlop={8}
-        style={styles.toggle}
-        testID="wallet-receipt-starred-filter">
-        <ThemedText themeColor={starredOnly ? 'accentText' : 'textTertiary'}>
-          {starredOnly ? '★ Starred only' : '☆ Starred only'}
-        </ThemedText>
-      </Pressable>
     </View>
   );
 
   if (data) {
-    const shown = searchReceipts(starredOnly ? data.filter((r) => r.starred) : data, query);
+    const ofCompany = pib ? data.filter((r) => r.tin?.trim() === pib) : data;
+    const shown = searchReceipts(ofCompany, query, groups);
     if (data.length === 0 && !scanning) {
       return (
         <EmptyState
@@ -152,7 +152,7 @@ export function ReceiptsTab() {
               {monthLabel(item.month)}
             </ThemedText>
           ) : (
-            <ReceiptRow receipt={item.receipt} />
+            <ReceiptRow receipt={item.receipt} groups={groups} />
           )
         }
         ListHeaderComponent={header}
@@ -182,7 +182,8 @@ const keyOf = (row: Row) => (row.kind === 'month' ? `m-${row.month}` : row.recei
 
 const statusText = { pending: 'Pending', failed: 'Failed', ok: '' } as const;
 
-function ReceiptRow({ receipt }: { receipt: Receipt }) {
+function ReceiptRow({ receipt, groups }: { receipt: Receipt; groups: readonly AliasGroup[] }) {
+  const name = shopOf(receipt, groups)[1];
   const stacked = useStackedRow();
   const lines = rowLines(stacked);
   const status = statusText[receipt.status];
@@ -190,7 +191,7 @@ function ReceiptRow({ receipt }: { receipt: Receipt }) {
   return (
     <Pressable
       role="button"
-      aria-label={titleOf(receipt)}
+      aria-label={name}
       testID={`wallet-receipt-${receipt.id}`}
       onPress={() => router.push({ pathname: '/wallet/receipt/[id]', params: { id: receipt.id } })}>
       <GlassSurface
@@ -198,10 +199,7 @@ function ReceiptRow({ receipt }: { receipt: Receipt }) {
         radius={Layout.radius.row}
         style={[styles.row, stacked && styles.stacked]}>
         <View style={stacked ? undefined : styles.texts}>
-          <ThemedText numberOfLines={lines}>
-            {receipt.starred ? '★ ' : ''}
-            {titleOf(receipt)}
-          </ThemedText>
+          <ThemedText numberOfLines={lines}>{name}</ThemedText>
           <ThemedText type="footnote" numberOfLines={lines}>
             {subtitle}
           </ThemedText>

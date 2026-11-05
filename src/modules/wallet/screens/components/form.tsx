@@ -1,14 +1,8 @@
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  type TextInputProps,
-  View,
-} from 'react-native';
+import { Pressable, StyleSheet, TextInput, type TextInputProps, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { GlassSurface } from '@/components/ui/glass-surface';
+import { PillRows } from '@/components/ui/pill-rows';
 import { Layout, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -48,8 +42,8 @@ export function Field({ label, testID, ...rest }: FieldProps) {
 export type ChipOption<T extends string> = { value: T; label: string };
 
 /**
- * Choices as filled chips, the chosen one in the accent. They wrap, or with `rows` sit in
- * that many rows that scroll sideways.
+ * Choices as filled chips, the chosen one in the accent. They sit in at most `maxRows` rows
+ * (two by default) and scroll sideways past that.
  */
 export function Chips<T extends string>({
   label,
@@ -57,14 +51,18 @@ export function Chips<T extends string>({
   value,
   onChange,
   testID,
-  rows,
+  maxRows,
+  disabled,
 }: {
   label: string;
   options: readonly ChipOption<T>[];
   value: T;
   onChange: (value: T) => void;
   testID: string;
-  rows?: 1 | 2;
+  /** Rows before the chips scroll sideways (two by default). */
+  maxRows?: number;
+  /** Shown dimmed and not pressable (a choice that does not apply). */
+  disabled?: boolean;
 }) {
   const theme = useTheme();
   const chip = (option: ChipOption<T>) => {
@@ -76,9 +74,14 @@ export function Chips<T extends string>({
         aria-checked={selected}
         aria-label={option.label}
         testID={`${testID}-${option.value}`}
-        onPress={() => onChange(option.value)}
+        aria-disabled={disabled}
+        onPress={disabled ? undefined : () => onChange(option.value)}
         hitSlop={4}
-        style={[styles.chip, { backgroundColor: selected ? theme.accent : theme.segmentTrack }]}>
+        style={[
+          styles.chip,
+          { backgroundColor: selected ? theme.accent : theme.segmentTrack },
+          disabled && styles.disabled,
+        ]}>
         <ThemedText themeColor={selected ? 'onAccent' : 'text'}>{option.label}</ThemedText>
       </Pressable>
     );
@@ -88,19 +91,10 @@ export function Chips<T extends string>({
       <ThemedText type="listHeader" role="heading">
         {label}
       </ThemedText>
-      {rows ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} testID={`${testID}-scroll`}>
-          <View style={styles.rows}>
-            {Array.from({ length: rows }, (_, row) => (
-              <View key={row} style={styles.line}>
-                {options.filter((_, i) => i % rows === row).map(chip)}
-              </View>
-            ))}
-          </View>
-        </ScrollView>
-      ) : (
-        <View style={styles.chips}>{options.map(chip)}</View>
-      )}
+      <PillRows
+        pills={options.map((option) => ({ key: option.value, node: chip(option) }))}
+        maxRows={maxRows}
+      />
     </View>
   );
 }
@@ -109,9 +103,7 @@ const styles = StyleSheet.create({
   block: { gap: Layout.labelGap },
   surface: { paddingHorizontal: Layout.listRow.paddingHorizontal },
   input: { minHeight: Layout.listRow.minHeight, fontSize: 17 },
-  rows: { gap: Spacing.two },
-  line: { flexDirection: 'row', gap: Spacing.two },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+  disabled: { opacity: 0.4 },
   chip: {
     minHeight: Layout.minTouch,
     paddingHorizontal: Spacing.three,

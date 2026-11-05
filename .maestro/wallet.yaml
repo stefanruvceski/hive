@@ -10,6 +10,9 @@ tags:
     id: 'wallet-screen'
 - tapOn:
     id: 'wallet-empty-add|wallet-add'
+# The camera opens first; "Type it in" brings the number and name fields.
+- tapOn:
+    id: 'wallet-scanner-close'
 - tapOn:
     id: 'wallet-card-number'
 - inputText: '4006381333931'

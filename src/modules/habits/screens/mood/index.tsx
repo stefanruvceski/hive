@@ -1,12 +1,12 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ErrorState } from '@/components/ui/error-state';
 import { LoadingState } from '@/components/ui/loading-state';
-import { PrimaryButton } from '@/components/ui/primary-button';
+import { SaveButton } from '@/components/ui/save-button';
 import { ScreenHeader } from '@/components/ui/screen-header';
 import { SegmentedControl, type SegmentedOption } from '@/components/ui/segmented-control';
 import { Wallpaper } from '@/components/ui/wallpaper';
@@ -32,10 +32,30 @@ const faceFor = (mood: number) => moodFaces.find((face) => face.value === mood);
 
 /** Daily mood and motivation: today's entry on top, the last 30 days read-only below. */
 export function HabitsMood() {
-  const insets = useSafeAreaInsets();
   const { data, isPending, isError, error, refetch } = useMoodEntries();
   const today = useToday();
 
+  if (isPending || isError) {
+    return (
+      <MoodFrame>
+        {isPending ? (
+          <LoadingState testID="habits-mood-loading" />
+        ) : (
+          <ErrorState error={error} onRetry={refetch} testID="habits-mood-load-error" />
+        )}
+      </MoodFrame>
+    );
+  }
+  // Mounted once the entries are loaded: the draft starts from today's entry.
+  return (
+    <MoodDraft key={today} today={today} entry={data.find((item) => item.date === today)}>
+      <History entries={recentEntries(data, today)} />
+    </MoodDraft>
+  );
+}
+
+function MoodFrame({ trailing, children }: { trailing?: ReactNode; children: ReactNode }) {
+  const insets = useSafeAreaInsets();
   return (
     <Wallpaper style={styles.container} testID="habits-mood-screen">
       <SafeAreaView edges={['top', 'right', 'left']} style={styles.container}>
@@ -45,6 +65,7 @@ export function HabitsMood() {
             onBack={() => router.back()}
             backTestID="habits-mood-back"
             titleTestID="habits-mood-title"
+            trailing={trailing}
           />
         </View>
         <ScrollView
@@ -52,28 +73,22 @@ export function HabitsMood() {
           automaticallyAdjustKeyboardInsets
           contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Spacing.five }]}
           testID="habits-mood-scroll">
-          {isPending ? (
-            <LoadingState testID="habits-mood-loading" />
-          ) : isError ? (
-            <ErrorState error={error} onRetry={refetch} testID="habits-mood-load-error" />
-          ) : (
-            <>
-              {/* Mounted once the entries are loaded: the draft starts from today's entry. */}
-              <MoodForm
-                key={today}
-                today={today}
-                entry={data.find((item) => item.date === today)}
-              />
-              <History entries={recentEntries(data, today)} />
-            </>
-          )}
+          {children}
         </ScrollView>
       </SafeAreaView>
     </Wallpaper>
   );
 }
 
-function MoodForm({ today, entry }: { today: string; entry: MoodEntry | undefined }) {
+function MoodDraft({
+  today,
+  entry,
+  children,
+}: {
+  today: string;
+  entry: MoodEntry | undefined;
+  children: ReactNode;
+}) {
   const theme = useTheme();
   // The draft lives here until Save (07 §7); a failed save keeps it.
   const [mood, setMood] = useState<number | null>(entry?.mood ?? null);
@@ -86,8 +101,11 @@ function MoodForm({ today, entry }: { today: string; entry: MoodEntry | undefine
     save.mutate({ date: today, mood, motivation, note });
   };
 
+  const valid = canSaveMood({ mood, motivation }) && !save.isPending;
+
   return (
-    <>
+    <MoodFrame
+      trailing={<SaveButton onPress={submit} disabled={!valid} testID="habits-mood-save" />}>
       <FormGroup title="How do you feel today?" padded testID="habits-mood-mood-group">
         <View role="radiogroup" aria-label="Mood" style={styles.faces} testID="habits-mood-faces">
           {moodFaces.map((face) => {
@@ -156,13 +174,8 @@ function MoodForm({ today, entry }: { today: string; entry: MoodEntry | undefine
           {"Couldn't save. Try again."}
         </ThemedText>
       )}
-      <PrimaryButton
-        label="Save"
-        onPress={submit}
-        disabled={!canSaveMood({ mood, motivation }) || save.isPending}
-        testID="habits-mood-save"
-      />
-    </>
+      {children}
+    </MoodFrame>
   );
 }
 

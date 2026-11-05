@@ -13,7 +13,8 @@ export type YearData = { habits: YearHabit[]; completions: Completion[] };
 /** The habits and every day they were done in one calendar year. Read-only. */
 export const habitsYearQuery = (year: number) =>
   queryOptions({
-    queryKey: [...habitsKeys.all, 'year', year] as const,
+    // Under `habitsKeys.completions()`, so marking a habit done refreshes a year that was opened.
+    queryKey: [...habitsKeys.completions(), 'year', year] as const,
     queryFn: async (): Promise<YearData> => {
       const db = getDb();
       return {

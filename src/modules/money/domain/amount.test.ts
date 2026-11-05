@@ -1,6 +1,7 @@
 import {
   allocate,
   currencies,
+  formatExact,
   formatMinor,
   formatWhole,
   minorToText,
@@ -71,5 +72,17 @@ describe('allocate', () => {
   it('gives nothing when there is nothing to weigh', () => {
     expect(allocate(100, [0, 0])).toEqual([0, 0]);
     expect(allocate(100, [])).toEqual([]);
+  });
+});
+
+describe('formatExact', () => {
+  it('keeps the para of a dinar amount that has them', () => {
+    expect(formatExact(300061)).toBe('3,000.61 RSD');
+    expect(formatExact(-17998)).toBe('−179.98 RSD');
+  });
+
+  it('is formatMinor for whole dinars and other currencies', () => {
+    expect(formatExact(300000)).toBe('3,000 RSD');
+    expect(formatExact(123450, 'EUR')).toBe('1,234.50 EUR');
   });
 });

@@ -54,15 +54,16 @@ export function ScreenHeader({
   );
 }
 
-/** Room for a compact button such as Save at the end. */
-const TRAILING_WIDTH = 88;
+/** Room for two round buttons (44 pt each) at the end. */
+const TRAILING_WIDTH = 96;
 
 const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingTop: Spacing.two,
-    paddingBottom: Spacing.two,
+    // The usual gap between the header and the content below it.
+    paddingBottom: Layout.sectionGap,
   },
   center: {
     flex: 1,
@@ -72,6 +73,8 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   trailing: {
-    alignItems: 'flex-end',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: Spacing.one,
   },
 });

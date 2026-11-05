@@ -8,6 +8,8 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core';
 
+import { coreBusinesses } from '@/lib/db/schema';
+
 // Money tables. Every table name starts with `money_` so modules never collide in hive.db.
 // After changing this file run `pnpm db:generate` and commit the new migration (07 §8).
 // Amounts are integer minor units (cents/para), never floats; the rate is the only real.
@@ -32,16 +34,6 @@ export const moneyPrefs = sqliteTable('money_prefs', {
   value: text('value').notNull(),
 });
 
-/** A business the user runs; its PIB (Serbian tax number) is what tells two apart. */
-export const moneyBusinesses = sqliteTable('money_businesses', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  pib: text('pib').notNull().unique(),
-  /** Hidden from new entries but kept on old ones. */
-  archivedAt: text('archived_at'),
-  createdAt: text('created_at').notNull(),
-});
-
 export const moneyCategories = sqliteTable('money_categories', {
   id: text('id').primaryKey(),
   space: text('space', { enum: spaces }).notNull(),
@@ -59,7 +51,7 @@ export const moneyEntries = sqliteTable(
     id: text('id').primaryKey(),
     /** Which category list the entry uses; `business` entries also have a `businessId`. */
     space: text('space', { enum: spaces }).notNull(),
-    businessId: text('business_id').references(() => moneyBusinesses.id),
+    businessId: text('business_id').references(() => coreBusinesses.id),
     kind: text('kind', { enum: entryKinds }).notNull(),
     /** In the entry's own currency, minor units. */
     amountMinor: integer('amount_minor').notNull(),
@@ -140,7 +132,7 @@ export const moneyBudgets = sqliteTable(
 export const moneyRecurring = sqliteTable('money_recurring', {
   id: text('id').primaryKey(),
   space: text('space', { enum: spaces }).notNull(),
-  businessId: text('business_id').references(() => moneyBusinesses.id),
+  businessId: text('business_id').references(() => coreBusinesses.id),
   kind: text('kind', { enum: categoryKinds }).notNull(),
   amountMinor: integer('amount_minor').notNull(),
   currency: text('currency').notNull(),
