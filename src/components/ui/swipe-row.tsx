@@ -26,6 +26,11 @@ type Props = {
   onArchive: () => void;
   /** The outer button's label (default "Archive"); its testID suffix stays `-archive`. */
   archiveLabel?: string;
+  /** The outer button's icon (default a trash can). */
+  archiveIcon?: Exclude<SymbolViewProps['name'], string>;
+  /** The leading button's label and icon (default Edit, a pencil); its testID suffix stays `-edit`. */
+  editLabel?: string;
+  editIcon?: Exclude<SymbolViewProps['name'], string>;
   /** Off in reorder mode. */
   enabled: boolean;
   /** The row's name, for the buttons' accessible names. */
@@ -49,6 +54,9 @@ export function SwipeRow({
   onEdit,
   onArchive,
   archiveLabel = 'Archive',
+  archiveIcon = { ios: 'trash', android: 'delete', web: 'delete' },
+  editLabel = 'Edit',
+  editIcon = { ios: 'pencil', android: 'edit', web: 'edit' },
   enabled,
   name,
   testID,
@@ -123,9 +131,9 @@ export function SwipeRow({
         style={[styles.panel, styles.leading, leading]}
         aria-hidden={open !== 'leading'}>
         <ActionButton
-          icon={{ ios: 'pencil', android: 'edit', web: 'edit' }}
-          label="Edit"
-          accessibilityLabel={`Edit ${name}`}
+          icon={editIcon}
+          label={editLabel}
+          accessibilityLabel={`${editLabel} ${name}`}
           tone="accent"
           onPress={run(onEdit)}
           testID={`${testID}-edit`}
@@ -135,7 +143,7 @@ export function SwipeRow({
         style={[styles.panel, styles.trailing, trailing]}
         aria-hidden={open !== 'trailing'}>
         <ActionButton
-          icon={{ ios: 'trash', android: 'delete', web: 'delete' }}
+          icon={archiveIcon}
           label={archiveLabel}
           accessibilityLabel={`${archiveLabel} ${name}`}
           tone="danger"

@@ -102,8 +102,8 @@ describe('MoneyHome', () => {
     expect(router.push).toHaveBeenCalledWith({ pathname: '/money/entry', params: { id: 'a' } });
     await user.press(screen.getByTestId('money-add'));
     expect(router.push).toHaveBeenCalledWith('/money/entry');
-    await user.press(screen.getByTestId('money-budgets-open'));
-    expect(router.push).toHaveBeenCalledWith('/money/budgets');
+    await user.press(screen.getByTestId('money-settings-open'));
+    expect(router.push).toHaveBeenCalledWith('/money/settings');
     await user.press(screen.getByTestId('money-overview-open'));
     expect(router.push).toHaveBeenCalledWith('/money/overview');
   });

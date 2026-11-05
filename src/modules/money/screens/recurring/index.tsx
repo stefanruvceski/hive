@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { EmptyState } from '@/components/ui/empty-state';
-import { PrimaryButton } from '@/components/ui/primary-button';
+import { GlassButton } from '@/components/ui/glass-button';
 import { Spacing } from '@/constants/theme';
 import { useToday } from '@/hooks/use-today';
 
@@ -29,9 +29,9 @@ export function MoneyRecurring() {
       id="money-recurring"
       title="Recurring"
       trailing={
-        <PrimaryButton
-          label="Add"
-          size="compact"
+        <GlassButton
+          icon={{ ios: 'plus', android: 'add', web: 'add' }}
+          label="Add recurring entry"
           onPress={() => router.push('/money/rule')}
           testID="money-recurring-add"
         />

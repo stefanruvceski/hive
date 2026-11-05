@@ -19,7 +19,6 @@ import { monthLabel, monthOf, shiftMonth } from '../../domain/dates';
 import { groupByDay, totalsOf } from '../../domain/entries';
 import { categoryLabel, inView, type Business } from '../../domain/owners';
 import { receiptIdOf } from '../../domain/receipt-entries';
-import { Group, LinkRow } from '../components/fields';
 import { Gate } from '../components/gate';
 import { ReceiptImport } from '../components/receipt-import';
 import { useMoneyView } from '../components/use-money-view';
@@ -65,6 +64,12 @@ export function MoneyHome() {
               label="Overview"
               onPress={() => router.push('/money/overview')}
               testID="money-overview-open"
+            />
+            <GlassButton
+              icon={{ ios: 'gearshape', android: 'settings', web: 'settings' }}
+              label="Money settings"
+              onPress={() => router.push('/money/settings')}
+              testID="money-settings-open"
             />
             <GlassButton
               icon={{ ios: 'plus', android: 'add', web: 'add' }}
@@ -116,33 +121,6 @@ function MoneyContent({ today }: { today: string }) {
           showOwner={scope.view === 'all' && scope.live.length > 0}
         />
       </Gate>
-      <Group title="Manage">
-        <LinkRow
-          title="Budgets"
-          onPress={() => router.push('/money/budgets')}
-          testID="money-budgets-open"
-        />
-        <LinkRow
-          title="Recurring"
-          onPress={() => router.push('/money/recurring')}
-          testID="money-recurring-open"
-        />
-        <LinkRow
-          title="Businesses"
-          onPress={() => router.push('/money/businesses')}
-          testID="money-businesses-open"
-        />
-        <LinkRow
-          title="Categories"
-          onPress={() => router.push('/money/categories')}
-          testID="money-categories-open"
-        />
-        <LinkRow
-          title="Exchange rates"
-          onPress={() => router.push('/money/rates')}
-          testID="money-rates-open"
-        />
-      </Group>
     </ScrollView>
   );
 }

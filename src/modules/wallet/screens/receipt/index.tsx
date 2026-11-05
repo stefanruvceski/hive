@@ -9,6 +9,7 @@ import { GlassButton } from '@/components/ui/glass-button';
 import { GlassSurface } from '@/components/ui/glass-surface';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PrimaryButton } from '@/components/ui/primary-button';
+import { SaveButton } from '@/components/ui/save-button';
 import { SwipeRow } from '@/components/ui/swipe-row';
 import { Fonts, Layout, Spacing } from '@/constants/theme';
 import { businessByPib, useBusinesses } from '@/hooks/use-businesses';
@@ -57,6 +58,7 @@ function ReceiptView({ receipt }: { receipt: Receipt }) {
   const saveNote = useEditReceiptNote();
   const retry = useRetryReceipt();
   const remove = useDeleteReceipt();
+  const owner = useOwnerEditor(receipt);
   const [note, setNote] = useState(receipt.note);
   const [printed, setPrinted] = useState(false);
   const [openItem, setOpenItem] = useState<{ id: string; side: SwipeSide } | null>(null);
@@ -94,6 +96,9 @@ function ReceiptView({ receipt }: { receipt: Receipt }) {
       title={company}
       trailing={
         <>
+          {receipt.status === 'ok' && owner.canSave ? (
+            <SaveButton onPress={owner.save} testID="wallet-receipt-owner-save" />
+          ) : null}
           {receipt.journal ? (
             <GlassButton
               icon={{ ios: 'doc.text', android: 'description', web: 'description' }}
@@ -110,7 +115,7 @@ function ReceiptView({ receipt }: { receipt: Receipt }) {
           />
         </>
       }>
-      {receipt.status === 'ok' ? <OwnerEditor receipt={receipt} /> : null}
+      {receipt.status === 'ok' ? <OwnerEditor editor={owner} /> : null}
       <View style={styles.dateRow}>
         <ThemedText type="footnote" testID="wallet-receipt-date">
           {receipt.time ? receipt.time.replace('T', ' ').slice(0, 16) : receiptDate(receipt)}
@@ -192,9 +197,10 @@ const pibValue = (pib: string) => `pib:${pib}`;
 
 /**
  * Whose receipt it is: Personal, a business Money and Wallet both know, or a new PIB as the
- * fallback. The chosen pill is the current owner; Save appears only when there is a change to save.
+ * fallback. The chosen pill is the current owner; the header's check appears only when there is a
+ * change to save.
  */
-function OwnerEditor({ receipt }: { receipt: Receipt }) {
+function useOwnerEditor(receipt: Receipt) {
   const setOwner = useSetReceiptOwner();
   const businesses = useBusinesses().data ?? [];
   const live = businesses.filter((b) => !b.archivedAt || b.pib === receipt.buyerTin);
@@ -218,37 +224,42 @@ function OwnerEditor({ receipt }: { receipt: Receipt }) {
       : null;
   const valid = choice === PERSONAL || (target !== null && isPib(target));
   const changed = target !== receipt.buyerTin;
+  return {
+    options,
+    choice,
+    setChoice,
+    pib,
+    setPib,
+    problem,
+    canSave: changed && valid,
+    save: () => setOwner.mutate({ id: receipt.id, buyerTin: target }),
+  };
+}
 
+function OwnerEditor({ editor }: { editor: ReturnType<typeof useOwnerEditor> }) {
   return (
     <View style={styles.block}>
       <Chips
         label="Belongs to"
-        options={options}
-        value={choice}
-        onChange={setChoice}
+        options={editor.options}
+        value={editor.choice}
+        onChange={editor.setChoice}
         testID="wallet-receipt-owner"
       />
-      {choice === OTHER ? (
+      {editor.choice === OTHER ? (
         <Field
           label="Company PIB"
-          value={pib}
-          onChangeText={setPib}
+          value={editor.pib}
+          onChangeText={editor.setPib}
           keyboardType="number-pad"
           maxLength={9}
           testID="wallet-receipt-owner-pib"
         />
       ) : null}
-      {problem ? (
+      {editor.problem ? (
         <ThemedText role="alert" themeColor="danger" testID="wallet-receipt-owner-problem">
-          {problem}
+          {editor.problem}
         </ThemedText>
-      ) : null}
-      {changed && valid ? (
-        <PrimaryButton
-          label="Save owner"
-          onPress={() => setOwner.mutate({ id: receipt.id, buyerTin: target })}
-          testID="wallet-receipt-owner-save"
-        />
       ) : null}
     </View>
   );

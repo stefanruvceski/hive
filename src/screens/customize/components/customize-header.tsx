@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { PrimaryButton } from '@/components/ui/primary-button';
+import { GlassButton } from '@/components/ui/glass-button';
 import { Layout } from '@/constants/theme';
 
 /** "Customize Home" (wraps at large text sizes, never cut off) and Done, which keeps its width. */
@@ -12,7 +12,12 @@ export function CustomizeHeader({ onDone }: { onDone: () => void }) {
         Customize Home
       </ThemedText>
       <View style={styles.done}>
-        <PrimaryButton label="Done" size="compact" onPress={onDone} testID="customize-done" />
+        <GlassButton
+          icon={{ ios: 'checkmark', android: 'check', web: 'check' }}
+          label="Done"
+          onPress={onDone}
+          testID="customize-done"
+        />
       </View>
     </View>
   );
