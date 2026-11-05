@@ -149,6 +149,10 @@ describe('ReceiptsTab', () => {
 
     expect(screen.getByTestId('wallet-receipt-r1')).toBeOnTheScreen();
     expect(screen.queryByTestId('wallet-receipt-r2')).not.toBeOnTheScreen();
+    expect(screen.getByTestId('wallet-receipts-company-filter')).toHaveTextContent(
+      /Receipts of NIS/,
+    );
+    expect(screen.getByTestId('wallet-receipts-company-filter')).not.toHaveTextContent(/104052135/);
     await userEvent.setup().press(screen.getByTestId('wallet-receipts-company-filter'));
     expect(onClearPib).toHaveBeenCalled();
   });

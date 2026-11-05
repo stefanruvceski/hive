@@ -35,9 +35,10 @@ const tabs = [
 
 /** Wallet's entry screen: loyalty cards and fiscal receipts, under the same header as the detail screens. */
 export function WalletHome() {
-  const params = useLocalSearchParams<{ tab?: string; pib?: string }>();
+  const params = useLocalSearchParams<{ tab?: string; pib?: string; scan?: string }>();
   const [tab, setTab] = useState<Tab>(params.tab === 'receipts' ? 'receipts' : 'cards');
-  const [scanning, setScanning] = useState(false);
+  // "scan=1" opens the camera at once (from a card: scan the loyalty card, then the receipt).
+  const [scanning, setScanning] = useState(params.scan === '1');
   // The company whose receipts are shown (from the receipt screen); cleared with "Show all".
   const [pib, setPib] = useState<string | undefined>(params.pib);
   const deletedCard = useDeletedCard();

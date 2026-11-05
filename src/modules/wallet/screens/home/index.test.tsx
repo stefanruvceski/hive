@@ -1,5 +1,5 @@
 import { act, render, screen, userEvent } from '@testing-library/react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/lib/api';
@@ -26,7 +26,7 @@ jest.mock('expo-camera', () => ({
 }));
 jest.mock('expo-router', () => ({
   router: { push: jest.fn(), back: jest.fn() },
-  useLocalSearchParams: () => ({}),
+  useLocalSearchParams: jest.fn(() => ({})),
 }));
 
 const restore = jest.fn();
@@ -44,6 +44,7 @@ const renderHome = () =>
 
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.mocked(useLocalSearchParams).mockReturnValue({});
   rememberDeletedCard(null);
   rememberDeletedReceipt(null);
   jest.mocked(useRestoreCard).mockReturnValue({ mutate: restore } as never);
@@ -175,5 +176,14 @@ describe('WalletHome', () => {
     await userEvent.setup().press(screen.getByTestId('wallet-undo'));
 
     expect(restoreReceipt).toHaveBeenCalledWith(gone);
+  });
+
+  it('opens the receipt camera at once when sent here from a card', async () => {
+    jest.mocked(useLocalSearchParams).mockReturnValue({ tab: 'receipts', scan: '1' });
+    jest.mocked(useReceipts).mockReturnValue(loaded([receipt('r1')]));
+    jest.mocked(useCards).mockReturnValue(loaded([]));
+    await renderHome();
+
+    expect(screen.getByTestId('wallet-scanner')).toBeOnTheScreen();
   });
 });

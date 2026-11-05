@@ -68,6 +68,9 @@ export function ReceiptsTab({ scanning = false, onScanningChange, pib, onClearPi
   const add = useAddReceipt();
   const [query, setQuery] = useState('');
   const [message, setMessage] = useState<string | null>(null);
+  const first = pib ? data?.find((r) => r.tin?.trim() === pib) : undefined;
+  // The company's name, not its PIB: that is what the user clicked through from.
+  const companyName = first ? shopOf(first, groups)[1] : pib;
 
   const addText = (text: string) => {
     setMessage(null);
@@ -103,7 +106,7 @@ export function ReceiptsTab({ scanning = false, onScanningChange, pib, onClearPi
           onPress={onClearPib}
           style={styles.toggle}
           testID="wallet-receipts-company-filter">
-          <ThemedText themeColor="accentText">{`Only ${pib} · Show all`}</ThemedText>
+          <ThemedText themeColor="accentText">{`Receipts of ${companyName} · Show all`}</ThemedText>
         </Pressable>
       ) : null}
       <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.field}>

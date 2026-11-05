@@ -71,6 +71,17 @@ describe('WalletCardScreen', () => {
     await waitFor(() => expect(Brightness.setBrightnessAsync).toHaveBeenCalledWith(0.4));
   });
 
+  it('opens the receipt camera from the header, to scan the receipt after the card', async () => {
+    jest.mocked(useCard).mockReturnValue(loaded(card('a')));
+    await renderScreen();
+    await userEvent.setup().press(screen.getByTestId('wallet-card-scan-receipt'));
+
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/wallet',
+      params: { tab: 'receipts', scan: '1' },
+    });
+  });
+
   it('pins and unpins', async () => {
     jest.mocked(useCard).mockReturnValue(loaded(card('a')));
     await renderScreen();

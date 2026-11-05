@@ -310,7 +310,6 @@ function ItemRow({
           <ThemedText type="footnote">
             {toText(item.quantity)}
             {item.unit ? ` ${unitLabel(item.unit)}` : ''} × {formatAmount(item.unitPrice)}
-            {item.vat ? ` · ${item.vat}` : ''}
           </ThemedText>
           {editing ? (
             <View style={styles.editRow}>
