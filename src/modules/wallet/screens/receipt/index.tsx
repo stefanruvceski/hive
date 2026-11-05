@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -9,9 +9,11 @@ import { GlassButton } from '@/components/ui/glass-button';
 import { GlassSurface } from '@/components/ui/glass-surface';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PrimaryButton } from '@/components/ui/primary-button';
+import { SwipeRow } from '@/components/ui/swipe-row';
 import { Fonts, Layout, Spacing } from '@/constants/theme';
 import { businessByPib, useBusinesses } from '@/hooks/use-businesses';
 import { useTheme } from '@/hooks/use-theme';
+import type { SwipeSide } from '@/utils/swipe';
 
 import { rememberDeletedReceipt } from '../../data/deleted-receipt';
 import { useShopGroups } from '../../data/price-queries';
@@ -19,6 +21,7 @@ import {
   type Receipt,
   type ReceiptItem,
   useDeleteReceipt,
+  useDeleteReceiptItem,
   useEditReceiptItem,
   useEditReceiptNote,
   useReceipt,
@@ -56,6 +59,7 @@ function ReceiptView({ receipt }: { receipt: Receipt }) {
   const remove = useDeleteReceipt();
   const [note, setNote] = useState(receipt.note);
   const [printed, setPrinted] = useState(false);
+  const [openItem, setOpenItem] = useState<{ id: string; side: SwipeSide } | null>(null);
   const company = shopOf(receipt, groups)[1];
   const shopPib = receipt.tin?.trim() || null;
 
@@ -106,27 +110,21 @@ function ReceiptView({ receipt }: { receipt: Receipt }) {
           />
         </>
       }>
-      {shopPib ? (
-        <Pressable
-          role="link"
-          aria-label={`Receipts of ${company}`}
-          onPress={() =>
-            router.push({ pathname: '/wallet', params: { tab: 'receipts', pib: shopPib } })
-          }
-          style={styles.company}
-          testID="wallet-receipt-company">
-          <ThemedText type="section" themeColor="accentText">
-            {company}
-          </ThemedText>
-        </Pressable>
-      ) : (
-        <ThemedText type="section" testID="wallet-receipt-company">
-          {company}
+      {receipt.status === 'ok' ? <OwnerEditor receipt={receipt} /> : null}
+      <View style={styles.dateRow}>
+        <ThemedText type="footnote" testID="wallet-receipt-date">
+          {receipt.time ? receipt.time.replace('T', ' ').slice(0, 16) : receiptDate(receipt)}
         </ThemedText>
-      )}
-      <ThemedText type="footnote" testID="wallet-receipt-date">
-        {receipt.time ? receipt.time.replace('T', ' ').slice(0, 16) : receiptDate(receipt)}
-      </ThemedText>
+        {shopPib ? (
+          <TextButton
+            label={`All receipts of ${company}`}
+            onPress={() =>
+              router.push({ pathname: '/wallet', params: { tab: 'receipts', pib: shopPib } })
+            }
+            testID="wallet-receipt-company"
+          />
+        ) : null}
+      </View>
       {receipt.status === 'ok' && receipt.total !== null ? (
         <ThemedText type="title" testID="wallet-receipt-total">
           {formatAmount(receipt.total)} RSD
@@ -152,11 +150,16 @@ function ReceiptView({ receipt }: { receipt: Receipt }) {
             Items
           </ThemedText>
           {receipt.items.map((item) => (
-            <ItemRow key={item.id} receiptId={receipt.id} item={item} />
+            <ItemRow
+              key={item.id}
+              receiptId={receipt.id}
+              item={item}
+              open={openItem?.id === item.id ? openItem.side : null}
+              onOpenChange={(side) => setOpenItem(side ? { id: item.id, side } : null)}
+            />
           ))}
         </View>
       ) : null}
-      {receipt.status === 'ok' ? <OwnerEditor receipt={receipt} /> : null}
       <Field
         label="Note"
         value={note}
@@ -189,7 +192,7 @@ const pibValue = (pib: string) => `pib:${pib}`;
 
 /**
  * Whose receipt it is: Personal, a business Money and Wallet both know, or a new PIB as the
- * fallback. The current owner is plain text; Save appears only when there is a change to save.
+ * fallback. The chosen pill is the current owner; Save appears only when there is a change to save.
  */
 function OwnerEditor({ receipt }: { receipt: Receipt }) {
   const setOwner = useSetReceiptOwner();
@@ -215,19 +218,11 @@ function OwnerEditor({ receipt }: { receipt: Receipt }) {
       : null;
   const valid = choice === PERSONAL || (target !== null && isPib(target));
   const changed = target !== receipt.buyerTin;
-  const ownerText =
-    receipt.buyerTin === null
-      ? 'Personal'
-      : `Company · ${current ? current.name : `PIB ${receipt.buyerTin}`}`;
 
   return (
     <View style={styles.block}>
-      <ThemedText type="listHeader" role="heading">
-        Belongs to
-      </ThemedText>
-      <ThemedText testID="wallet-receipt-owner-current">{ownerText}</ThemedText>
       <Chips
-        label="Change owner"
+        label="Belongs to"
         options={options}
         value={choice}
         onChange={setChoice}
@@ -261,72 +256,100 @@ function OwnerEditor({ receipt }: { receipt: Receipt }) {
 
 const toText = (value: number) => String(value).replace('.', ',');
 
-/** An item; tap Edit to correct a misread price or quantity. */
-function ItemRow({ receiptId, item }: { receiptId: string; item: ReceiptItem }) {
+/** An item: swipe towards the end to correct a misread price or quantity, towards the start to delete it. */
+function ItemRow({
+  receiptId,
+  item,
+  open,
+  onOpenChange,
+}: {
+  receiptId: string;
+  item: ReceiptItem;
+  open: SwipeSide | null;
+  onOpenChange: (side: SwipeSide | null) => void;
+}) {
   const theme = useTheme();
   const edit = useEditReceiptItem();
+  const remove = useDeleteReceiptItem();
   const [editing, setEditing] = useState(false);
   const [quantity, setQuantity] = useState(toText(item.quantity));
   const [price, setPrice] = useState(toText(item.unitPrice / 100));
   const q = number(quantity);
   const p = number(price);
   const valid = q !== null && p !== null;
+  const name = cleanItemName(item.name);
+
+  const confirmDelete = () =>
+    Alert.alert('Delete this item?', `${name} is taken off this receipt.`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => remove.mutate({ receiptId, itemId: item.id }),
+      },
+    ]);
 
   return (
-    <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.item}>
-      <View style={styles.itemHead}>
-        <ThemedText style={styles.itemName}>{cleanItemName(item.name)}</ThemedText>
-        <ThemedText testID={`wallet-receipt-item-total-${item.id}`}>
-          {formatAmount(item.total)}
-        </ThemedText>
-      </View>
-      <ThemedText type="footnote">
-        {toText(item.quantity)}
-        {item.unit ? ` ${unitLabel(item.unit)}` : ''} × {formatAmount(item.unitPrice)}
-        {item.vat ? ` · ${item.vat}` : ''}
-      </ThemedText>
-      {editing ? (
-        <View style={styles.editRow}>
-          <TextInput
-            aria-label="Quantity"
-            value={quantity}
-            onChangeText={setQuantity}
-            keyboardType="decimal-pad"
-            selectionColor={theme.accent}
-            style={[styles.editInput, { color: theme.text }]}
-            testID={`wallet-receipt-item-qty-${item.id}`}
-          />
-          <TextInput
-            aria-label="Unit price"
-            value={price}
-            onChangeText={setPrice}
-            keyboardType="decimal-pad"
-            selectionColor={theme.accent}
-            style={[styles.editInput, { color: theme.text }]}
-            testID={`wallet-receipt-item-price-${item.id}`}
-          />
-          <PrimaryButton
-            label="Save"
-            size="compact"
-            disabled={!valid}
-            onPress={() => {
-              if (q === null || p === null) return;
-              edit.mutate(
-                { receiptId, itemId: item.id, quantity: q, unitPrice: toMinor(p) },
-                { onSuccess: () => setEditing(false) },
-              );
-            }}
-            testID={`wallet-receipt-item-save-${item.id}`}
-          />
-        </View>
-      ) : (
-        <TextButton
-          label="Edit"
-          onPress={() => setEditing(true)}
-          testID={`wallet-receipt-item-edit-${item.id}`}
-        />
-      )}
-    </GlassSurface>
+    <View style={styles.swipe}>
+      <SwipeRow
+        open={open}
+        onOpenChange={onOpenChange}
+        onEdit={() => setEditing(true)}
+        onArchive={confirmDelete}
+        archiveLabel="Delete"
+        enabled={!editing}
+        name={name}
+        testID={`wallet-receipt-item-${item.id}`}>
+        <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.item}>
+          <View style={styles.itemHead}>
+            <ThemedText style={styles.itemName}>{name}</ThemedText>
+            <ThemedText testID={`wallet-receipt-item-total-${item.id}`}>
+              {formatAmount(item.total)}
+            </ThemedText>
+          </View>
+          <ThemedText type="footnote">
+            {toText(item.quantity)}
+            {item.unit ? ` ${unitLabel(item.unit)}` : ''} × {formatAmount(item.unitPrice)}
+            {item.vat ? ` · ${item.vat}` : ''}
+          </ThemedText>
+          {editing ? (
+            <View style={styles.editRow}>
+              <TextInput
+                aria-label="Quantity"
+                value={quantity}
+                onChangeText={setQuantity}
+                keyboardType="decimal-pad"
+                selectionColor={theme.accent}
+                style={[styles.editInput, { color: theme.text }]}
+                testID={`wallet-receipt-item-qty-${item.id}`}
+              />
+              <TextInput
+                aria-label="Unit price"
+                value={price}
+                onChangeText={setPrice}
+                keyboardType="decimal-pad"
+                selectionColor={theme.accent}
+                style={[styles.editInput, { color: theme.text }]}
+                testID={`wallet-receipt-item-price-${item.id}`}
+              />
+              <PrimaryButton
+                label="Save"
+                size="compact"
+                disabled={!valid}
+                onPress={() => {
+                  if (q === null || p === null) return;
+                  edit.mutate(
+                    { receiptId, itemId: item.id, quantity: q, unitPrice: toMinor(p) },
+                    { onSuccess: () => setEditing(false) },
+                  );
+                }}
+                testID={`wallet-receipt-item-save-${item.id}`}
+              />
+            </View>
+          ) : null}
+        </GlassSurface>
+      </SwipeRow>
+    </View>
   );
 }
 
@@ -335,8 +358,14 @@ const styles = StyleSheet.create({
   detail: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.three },
   value: { flex: 1, textAlign: 'right' },
   itemName: { flex: 1 },
-  company: { minHeight: Layout.minTouch, justifyContent: 'center' },
-  item: { padding: Spacing.three, gap: Spacing.one, alignItems: 'stretch' },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+  },
+  swipe: { borderRadius: Layout.radius.row, overflow: 'hidden' },
+  item: { paddingHorizontal: Spacing.three, paddingVertical: Spacing.two, alignItems: 'stretch' },
   itemHead: { flexDirection: 'row', gap: Spacing.three, justifyContent: 'space-between' },
   editRow: { flexDirection: 'row', gap: Spacing.two, alignItems: 'center' },
   editInput: { flex: 1, minHeight: Layout.minTouch, fontSize: 17, fontFamily: Fonts.sans },

@@ -8,8 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Layout } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useTheme } from '@/hooks/use-theme';
-
-import { type SwipeSide, swipeOutcome } from '../../../domain/swipe';
+import { type SwipeSide, swipeOutcome } from '@/utils/swipe';
 
 /** One button's width; each panel holds one: Edit on the leading side, Archive/Delete on the trailing one. */
 const buttonWidth = 80;
@@ -29,7 +28,7 @@ type Props = {
   archiveLabel?: string;
   /** Off in reorder mode. */
   enabled: boolean;
-  /** The habit's name, for the buttons' accessible names. */
+  /** The row's name, for the buttons' accessible names. */
   name: string;
   /** Prefix of the buttons' testIDs, e.g. `habits-swipe-<id>`. */
   testID: string;

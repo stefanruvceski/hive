@@ -1,11 +1,12 @@
 import { render, screen, userEvent } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
+import type { SwipeSide } from '@/utils/swipe';
+
 import { SwipeRow } from './swipe-row';
-import type { SwipeSide } from '../../../domain/swipe';
 
 // The swipe itself is a gesture Jest cannot perform: its release rules are tested in
-// domain/swipe.test.ts and the whole flow by Maestro. Here: what the open row offers.
+// utils/swipe.test.ts and the whole flow by Maestro. Here: what the open row offers.
 const onOpenChange = jest.fn();
 const onEdit = jest.fn();
 const onArchive = jest.fn();

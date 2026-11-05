@@ -15,9 +15,10 @@ import {
   shortName,
 } from '../../domain/card-brands';
 
-const ASPECT = 1.586;
+/** The shape of a bank card; the scanner window uses it too. */
+export const CARD_ASPECT = 1.586;
 const W = 160;
-const H = W / ASPECT;
+const H = W / CARD_ASPECT;
 
 /** A faint repeating motif over the gradient, in the card's ink color. */
 function Motif({ style, ink }: { style: CardStyle; ink: string }) {
@@ -162,7 +163,7 @@ export function CardFace({ look, name, detail, testID }: Props) {
 const styles = StyleSheet.create({
   face: {
     width: '100%',
-    aspectRatio: ASPECT,
+    aspectRatio: CARD_ASPECT,
     borderRadius: Layout.radius.row,
     overflow: 'hidden',
     justifyContent: 'space-between',

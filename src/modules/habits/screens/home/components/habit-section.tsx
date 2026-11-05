@@ -9,18 +9,18 @@ import Animated, {
 
 import { ThemedText } from '@/components/themed-text';
 import { GlassSurface } from '@/components/ui/glass-surface';
+import { SwipeRow } from '@/components/ui/swipe-row';
 import { Layout, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import type { SwipeSide } from '@/utils/swipe';
 
 import { HabitRow } from './habit-row';
-import { SwipeRow } from './swipe-row';
 import { TodoRow } from './todo-row';
 import type { Habit } from '../../../data/queries';
 import type { TimeOfDay } from '../../../data/schema';
 import { partState } from '../../../domain/day-part';
 import { isMeasurable } from '../../../domain/goal';
 import { scheduleOf, streakOf, weeklyProgress } from '../../../domain/schedule';
-import type { SwipeSide } from '../../../domain/swipe';
 import type { Todo } from '../../../domain/todos';
 import { DragRow, useDropPart } from '../drag/drag-row';
 import type { HostView } from '../drag/list-drag';

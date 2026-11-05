@@ -245,20 +245,25 @@ describe('MoneyEntry', () => {
     expect(screen.getByTestId('money-entry-category-fuel')).toBeOnTheScreen();
   });
 
-  it('splits an entry into items that must add up to the total', async () => {
+  it('has no way to type items by hand', async () => {
     await renderEntry();
+
+    expect(screen.queryByText(/Items/)).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('money-entry-item-add')).not.toBeOnTheScreen();
+  });
+
+  it('keeps the items an entry already has, and keeps its amount in line with them', async () => {
+    jest.mocked(useEntries).mockReturnValue(loaded([entry('e1', { categoryId: null })]));
+    jest.mocked(useItems).mockReturnValue(
+      loaded([
+        { id: 'i1', entryId: 'e1', name: 'Milk', amountMinor: 6000, categoryId: 'food' },
+        { id: 'i2', entryId: 'e1', name: 'Bread', amountMinor: 4000, categoryId: 'food' },
+      ] as never),
+    );
+    await renderEntry('e1');
     const user = userEvent.setup();
 
-    await user.type(screen.getByTestId('money-entry-amount'), '100');
-    await user.press(screen.getByTestId('money-entry-item-add'));
-    await user.type(screen.getByTestId('money-entry-item-name-0'), 'Milk');
-    await user.type(screen.getByTestId('money-entry-item-amount-0'), '60');
-    await user.press(screen.getByTestId('money-entry-save'));
-    expect(screen.getByTestId('money-entry-error')).toHaveTextContent(/differ/);
-
-    await user.press(screen.getByTestId('money-entry-item-add'));
-    await user.type(screen.getByTestId('money-entry-item-name-1'), 'Bread');
-    await user.type(screen.getByTestId('money-entry-item-amount-1'), '40');
+    await user.type(screen.getByTestId('money-entry-note'), 'Weekly');
     await user.press(screen.getByTestId('money-entry-save'));
     expect(save).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -270,6 +275,13 @@ describe('MoneyEntry', () => {
       }),
       expect.anything(),
     );
+
+    save.mockClear();
+    await user.clear(screen.getByTestId('money-entry-amount'));
+    await user.type(screen.getByTestId('money-entry-amount'), '120');
+    await user.press(screen.getByTestId('money-entry-save'));
+    expect(screen.getByTestId('money-entry-error')).toHaveTextContent(/items add up to/);
+    expect(save).not.toHaveBeenCalled();
   });
 
   it('opens an existing entry filled in, and deletes it after a confirmation', async () => {

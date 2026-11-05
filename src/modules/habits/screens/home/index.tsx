@@ -12,6 +12,7 @@ import { PrimaryButton } from '@/components/ui/primary-button';
 import { Wallpaper } from '@/components/ui/wallpaper';
 import { Layout, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useToday } from '@/hooks/use-today';
+import type { SwipeSide } from '@/utils/swipe';
 
 import { AmountSheet } from './components/amount-sheet';
 import { HabitSection, type SectionItem } from './components/habit-section';
@@ -60,7 +61,6 @@ import {
 } from '../../domain/reorder';
 import { isScheduled, scheduleOf } from '../../domain/schedule';
 import { pickSuggestions } from '../../domain/suggestions';
-import type { SwipeSide } from '../../domain/swipe';
 import { overdue, todosFor } from '../../domain/todos';
 
 const addHabit = () => router.push('/habits/new');

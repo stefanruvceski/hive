@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/themed-text';
 import { PrimaryButton } from '@/components/ui/primary-button';
 import { Layout, Spacing } from '@/constants/theme';
 
+import { CARD_ASPECT } from './card-face';
 import { type CardFormat, fromScanner, scannerTypes } from '../../domain/card-format';
 
 type Props = {
@@ -54,6 +55,11 @@ export function CardScanner({ barcodeTypes = scannerTypes, onScanned, onClose }:
 
 const styles = StyleSheet.create({
   box: { gap: Spacing.three, alignItems: 'stretch' },
-  camera: { height: 260, borderRadius: Layout.radius.row, overflow: 'hidden' },
+  camera: {
+    width: '100%',
+    aspectRatio: CARD_ASPECT,
+    borderRadius: Layout.radius.row,
+    overflow: 'hidden',
+  },
   text: { textAlign: 'center' },
 });

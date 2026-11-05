@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, TextInput, type TextInputProps, View } from 'rea
 
 import { ThemedText } from '@/components/themed-text';
 import { GlassSurface } from '@/components/ui/glass-surface';
+import { PillRows } from '@/components/ui/pill-rows';
 import { Fonts, Layout, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -53,7 +54,7 @@ export function Field({ label, testID, ...rest }: FieldProps) {
 
 export type ChipOption<T extends string> = { value: T; label: string };
 
-/** A wrapping row of choices; the chosen one is filled with the accent. */
+/** Choices in at most two rows, scrolling sideways past that; the chosen one is filled with the accent. */
 export function Chips<T extends string>({
   options,
   value,
@@ -66,29 +67,33 @@ export function Chips<T extends string>({
   idPrefix: string;
 }) {
   const theme = useTheme();
+  const pills = options.map((option) => {
+    const selected = option.value === value;
+    return {
+      key: option.value,
+      node: (
+        <Pressable
+          key={option.value}
+          role="radio"
+          aria-checked={selected}
+          aria-label={option.label}
+          onPress={() => onChange(option.value)}
+          testID={`${idPrefix}-${option.value}`}
+          style={[
+            styles.chip,
+            { borderColor: theme.controlBorder },
+            selected && { backgroundColor: theme.accent, borderColor: theme.accent },
+          ]}>
+          <ThemedText type="footnote" themeColor={selected ? 'onAccent' : 'text'}>
+            {option.label}
+          </ThemedText>
+        </Pressable>
+      ),
+    };
+  });
   return (
     <View style={styles.chips}>
-      {options.map((option) => {
-        const selected = option.value === value;
-        return (
-          <Pressable
-            key={option.value}
-            role="radio"
-            aria-checked={selected}
-            aria-label={option.label}
-            onPress={() => onChange(option.value)}
-            testID={`${idPrefix}-${option.value}`}
-            style={[
-              styles.chip,
-              { borderColor: theme.controlBorder },
-              selected && { backgroundColor: theme.accent, borderColor: theme.accent },
-            ]}>
-            <ThemedText type="footnote" themeColor={selected ? 'onAccent' : 'text'}>
-              {option.label}
-            </ThemedText>
-          </Pressable>
-        );
-      })}
+      <PillRows pills={pills} />
     </View>
   );
 }
@@ -133,7 +138,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sans,
     fontSize: 17,
   },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, paddingVertical: Spacing.one },
+  chips: { paddingVertical: Spacing.one },
   chip: {
     minHeight: 36,
     paddingHorizontal: Spacing.three,

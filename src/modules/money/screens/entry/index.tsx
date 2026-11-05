@@ -1,11 +1,10 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { SaveButton } from '@/components/ui/save-button';
 import { SegmentedControl } from '@/components/ui/segmented-control';
-import { Spacing } from '@/constants/theme';
 import { useToday } from '@/hooks/use-today';
 
 import { ReceiptEntry } from './receipt-entry';
@@ -47,8 +46,6 @@ const kindOptions = [
   { value: 'income', label: 'Income' },
   { value: 'payout', label: 'Payout' },
 ] as const;
-
-type ItemRow = { key: number; name: string; amount: string; categoryId: string };
 
 /** Add or edit an entry. With an `id` it edits that entry; without one it adds to the open space. */
 export function MoneyEntry({ id }: { id?: string }) {
@@ -126,15 +123,13 @@ function EntryForm({
   const [date, setDate] = useState(entry?.date ?? today);
   const [note, setNote] = useState(entry?.note ?? '');
   const [categoryId, setCategoryId] = useState<string | null>(entry?.categoryId ?? null);
-  const [rows, setRows] = useState<ItemRow[]>(() =>
-    entryItems.map((item, index) => ({
-      key: index,
-      name: item.name,
-      amount: minorToText(item.amountMinor),
-      categoryId: item.categoryId,
-    })),
-  );
-  const [nextKey, setNextKey] = useState(entryItems.length);
+  // Items arrive from a Wallet receipt; this form never edits them. An entry that has some keeps them.
+  const keptItems = entryItems.map((item) => ({
+    name: item.name,
+    amountMinor: item.amountMinor,
+    categoryId: item.categoryId,
+  }));
+  const hasItems = keptItems.length > 0;
   const [error, setError] = useState<string | null>(null);
   // Who the entry belongs to, and for a payout the business it comes from.
   const live = businesses.filter((b) => !b.archivedAt || b.id === entry?.businessId);
@@ -171,19 +166,10 @@ function EntryForm({
     if (rate === null) return setError('Enter the exchange rate for this currency.');
     if (!isIsoDate(date)) return setError('Enter the date as YYYY-MM-DD.');
     if (isPayout && !from) return setError('Add a business first (Money › Businesses).');
-    const draftItems = rows.map((row) => ({
-      name: row.name.trim(),
-      amountMinor: parseAmount(row.amount) ?? 0,
-      categoryId: row.categoryId,
-    }));
-    if (!isPayout && draftItems.length > 0) {
-      const check = checkItems(minor, draftItems);
-      if (!check.ok) {
-        return setError(
-          check.reason === 'mismatch'
-            ? `Items differ from the total by ${formatMinor(Math.abs(check.diff), currency)}.`
-            : 'Every item needs a name and an amount.',
-        );
+    if (!isPayout && hasItems) {
+      if (!checkItems(minor, keptItems).ok) {
+        const sum = keptItems.reduce((total, item) => total + item.amountMinor, 0);
+        return setError(`Its items add up to ${formatMinor(sum, currency)}, so the amount stays.`);
       }
     } else if (!isPayout && !chosenCategory) {
       return setError('Choose a category.');
@@ -201,7 +187,7 @@ function EntryForm({
         date,
         note,
         categoryId: isPayout ? null : chosenCategory,
-        items: isPayout ? [] : draftItems,
+        items: isPayout ? [] : keptItems,
       },
       { onSuccess: () => router.back(), onError: () => setError('Could not save. Try again.') },
     );
@@ -218,13 +204,6 @@ function EntryForm({
       },
     ]);
   };
-
-  const addRow = () => {
-    setRows([...rows, { key: nextKey, name: '', amount: '', categoryId: choices[0]?.id ?? '' }]);
-    setNextKey(nextKey + 1);
-  };
-  const patchRow = (key: number, patch: Partial<ItemRow>) =>
-    setRows(rows.map((row) => (row.key === key ? { ...row, ...patch } : row)));
 
   return (
     <MoneyScreen
@@ -324,8 +303,8 @@ function EntryForm({
         />
       </Group>
       {isPayout ? null : (
-        <Group title={rows.length > 0 ? 'Category (set per item)' : 'Category'}>
-          {rows.length === 0 ? (
+        <Group title={hasItems ? 'Category (set per item)' : 'Category'}>
+          {!hasItems ? (
             <Chips
               options={options}
               value={chosenCategory}
@@ -337,51 +316,6 @@ function EntryForm({
               Each item has its own category.
             </ThemedText>
           )}
-        </Group>
-      )}
-      {isPayout ? null : (
-        <Group title="Items (optional)">
-          {rows.map((row, index) => (
-            <View key={row.key} style={styles.item} testID={`money-entry-item-${index}`}>
-              <Field
-                label={`Item ${index + 1} name`}
-                value={row.name}
-                onChangeText={(name) => patchRow(row.key, { name })}
-                placeholder="Name"
-                testID={`money-entry-item-name-${index}`}
-              />
-              <Field
-                label={`Item ${index + 1} amount`}
-                value={row.amount}
-                onChangeText={(value) => patchRow(row.key, { amount: value })}
-                placeholder="0.00"
-                keyboardType="decimal-pad"
-                testID={`money-entry-item-amount-${index}`}
-              />
-              <Chips
-                options={options}
-                value={row.categoryId}
-                onChange={(value) => patchRow(row.key, { categoryId: value })}
-                idPrefix={`money-entry-item-category-${index}`}
-              />
-              <Pressable
-                role="button"
-                aria-label={`Remove item ${index + 1}`}
-                onPress={() => setRows(rows.filter((r) => r.key !== row.key))}
-                testID={`money-entry-item-remove-${index}`}
-                style={styles.remove}>
-                <ThemedText themeColor="danger">Remove</ThemedText>
-              </Pressable>
-            </View>
-          ))}
-          <Pressable
-            role="button"
-            aria-label="Add item"
-            onPress={addRow}
-            testID="money-entry-item-add"
-            style={styles.remove}>
-            <ThemedText themeColor="accent">Add item</ThemedText>
-          </Pressable>
         </Group>
       )}
       <Group title="Note">
@@ -413,6 +347,5 @@ function EntryForm({
 }
 
 const styles = StyleSheet.create({
-  item: { gap: Spacing.one, paddingVertical: Spacing.two },
   remove: { minHeight: 44, justifyContent: 'center' },
 });

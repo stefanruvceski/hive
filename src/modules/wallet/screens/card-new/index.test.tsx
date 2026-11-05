@@ -44,6 +44,7 @@ describe('WalletCardNew', () => {
   it('guesses EAN-13 from a typed number and saves the named card', async () => {
     await renderScreen();
     const user = userEvent.setup();
+    await user.press(screen.getByTestId('wallet-scanner-close'));
 
     await user.type(screen.getByTestId('wallet-card-number'), '4006381333931');
     expect(screen.getByTestId('wallet-card-format-EAN_13')).toBeChecked();
@@ -62,6 +63,7 @@ describe('WalletCardNew', () => {
   it('suggests a known program while typing and fills in its name', async () => {
     await renderScreen();
     const user = userEvent.setup();
+    await user.press(screen.getByTestId('wallet-scanner-close'));
 
     await user.type(screen.getByTestId('wallet-card-name'), 'ide');
     await user.press(screen.getByTestId('wallet-card-suggestion-Idea'));
@@ -73,6 +75,7 @@ describe('WalletCardNew', () => {
   it('saves a non-numeric number as Code 128', async () => {
     await renderScreen();
     const user = userEvent.setup();
+    await user.press(screen.getByTestId('wallet-scanner-close'));
 
     await user.type(screen.getByTestId('wallet-card-number'), 'AB-12345');
     await user.type(screen.getByTestId('wallet-card-name'), 'Gym');
@@ -87,6 +90,7 @@ describe('WalletCardNew', () => {
   it('says what is wrong with a number for the chosen type, and does not save it', async () => {
     await renderScreen();
     const user = userEvent.setup();
+    await user.press(screen.getByTestId('wallet-scanner-close'));
 
     await user.type(screen.getByTestId('wallet-card-number'), '4006381333932');
     await user.press(screen.getByTestId('wallet-card-format-EAN_13'));
@@ -99,16 +103,34 @@ describe('WalletCardNew', () => {
     expect(mutate).not.toHaveBeenCalled();
   });
 
-  it('fills the number and type from a scan', async () => {
+  it('starts with only the scan button; typing it in brings the fields', async () => {
+    await renderScreen();
+
+    expect(screen.queryByTestId('wallet-card-number')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('wallet-card-name')).not.toBeOnTheScreen();
+    await userEvent.setup().press(screen.getByTestId('wallet-scanner-close'));
+    expect(screen.getByTestId('wallet-card-number')).toBeOnTheScreen();
+    expect(screen.getByTestId('wallet-card-name')).toBeOnTheScreen();
+  });
+
+  it('fills the number and type from a scan and asks only for the name and color', async () => {
     await renderScreen();
     const user = userEvent.setup();
 
-    await user.press(screen.getByTestId('wallet-card-scan'));
     await user.press(screen.getByTestId('fake-camera'));
 
-    expect(screen.getByTestId('wallet-card-number')).toHaveDisplayValue('4006381333931');
-    expect(screen.getByTestId('wallet-card-format-EAN_13')).toBeChecked();
     expect(screen.queryByTestId('wallet-scanner')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('wallet-card-number')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('wallet-card-format-EAN_13')).not.toBeOnTheScreen();
+    expect(screen.getByTestId('wallet-card-name')).toBeOnTheScreen();
+    expect(screen.getByTestId('wallet-card-color-rose')).toBeOnTheScreen();
+
+    await user.type(screen.getByTestId('wallet-card-name'), 'Gym');
+    await user.press(screen.getByTestId('wallet-card-save'));
+    expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({ number: '4006381333931', format: 'EAN_13', name: 'Gym' }),
+      expect.anything(),
+    );
   });
 
   it('keeps typing possible and offers Settings when the camera is denied', async () => {
@@ -117,12 +139,12 @@ describe('WalletCardNew', () => {
     await renderScreen();
     const user = userEvent.setup();
 
-    await user.press(screen.getByTestId('wallet-card-scan'));
     expect(screen.getByTestId('wallet-scanner-denied')).toBeOnTheScreen();
     await user.press(screen.getByTestId('wallet-scanner-settings'));
     expect(openSettings).toHaveBeenCalled();
 
     await user.press(screen.getByTestId('wallet-scanner-close'));
+    expect(screen.getByTestId('wallet-card-number')).toBeOnTheScreen();
     await user.type(screen.getByTestId('wallet-card-number'), '123');
     expect(screen.getByTestId('wallet-card-number')).toHaveDisplayValue('123');
   });
@@ -133,6 +155,7 @@ describe('WalletCardNew', () => {
     );
     await renderScreen();
     const user = userEvent.setup();
+    await user.press(screen.getByTestId('wallet-scanner-close'));
     await user.type(screen.getByTestId('wallet-card-number'), 'AB-1');
     await user.type(screen.getByTestId('wallet-card-name'), 'Gym');
     await user.press(screen.getByTestId('wallet-card-save'));
@@ -140,25 +163,31 @@ describe('WalletCardNew', () => {
     expect(router.back).toHaveBeenCalled();
   });
 
-  it('names a recognised program from the scan, puts QR first and locks the color', async () => {
+  it('asks for nothing when the scan names a known program, and saves it as scanned', async () => {
     mockScan.mockReturnValue({ type: 'qr', data: 'https://www.lidl.rs/plus?c=3e3c9a' });
     await renderScreen();
     const user = userEvent.setup();
-    await user.press(screen.getByTestId('wallet-card-scan'));
     await user.press(screen.getByTestId('fake-camera'));
 
-    expect(screen.getByTestId('wallet-card-name')).toHaveProp('value', 'Lidl Plus');
-    expect(screen.getByTestId('wallet-card-format-QR_CODE')).toBeChecked();
-    const ids = screen.getAllByTestId(/^wallet-card-format-/).map((node) => node.props.testID);
-    expect(ids[0]).toBe('wallet-card-format-QR_CODE');
+    for (const hidden of [
+      'wallet-card-name',
+      'wallet-card-number',
+      'wallet-card-format-QR_CODE',
+      'wallet-card-color-rose',
+    ]) {
+      expect(screen.queryByTestId(hidden)).not.toBeOnTheScreen();
+    }
     expect(screen.getByTestId('wallet-card-recognised')).toBeOnTheScreen();
-    expect(screen.getByTestId('wallet-card-color-rose')).toBeDisabled();
+    await user.press(screen.getByTestId('wallet-card-save'));
+    expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Lidl Plus', format: 'QR_CODE' }),
+      expect.anything(),
+    );
   });
 
   it('leaves the name and color alone for a code that is not a known program', async () => {
     await renderScreen();
     const user = userEvent.setup();
-    await user.press(screen.getByTestId('wallet-card-scan'));
     await user.press(screen.getByTestId('fake-camera'));
 
     expect(screen.getByTestId('wallet-card-name')).toHaveProp('value', '');

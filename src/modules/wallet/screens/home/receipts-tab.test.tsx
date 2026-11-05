@@ -153,17 +153,6 @@ describe('ReceiptsTab', () => {
     expect(onClearPib).toHaveBeenCalled();
   });
 
-  it('adds a pasted link from the field under the header', async () => {
-    jest.mocked(useReceipts).mockReturnValue(loaded([receipt('r1')]));
-    await renderTab();
-    const user = userEvent.setup();
-
-    expect(screen.getByTestId('wallet-receipt-link-add')).toBeDisabled();
-    await user.type(screen.getByTestId('wallet-receipt-link'), 'https://suf.purs.gov.rs/v/?vl=Q2');
-    await user.press(screen.getByTestId('wallet-receipt-link-add'));
-    expect(add).toHaveBeenCalledWith('https://suf.purs.gov.rs/v/?vl=Q2', expect.anything());
-  });
-
   it('asks the tax office again on pull to refresh', async () => {
     jest.mocked(useReceipts).mockReturnValue(loaded([receipt('r1')]));
     await renderTab();
@@ -173,12 +162,12 @@ describe('ReceiptsTab', () => {
     expect(refresh).toHaveBeenCalled();
   });
 
-  it('shows an empty state that still offers adding a link', async () => {
+  it('shows an empty state that still offers search', async () => {
     jest.mocked(useReceipts).mockReturnValue(loaded([]));
     await renderTab();
 
     expect(screen.getByTestId('wallet-receipts-empty')).toBeOnTheScreen();
-    expect(screen.getByTestId('wallet-receipt-link')).toBeOnTheScreen();
+    expect(screen.getByTestId('wallet-receipt-search')).toBeOnTheScreen();
   });
 
   it('shows a retryable error', async () => {

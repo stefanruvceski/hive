@@ -9,6 +9,7 @@ import { WalletReceiptScreen } from './index';
 import { useShopGroups } from '../../data/price-queries';
 import {
   useDeleteReceipt,
+  useDeleteReceiptItem,
   useEditReceiptItem,
   useEditReceiptNote,
   useReceipt,
@@ -34,6 +35,7 @@ const hooks = {
   remove: jest.fn(),
   owner: jest.fn(),
   item: jest.fn(),
+  removeItem: jest.fn(),
 };
 const firm = {
   id: 'b1',
@@ -42,6 +44,8 @@ const firm = {
   archivedAt: null,
   createdAt: '2026-01-01',
 };
+// A swipe cannot be performed in Jest, so the row's buttons are pressed while still closed.
+const hidden = { includeHiddenElements: true };
 const frame = {
   frame: { x: 0, y: 0, width: 390, height: 844 },
   insets: { top: 0, left: 0, right: 0, bottom: 0 },
@@ -62,6 +66,7 @@ beforeEach(() => {
   jest.mocked(useDeleteReceipt).mockReturnValue({ mutate: hooks.remove } as never);
   jest.mocked(useSetReceiptOwner).mockReturnValue({ mutate: hooks.owner } as never);
   jest.mocked(useEditReceiptItem).mockReturnValue({ mutate: hooks.item } as never);
+  jest.mocked(useDeleteReceiptItem).mockReturnValue({ mutate: hooks.removeItem } as never);
 });
 
 describe('WalletReceiptScreen', () => {
@@ -113,14 +118,13 @@ describe('WalletReceiptScreen', () => {
     expect(screen.getByText(/doesn't know this receipt/)).toBeOnTheScreen();
   });
 
-  it('shows the current owner as plain text and offers Save only for a change', async () => {
+  it('marks the current owner in the pills and offers Save only for a change', async () => {
     jest.mocked(useReceipt).mockReturnValue(loaded(receipt('r1', { buyerTin: '104052135' })));
     await renderScreen();
     const user = userEvent.setup();
 
-    expect(screen.getByTestId('wallet-receipt-owner-current')).toHaveTextContent(
-      'Company · Moja firma',
-    );
+    expect(screen.getByTestId('wallet-receipt-owner-pib:104052135')).toBeChecked();
+    expect(screen.queryByText('Change owner')).not.toBeOnTheScreen();
     expect(screen.queryByTestId('wallet-receipt-owner-save')).not.toBeOnTheScreen();
 
     await user.press(screen.getByTestId('wallet-receipt-owner-personal'));
@@ -133,7 +137,7 @@ describe('WalletReceiptScreen', () => {
     await renderScreen();
     const user = userEvent.setup();
 
-    expect(screen.getByTestId('wallet-receipt-owner-current')).toHaveTextContent('Personal');
+    expect(screen.getByTestId('wallet-receipt-owner-personal')).toBeChecked();
     await user.press(screen.getByTestId('wallet-receipt-owner-pib:104052135'));
     await user.press(screen.getByTestId('wallet-receipt-owner-save'));
     expect(hooks.owner).toHaveBeenCalledWith({ id: 'r1', buyerTin: '104052135' });
@@ -157,9 +161,8 @@ describe('WalletReceiptScreen', () => {
     jest.mocked(useReceipt).mockReturnValue(loaded(receipt('r1', { buyerTin: '100000001' })));
     await renderScreen();
 
-    expect(screen.getByTestId('wallet-receipt-owner-current')).toHaveTextContent(
-      'Company · PIB 100000001',
-    );
+    expect(screen.getByTestId('wallet-receipt-owner-other')).toBeChecked();
+    expect(screen.getByTestId('wallet-receipt-owner-pib').props.value).toBe('100000001');
     expect(screen.queryByTestId('wallet-receipt-owner-save')).not.toBeOnTheScreen();
   });
 
@@ -215,7 +218,7 @@ describe('WalletReceiptScreen', () => {
     await renderScreen();
     const user = userEvent.setup();
 
-    await user.press(screen.getByTestId('wallet-receipt-item-edit-r1-i1'));
+    await user.press(screen.getByTestId('wallet-receipt-item-r1-i1-edit', hidden));
     await user.clear(screen.getByTestId('wallet-receipt-item-qty-r1-i1'));
     await user.type(screen.getByTestId('wallet-receipt-item-qty-r1-i1'), '38,5');
     await user.clear(screen.getByTestId('wallet-receipt-item-price-r1-i1'));
@@ -226,6 +229,17 @@ describe('WalletReceiptScreen', () => {
       { receiptId: 'r1', itemId: 'r1-i1', quantity: 38.5, unitPrice: 19990 },
       expect.anything(),
     );
+  });
+
+  it('deletes an item only after confirmation', async () => {
+    jest.mocked(useReceipt).mockReturnValue(loaded(receipt('r1')));
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+    await renderScreen();
+    await userEvent.setup().press(screen.getByTestId('wallet-receipt-item-r1-i1-archive', hidden));
+
+    expect(hooks.removeItem).not.toHaveBeenCalled();
+    alert.mock.calls[0]?.[2]?.find((b) => b.text === 'Delete')?.onPress?.();
+    expect(hooks.removeItem).toHaveBeenCalledWith({ receiptId: 'r1', itemId: 'r1-i1' });
   });
 
   it('notes and shows it as printed', async () => {

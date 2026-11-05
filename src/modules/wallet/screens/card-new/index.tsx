@@ -1,9 +1,8 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { PrimaryButton } from '@/components/ui/primary-button';
 import { SaveButton } from '@/components/ui/save-button';
 import { useThemeName } from '@/hooks/use-theme';
 
@@ -31,7 +30,8 @@ const formatOptions = (qrFirst: boolean) =>
 export function WalletCardNew() {
   const scheme = useThemeName();
   const create = useCreateCard();
-  const [scanning, setScanning] = useState(false);
+  // The camera is open from the start: scanning is the way in, typing the way out.
+  const [scanning, setScanning] = useState(true);
   const [number, setNumber] = useState('');
   const [chosen, setChosen] = useState<CardFormat | null>(null);
   const [name, setName] = useState('');
@@ -40,6 +40,15 @@ export function WalletCardNew() {
   // The program the scan pointed at: it brings its own face, so the color does not apply.
   const [recognised, setRecognised] = useState<CardBrand | null>(null);
   const [scannedQr, setScannedQr] = useState(false);
+  // The number and name fields stay out of the way until they are needed: when the user chooses
+  // to type, or when a scan did not tell which program the card is.
+  const [typing, setTyping] = useState(false);
+  const [scanned, setScanned] = useState(false);
+  const showNumber = typing;
+  const showName = typing || (scanned && recognised === null);
+  // A scan tells the barcode type, and a known program brings its own colors; ask only for the rest.
+  const showFormat = typing || (scanned && chosen === null);
+  const showColor = typing || (scanned && recognised === null);
 
   const format = chosen ?? guess(number);
   const issue = number.trim() ? problem(number, format) : null;
@@ -65,44 +74,62 @@ export function WalletCardNew() {
             const brand = recognizeCard(data);
             setRecognised(brand);
             if (brand) setName(brand.name);
+            setScanned(true);
             setScanning(false);
           }}
-          onClose={() => setScanning(false)}
+          onClose={() => {
+            setScanning(false);
+            setTyping(true);
+          }}
         />
       ) : (
-        <PrimaryButton
-          label="Scan with camera"
+        <Pressable
+          role="button"
+          aria-label="Scan the card again"
           onPress={() => setScanning(true)}
-          testID="wallet-card-scan"
-        />
+          testID="wallet-card-preview">
+          <CardFace
+            look={cardLook(recognised?.name ?? name, cardColor(color, scheme))}
+            name={name.trim() || 'Card name'}
+          />
+        </Pressable>
       )}
-      <Field
-        label="Card number"
-        value={number}
-        onChangeText={(text) => {
-          setNumber(text);
-          setChosen(null);
-          setScannedQr(false);
-          setRecognised(null);
-        }}
-        autoCapitalize="characters"
-        placeholder="Number under the barcode"
-        testID="wallet-card-number"
-      />
+      {scanning ? null : (
+        <ThemedText type="hint" testID="wallet-card-rescan-hint">
+          Tap the card to scan it again.
+        </ThemedText>
+      )}
+      {showNumber ? (
+        <Field
+          label="Card number"
+          value={number}
+          onChangeText={(text) => {
+            setNumber(text);
+            setChosen(null);
+            setScannedQr(false);
+            setRecognised(null);
+          }}
+          autoCapitalize="characters"
+          placeholder="Number under the barcode"
+          testID="wallet-card-number"
+        />
+      ) : null}
       {issue ? (
         <ThemedText role="alert" themeColor="danger" testID="wallet-card-problem">
           {issue}
         </ThemedText>
       ) : null}
-      <Field
-        label="Name"
-        value={name}
-        onChangeText={setName}
-        placeholder="Shop or brand"
-        maxLength={40}
-        testID="wallet-card-name"
-      />
-      {suggestions.length > 0 ? (
+      {showName ? (
+        <Field
+          label="Name"
+          value={name}
+          onChangeText={setName}
+          placeholder="Shop or brand"
+          maxLength={40}
+          testID="wallet-card-name"
+        />
+      ) : null}
+      {showName && suggestions.length > 0 ? (
         <Chips
           label="Suggestions"
           options={suggestions.map(({ name: value }) => ({ value, label: value }))}
@@ -111,38 +138,31 @@ export function WalletCardNew() {
           testID="wallet-card-suggestion"
         />
       ) : null}
-      <Chips
-        label="Barcode type"
-        options={formatOptions(scannedQr)}
-        value={format}
-        onChange={setChosen}
-        testID="wallet-card-format"
-      />
-      <Chips
-        label="Color"
-        options={cardColorKeys.map((value) => ({ value, label: value }))}
-        value={color as (typeof cardColorKeys)[number]}
-        onChange={setColor}
-        testID="wallet-card-color"
-        disabled={recognised !== null}
-      />
+      {showFormat ? (
+        <Chips
+          label="Barcode type"
+          options={formatOptions(scannedQr)}
+          value={format}
+          onChange={setChosen}
+          testID="wallet-card-format"
+          maxRows={1}
+        />
+      ) : null}
+      {showColor ? (
+        <Chips
+          label="Color"
+          options={cardColorKeys.map((value) => ({ value, label: value }))}
+          value={color as (typeof cardColorKeys)[number]}
+          onChange={setColor}
+          testID="wallet-card-color"
+        />
+      ) : null}
       {recognised ? (
         <ThemedText type="hint" testID="wallet-card-recognised">
           {`Recognised: ${recognised.name}. It uses its own colors.`}
         </ThemedText>
       ) : null}
-      <View style={styles.preview}>
-        <CardFace
-          look={cardLook(recognised?.name ?? name, cardColor(color, scheme))}
-          name={name.trim() || 'Card name'}
-          testID="wallet-card-preview"
-        />
-      </View>
       <Field label="Note" value={note} onChangeText={setNote} testID="wallet-card-note" />
     </WalletScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  preview: { width: '62%' },
-});

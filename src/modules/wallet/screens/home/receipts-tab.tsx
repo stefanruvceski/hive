@@ -7,7 +7,6 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
 import { GlassSurface } from '@/components/ui/glass-surface';
 import { LoadingState } from '@/components/ui/loading-state';
-import { PrimaryButton } from '@/components/ui/primary-button';
 import { Layout, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -60,7 +59,7 @@ type TabProps = {
   onClearPib?: () => void;
 };
 
-/** The Receipts tab: search, add a link, open receipts; the scan button is in the header. */
+/** The Receipts tab: search and open receipts; the scan button is in the header. */
 export function ReceiptsTab({ scanning = false, onScanningChange, pib, onClearPib }: TabProps) {
   const theme = useTheme();
   const { data, error, isError, refetch } = useReceipts();
@@ -68,7 +67,6 @@ export function ReceiptsTab({ scanning = false, onScanningChange, pib, onClearPi
   const { refresh, isRefreshing } = useSyncReceipts();
   const add = useAddReceipt();
   const [query, setQuery] = useState('');
-  const [link, setLink] = useState('');
   const [message, setMessage] = useState<string | null>(null);
 
   const addText = (text: string) => {
@@ -76,7 +74,6 @@ export function ReceiptsTab({ scanning = false, onScanningChange, pib, onClearPi
     add.mutate(text, {
       onSuccess: ({ duplicate }) => {
         if (duplicate) setMessage('This receipt is already saved.');
-        else setLink('');
       },
       onError: (e) => setMessage(e.message),
     });
@@ -121,26 +118,6 @@ export function ReceiptsTab({ scanning = false, onScanningChange, pib, onClearPi
           style={[styles.input, { color: theme.text }]}
         />
       </GlassSurface>
-      <GlassSurface kind="glass" radius={Layout.radius.row} style={styles.field}>
-        <TextInput
-          aria-label="Receipt link"
-          placeholder="Paste a receipt link"
-          placeholderTextColor={theme.textQuaternary}
-          selectionColor={theme.accent}
-          autoCapitalize="none"
-          autoCorrect={false}
-          value={link}
-          onChangeText={setLink}
-          testID="wallet-receipt-link"
-          style={[styles.input, { color: theme.text }]}
-        />
-      </GlassSurface>
-      <PrimaryButton
-        label="Add link"
-        disabled={link.trim().length === 0 || add.isPending}
-        onPress={() => addText(link)}
-        testID="wallet-receipt-link-add"
-      />
       <TextButton
         label="Prices by shop"
         onPress={() => router.push('/wallet/prices')}

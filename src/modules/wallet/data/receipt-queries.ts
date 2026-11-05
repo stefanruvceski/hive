@@ -266,6 +266,23 @@ export const useEditReceiptItem = () =>
     },
   );
 
+/** Takes one line off a receipt; consumers hear the receipt again without it. */
+export const useDeleteReceiptItem = () =>
+  useInvalidating(({ receiptId, itemId }: { receiptId: string; itemId: string }) => {
+    getDb().transaction((tx) => {
+      tx.delete(walletReceiptItems).where(eq(walletReceiptItems.id, itemId)).run();
+      const row = tx.select().from(walletReceipts).where(eq(walletReceipts.id, receiptId)).get();
+      if (row?.status !== 'ok') return;
+      const items = tx
+        .select()
+        .from(walletReceiptItems)
+        .where(eq(walletReceiptItems.receiptId, receiptId))
+        .orderBy(asc(walletReceiptItems.position))
+        .all();
+      publish(tx, { type: 'receipt.updated', payload: eventFor(row, items.map(toStored)) });
+    });
+  });
+
 /** Deletes the receipt and hands it back (with its items) so the caller can offer Undo. */
 export const useDeleteReceipt = () =>
   useInvalidating((id: string): Receipt | null => {
