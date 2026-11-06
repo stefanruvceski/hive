@@ -17,11 +17,15 @@ describe('parseAppSettings', () => {
       toSettingRow({ key: 'appearance', value: 'dark' }),
       toSettingRow({ key: 'showToday', value: false }),
       toSettingRow({ key: 'dateFormat', value: 'iso' }),
+      toSettingRow({ key: 'backupFolder', value: 'file:///b/' }),
+      toSettingRow({ key: 'lastBackup', value: '2026-11-05T10:00:00.000Z' }),
     ];
     expect(parseAppSettings(rows)).toEqual({
       appearance: 'dark',
       showToday: false,
       dateFormat: 'iso',
+      backupFolder: 'file:///b/',
+      lastBackup: '2026-11-05T10:00:00.000Z',
     });
   });
 

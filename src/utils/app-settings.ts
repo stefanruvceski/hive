@@ -10,6 +10,10 @@ export type AppSettings = {
   showToday: boolean;
   /** Stored now; dates follow it once the date-format story lands. */
   dateFormat: DateFormat;
+  /** The folder the backups are written to (a `file://` or content URI); null until chosen. */
+  backupFolder: string | null;
+  /** ISO time of the last backup written to the folder or shared; null = never. */
+  lastBackup: string | null;
 };
 
 export type SettingRow = { key: string; value: string };
@@ -23,6 +27,8 @@ export const defaultAppSettings: AppSettings = {
   appearance: 'system',
   showToday: true,
   dateFormat: 'eu',
+  backupFolder: null,
+  lastBackup: null,
 };
 
 export const appearances: readonly Appearance[] = ['system', 'dark', 'light'];
@@ -32,6 +38,8 @@ const isValid: { [K in keyof AppSettings]: (value: unknown) => value is AppSetti
   appearance: (value): value is Appearance => appearances.includes(value as Appearance),
   showToday: (value): value is boolean => typeof value === 'boolean',
   dateFormat: (value): value is DateFormat => dateFormats.includes(value as DateFormat),
+  backupFolder: (value): value is string | null => value === null || typeof value === 'string',
+  lastBackup: (value): value is string | null => value === null || typeof value === 'string',
 };
 
 function isSettingKey(key: string): key is keyof AppSettings {
