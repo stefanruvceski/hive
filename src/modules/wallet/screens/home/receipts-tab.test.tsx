@@ -10,6 +10,9 @@ import { loaded, receipt } from '../test-data';
 
 jest.mock('../../data/receipt-queries');
 jest.mock('../../data/price-queries');
+const mockPick = jest.fn();
+const mockPhoto = { pick: mockPick, busy: false, error: null as string | null };
+jest.mock('../components/use-photo-scan', () => ({ usePhotoScan: () => mockPhoto }));
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
 jest.mock('expo-camera', () => {
   const { Pressable } = jest.requireActual<typeof import('react-native')>('react-native');
@@ -39,6 +42,7 @@ const renderTab = (props: ComponentProps<typeof ReceiptsTab> = {}) =>
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockPhoto.error = null;
   jest.mocked(useAddReceipt).mockReturnValue({ mutate: add, isPending: false } as never);
   jest.mocked(useShopGroups).mockReturnValue(loaded([]));
   jest.mocked(useSyncReceipts).mockReturnValue({ refresh, isRefreshing: false });
@@ -184,5 +188,25 @@ describe('ReceiptsTab', () => {
 
     expect(screen.getByTestId('wallet-receipts-error')).toBeOnTheScreen();
     expect(screen.queryByText(/SELECT failed/)).not.toBeOnTheScreen();
+  });
+
+  it('adds a receipt from a photo of its QR code', async () => {
+    jest.mocked(useReceipts).mockReturnValue(loaded([receipt('r1')]));
+    mockPick.mockResolvedValue({ data: 'https://suf.purs.gov.rs/v/?vl=Q3', format: 'QR_CODE' });
+    await renderTab();
+    await userEvent.setup().press(screen.getByTestId('wallet-receipt-photo'));
+
+    expect(add).toHaveBeenCalledWith('https://suf.purs.gov.rs/v/?vl=Q3', expect.anything());
+  });
+
+  it('says when the photo has no receipt code', async () => {
+    jest.mocked(useReceipts).mockReturnValue(loaded([receipt('r1')]));
+    mockPick.mockResolvedValue(null);
+    mockPhoto.error = 'No barcode or QR code found in this photo. Try a sharper, closer picture.';
+    await renderTab();
+    await userEvent.setup().press(screen.getByTestId('wallet-receipt-photo'));
+
+    expect(add).not.toHaveBeenCalled();
+    expect(screen.getByTestId('wallet-receipt-photo-problem')).toBeOnTheScreen();
   });
 });

@@ -22,6 +22,7 @@ import { byMonth, formatAmount, receiptDate, searchReceipts } from '../../domain
 import { shopOf } from '../../domain/shop-brands';
 import { CardScanner } from '../components/card-scanner';
 import { TextButton } from '../components/text-button';
+import { usePhotoScan } from '../components/use-photo-scan';
 import { rowLines, useStackedRow } from '../components/use-stacked-row';
 
 type Row = { kind: 'month'; month: string } | { kind: 'receipt'; receipt: Receipt };
@@ -66,6 +67,7 @@ export function ReceiptsTab({ scanning = false, onScanningChange, pib, onClearPi
   const groups = useShopGroups().data ?? [];
   const { refresh, isRefreshing } = useSyncReceipts();
   const add = useAddReceipt();
+  const photo = usePhotoScan(['qr']);
   const [query, setQuery] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const first = pib ? data?.find((r) => r.tin?.trim() === pib) : undefined;
@@ -121,6 +123,20 @@ export function ReceiptsTab({ scanning = false, onScanningChange, pib, onClearPi
           style={[styles.input, { color: theme.text }]}
         />
       </GlassSurface>
+      <TextButton
+        label="Add from a photo"
+        onPress={() =>
+          void photo.pick().then((scan) => {
+            if (scan) addText(scan.data);
+          })
+        }
+        testID="wallet-receipt-photo"
+      />
+      {photo.error ? (
+        <ThemedText role="alert" themeColor="danger" testID="wallet-receipt-photo-problem">
+          {photo.error}
+        </ThemedText>
+      ) : null}
       <TextButton
         label="Prices by shop"
         onPress={() => router.push('/wallet/prices')}

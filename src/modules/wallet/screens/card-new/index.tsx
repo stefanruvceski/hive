@@ -19,6 +19,8 @@ import {
 import { CardFace } from '../components/card-face';
 import { CardScanner } from '../components/card-scanner';
 import { Chips, Field } from '../components/form';
+import { TextButton } from '../components/text-button';
+import { usePhotoScan } from '../components/use-photo-scan';
 import { WalletScreen } from '../components/wallet-screen';
 
 const formatOptions = (qrFirst: boolean) =>
@@ -50,6 +52,18 @@ export function WalletCardNew() {
   const showFormat = typing || (scanned && chosen === null);
   const showColor = typing || (scanned && recognised === null);
 
+  const photo = usePhotoScan();
+
+  const applyScan = (data: string, scannedFormat: CardFormat | null) => {
+    setNumber(data);
+    setChosen(scannedFormat && isDrawable(scannedFormat) ? scannedFormat : null);
+    setScannedQr(scannedFormat === 'QR_CODE');
+    const brand = recognizeCard(data);
+    setRecognised(brand);
+    if (brand) setName(brand.name);
+    setScanned(true);
+  };
+
   const format = chosen ?? guess(number);
   const issue = number.trim() ? problem(number, format) : null;
   const suggestions = suggestBrands(name).filter((b) => b.name !== name.trim());
@@ -67,14 +81,8 @@ export function WalletCardNew() {
       trailing={<SaveButton disabled={!canSave} onPress={save} testID="wallet-card-save" />}>
       {scanning ? (
         <CardScanner
-          onScanned={(data, scanned) => {
-            setNumber(data);
-            setChosen(scanned && isDrawable(scanned) ? scanned : null);
-            setScannedQr(scanned === 'QR_CODE');
-            const brand = recognizeCard(data);
-            setRecognised(brand);
-            if (brand) setName(brand.name);
-            setScanned(true);
+          onScanned={(data, scannedFormat) => {
+            applyScan(data, scannedFormat);
             setScanning(false);
           }}
           onClose={() => {
@@ -99,6 +107,22 @@ export function WalletCardNew() {
           Tap the card to scan it again.
         </ThemedText>
       )}
+      <TextButton
+        label="Choose from photos"
+        onPress={() =>
+          void photo.pick().then((scan) => {
+            if (!scan) return;
+            applyScan(scan.data, scan.format);
+            setScanning(false);
+          })
+        }
+        testID="wallet-card-photo"
+      />
+      {photo.error ? (
+        <ThemedText role="alert" themeColor="danger" testID="wallet-card-photo-problem">
+          {photo.error}
+        </ThemedText>
+      ) : null}
       {showNumber ? (
         <Field
           label="Card number"

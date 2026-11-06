@@ -7,6 +7,9 @@ import { WalletCardNew } from './index';
 import { useCreateCard } from '../../data/queries';
 
 jest.mock('../../data/queries');
+const mockPick = jest.fn();
+const mockPhoto = { pick: mockPick, busy: false, error: null as string | null };
+jest.mock('../components/use-photo-scan', () => ({ usePhotoScan: () => mockPhoto }));
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
 
 const mockPermission = jest.fn();
@@ -35,6 +38,7 @@ const renderScreen = () =>
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockPhoto.error = null;
   mockScan.mockReturnValue({ type: 'ean13', data: '4006381333931' });
   mockPermission.mockReturnValue([{ granted: true, canAskAgain: true }, jest.fn()]);
   jest.mocked(useCreateCard).mockReturnValue({ mutate, isPending: false } as never);
@@ -199,5 +203,33 @@ describe('WalletCardNew', () => {
     await renderScreen();
     expect(screen.queryByTestId('wallet-card-format-scroll')).not.toBeOnTheScreen();
     expect(screen.queryByTestId('wallet-card-color-scroll')).not.toBeOnTheScreen();
+  });
+
+  it('adds a card from a photo: recognises the program and saves its code', async () => {
+    mockPick.mockResolvedValue({ data: 'https://www.lidl.rs/plus?c=3e3c9a', format: 'QR_CODE' });
+    await renderScreen();
+    const user = userEvent.setup();
+    await user.press(screen.getByTestId('wallet-card-photo'));
+
+    expect(screen.getByTestId('wallet-card-recognised')).toBeOnTheScreen();
+    await user.press(screen.getByTestId('wallet-card-save'));
+    expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Lidl Plus',
+        number: 'https://www.lidl.rs/plus?c=3e3c9a',
+        format: 'QR_CODE',
+      }),
+      expect.anything(),
+    );
+  });
+
+  it('shows why a photo gave no card', async () => {
+    mockPick.mockResolvedValue(null);
+    mockPhoto.error = 'No barcode or QR code found in this photo. Try a sharper, closer picture.';
+    await renderScreen();
+    await userEvent.setup().press(screen.getByTestId('wallet-card-photo'));
+
+    expect(screen.getByTestId('wallet-card-photo-problem')).toHaveTextContent(/No barcode/);
+    expect(screen.queryByTestId('wallet-card-recognised')).not.toBeOnTheScreen();
   });
 });
