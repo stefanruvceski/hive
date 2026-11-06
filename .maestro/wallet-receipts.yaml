@@ -12,3 +12,5 @@ tags:
     id: 'wallet-receipt-scan'
 - assertVisible:
     id: 'wallet-receipt-search'
+- assertVisible:
+    id: 'wallet-receipt-photo'

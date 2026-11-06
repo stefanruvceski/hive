@@ -9,7 +9,12 @@ import { rememberDeletedCard } from '../../data/deleted-card';
 import { rememberDeletedReceipt } from '../../data/deleted-receipt';
 import { useShopGroups } from '../../data/price-queries';
 import { useCards, useRestoreCard } from '../../data/queries';
-import { useReceipts, useRestoreReceipt, useSyncReceipts } from '../../data/receipt-queries';
+import {
+  useAddReceipt,
+  useReceipts,
+  useRestoreReceipt,
+  useSyncReceipts,
+} from '../../data/receipt-queries';
 import { useStackedRow } from '../components/use-stacked-row';
 import { card, loaded, receipt } from '../test-data';
 
@@ -20,6 +25,7 @@ jest.mock('../components/use-stacked-row', () => ({
 }));
 jest.mock('../../data/receipt-queries');
 jest.mock('../../data/price-queries');
+jest.mock('expo-image-picker', () => ({ launchImageLibraryAsync: jest.fn() }));
 jest.mock('expo-camera', () => ({
   useCameraPermissions: () => [{ granted: true, canAskAgain: true }, jest.fn()],
   CameraView: () => null,
@@ -51,6 +57,7 @@ beforeEach(() => {
   jest.mocked(useRestoreReceipt).mockReturnValue({ mutate: restoreReceipt } as never);
   jest.mocked(useSyncReceipts).mockReturnValue({ refresh: jest.fn(), isRefreshing: false });
   jest.mocked(useReceipts).mockReturnValue(loaded([]));
+  jest.mocked(useAddReceipt).mockReturnValue({ mutate: jest.fn(), isPending: false } as never);
   jest.mocked(useShopGroups).mockReturnValue(loaded([]));
 });
 
